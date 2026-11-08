@@ -99,3 +99,22 @@ test('autopilot waits for a reminder the seller rescheduled', async () => {
   await post('/api/autopilot', { enabled: false });
   assert.equal((await post('/api/reminders', { invoiceId: 'x', at: 'tomorrow' })).status, 400);
 });
+
+test('double-clicking approve sends only once', async () => {
+  await post('/api/demo/reset');
+  const { proposals } = await (await post('/api/agent/scan')).json();
+  const p = proposals.find((x) => x.kind === 'invoice');
+  const [a, b] = await Promise.all([
+    post('/api/agent/approve', { id: p.id, fingerprint: p.fingerprint }),
+    post('/api/agent/approve', { id: p.id, fingerprint: p.fingerprint }),
+  ]);
+  const codes = [a.status, b.status].sort();
+  assert.equal(codes[0], 200);
+  assert.ok([404, 409].includes(codes[1]));
+});
+
+test('webhook events are processed once even if PayPal retries', async () => {
+  const ev = { id: 'WH-TEST-1', event_type: 'CUSTOMER.DISPUTE.CREATED', resource: { dispute_id: 'PP-D-9' } };
+  assert.equal((await post('/api/webhooks/paypal', ev, false)).status, 200);
+  assert.equal((await post('/api/webhooks/paypal', ev, false)).status, 200);
+});

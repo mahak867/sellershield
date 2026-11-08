@@ -1,5 +1,7 @@
 # SellerShield
 
+[![tests](https://github.com/mahak867/sellershield/actions/workflows/test.yml/badge.svg)](https://github.com/mahak867/sellershield/actions/workflows/test.yml) ![license](https://img.shields.io/badge/license-MIT-blue)
+
 **An AI agent that knows PayPal Seller Protection and defends a small seller's money.**
 
 Small sellers lose money three ways:
@@ -21,7 +23,7 @@ So a small seller has to know which disputes PayPal will cover, add tracking bef
 
 ## How to judge in 5 minutes
 
-1. Open the hosted demo (link at the top of the Devpost page). It runs on the real PayPal sandbox, and your browser gets its own isolated workspace, so other judges can't reset or approve your items.
+1. Open the hosted demo (link at the top of the Devpost page). On Render's free tier, the first load after idle can take about a minute while the server wakes up. It runs on the real PayPal sandbox, and your browser gets its own isolated workspace, so other judges can't reset or approve your items.
 2. Click **Load sandbox data**: real overdue invoices are created in the sandbox.
 3. Click **Run agent**. Every item gets a proposal, and every dispute shows a **Seller Protection checklist**.
 4. Turn on **Autopilot** (max $100, 80%), then click **Simulate dispute**. The **Live activity** feed shows the agent reacting and acting within the limits.
@@ -162,7 +164,13 @@ The suite runs 30 hand-labelled disputes through the Seller Protection check and
 2. Subscribe it to Customer dispute created/updated, Payment capture completed, and Invoice paid.
 3. Put the webhook ID in `PAYPAL_WEBHOOK_ID`.
 
-Every event is checked with PayPal's `verify-webhook-signature` API before the agent runs. Unverified events are rejected.
+Every event is checked with PayPal's `verify-webhook-signature` API before the agent runs. Unverified events are rejected, and retried deliveries of the same event are handled only once.
+
+## Safety on a public demo
+
+- **Rate limits:** API writes are capped per IP. "Load sandbox data" (which creates real sandbox invoices) is capped per IP and per day.
+- **No double-sends:** one in-flight execution per item. For real PayPal objects, there's one write per item per 10 minutes across all visitors, so two judges can't both answer the same dispute.
+- **Bounded AI:** the AI never sends anything directly. Every write goes through the fingerprint and citation checks, and autopilot limits.
 
 ## Deploy on Render
 

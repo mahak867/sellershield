@@ -10,8 +10,25 @@ import { workspaceMiddleware, workspaceId, SHARED } from './lib/workspace.js';
 import { buildRecords, checkDraft, fingerprint, renderForPayPal } from './lib/evidence.js';
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
+app.set('trust proxy', 1); // Render sits behind a proxy; use the real client IP for limits
 app.use(workspaceMiddleware);
+
+// Simple fixed-window rate limits so a public demo can't be used to spam PayPal's sandbox.
+const hits = new Map();
+function limit(key, max, windowMs) {
+  const now = Date.now();
+  const h = hits.get(key);
+  if (!h || now - h.start > windowMs) { hits.set(key, { start: now, n: 1 }); return true; }
+  h.n += 1;
+  if (hits.size > 5000) for (const [k, v] of hits) if (now - v.start > windowMs) hits.delete(k);
+  return h.n <= max;
+}
+app.use('/api', (req, res, next) => {
+  if (req.method !== 'POST' || req.path.startsWith('/webhooks/')) return next();
+  if (!limit(`ip:${req.ip}`, 120, 60_000)) return res.status(429).json({ error: 'Too many requests. Wait a minute and try again.' });
+  next();
+});
 app.use(express.static('public'));
 app.use('/vendor/ag-grid', express.static('node_modules/ag-grid-community'));
 app.use('/vendor/ag-charts', express.static('node_modules/ag-charts-community/dist/umd'));
@@ -66,9 +83,25 @@ async function scan() {
 // Execute one proposal on PayPal.
 // The approval must carry the fingerprint of exactly the text being sent: a changed draft
 // is a different payload and needs its own approval. Dispute text must pass the citation check.
+// Guards against double-sends: one in-flight execution per item, and for real PayPal objects
+// one write per target in 10 minutes across all visitors (two judges can't both answer one dispute).
+const inflight = new Set();
+const realWrites = new Map();
 async function execute(id, draft, by = 'seller', approvedFingerprint) {
   const p = store.proposals.find((x) => x.id === id);
   if (!p) throw Object.assign(new Error(`proposal ${id} not found; run a scan first`), { status: 404 });
+  const lockKey = p.demo ? `${workspaceId()}:${id}` : `real:${id}`;
+  if (inflight.has(lockKey)) throw Object.assign(new Error('This action is already being sent.'), { status: 409 });
+  const last = realWrites.get(id);
+  if (!p.demo && !MOCK_PAYPAL && last && Date.now() - last < 600_000) {
+    throw Object.assign(new Error('This PayPal item was already acted on in the last 10 minutes.'), { status: 409 });
+  }
+  inflight.add(lockKey);
+  try { return await executeOnce(p, id, draft, by, approvedFingerprint); }
+  finally { inflight.delete(lockKey); }
+}
+
+async function executeOnce(p, id, draft, by, approvedFingerprint) {
   const text = draft ?? p.draft;
   const fp = fingerprint({ kind: p.kind, decision: p.decision, target: p.target, text });
   if (by === 'seller' && approvedFingerprint !== fp) {
@@ -91,6 +124,7 @@ async function execute(id, draft, by = 'seller', approvedFingerprint) {
     result = await paypal.addTracking(store.orders.find((x) => x.transactionId === p.target));
   }
   store.proposals = store.proposals.filter((x) => x.id !== id);
+  if (!p.demo && !result?.simulated) realWrites.set(id, Date.now());
   return logAction({
     kind: p.kind, target: p.target, decision: p.decision, amount: p.amount, confidence: p.confidence,
     by, fingerprint: fp, simulated: !!result?.simulated, text: result?.via ? `[sent as buyer message: PayPal not taking evidence at this stage] ${text}` : text,
@@ -148,6 +182,7 @@ app.post('/api/agent/scan', async (_req, res, next) => {
 });
 
 // ---------- PayPal webhooks: the agent reacts the moment money is at risk ----------
+const seenEvents = new Set();
 const WEBHOOK_EVENTS = {
   'CUSTOMER.DISPUTE.CREATED': 'New dispute opened',
   'CUSTOMER.DISPUTE.UPDATED': 'Dispute updated',
@@ -161,6 +196,11 @@ app.post('/api/webhooks/paypal', async (req, res) => {
     if (!ok) return res.status(400).json({ error: 'signature not verified (set PAYPAL_WEBHOOK_ID)' });
   }
   res.sendStatus(200); // ack fast; PayPal retries slow endpoints
+  if (ev.id) { // PayPal retries deliveries; handle each event once
+    if (seenEvents.has(ev.id)) return;
+    seenEvents.add(ev.id);
+    if (seenEvents.size > 1000) seenEvents.delete(seenEvents.values().next().value);
+  }
   const label = WEBHOOK_EVENTS[ev.event_type];
   if (!label) return;
   activity('webhook', `PayPal webhook: ${label} (${ev.resource?.dispute_id || ev.resource?.id || 'n/a'})`);
@@ -231,8 +271,11 @@ app.post('/api/agent/chat', async (req, res, next) => {
 });
 
 // Creates real overdue invoices in the PayPal sandbox so the demo uses live data.
-app.post('/api/demo/seed', async (_req, res, next) => {
+app.post('/api/demo/seed', async (req, res, next) => {
   try {
+    if (!limit(`seed:${req.ip}`, 3, 600_000) || !limit('seed:all', 60, 86_400_000)) {
+      return res.status(429).json({ error: 'Sandbox data was loaded recently. Use Run agent on the existing invoices.' });
+    }
     const seeds = [
       { email: 'billing@acme-studio.example', name: 'Acme', memo: 'Logo + brand kit design', amount: 1500, daysOverdue: 19 },
       { email: 'ops@bluecafe.example', name: 'Blue Cafe', memo: 'Menu photography', amount: 320, daysOverdue: 5 },
