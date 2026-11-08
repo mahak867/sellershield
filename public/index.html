@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SellerShield</title>
+<link rel="stylesheet" href="/vendor/ag-grid/styles/ag-grid.css">
+<link rel="stylesheet" href="/vendor/ag-grid/styles/ag-theme-quartz.css">
+<script src="/vendor/ag-grid/dist/ag-grid-community.min.js"></script>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#14181f; --mute:#5b6472; --line:#e3e6eb; --accent:#0b57d0; --good:#137333; --warn:#b06000; --bad:#b3261e; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif; background:var(--bg); color:var(--ink); }
+  header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 24px; background:var(--card); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  h1 { margin:0; font-size:20px; } h1 span { color:var(--accent); }
+  .badge { font-size:12px; padding:3px 8px; border-radius:99px; background:#fff4e5; color:var(--warn); margin-left:8px; }
+  main { max-width:1200px; margin:0 auto; padding:20px 16px; display:grid; gap:16px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .kpi b { display:block; font-size:26px; font-variant-numeric:tabular-nums; } .kpi small { color:var(--mute); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .card h2 { margin:0 0 10px; font-size:16px; }
+  button { font:inherit; border:0; border-radius:8px; padding:9px 14px; background:var(--accent); color:#fff; cursor:pointer; }
+  button.ghost { background:#eef2fb; color:var(--accent); } button:disabled { opacity:.5; cursor:wait; }
+  .prop { border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px; display:grid; gap:8px; }
+  .prop .top { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .tag { font-size:12px; font-weight:600; padding:2px 8px; border-radius:6px; background:#eef2fb; color:var(--accent); }
+  .tag.ACCEPT { background:#fdecea; color:var(--bad); } .tag.FIGHT { background:#e6f4ea; color:var(--good); }
+  textarea { width:100%; min-height:70px; font:inherit; padding:8px; border:1px solid var(--line); border-radius:8px; }
+  .mute { color:var(--mute); font-size:13px; }
+  .chat { display:flex; gap:8px; } .chat input { flex:1; font:inherit; padding:9px; border:1px solid var(--line); border-radius:8px; min-width:0; }
+  #reply { white-space:pre-wrap; margin-top:10px; }
+  .grid { height:300px; }
+</style>
+</head>
+<body>
+<header>
+  <h1><span>Seller</span>Shield <span id="mode"></span></h1>
+  <button id="run">Run agent</button>
+</header>
+<main>
+  <section class="kpis">
+    <div class="kpi"><small>Money at risk</small><b id="kRisk">$0</b></div>
+    <div class="kpi"><small>Recovered by agent</small><b id="kSaved" style="color:var(--good)">$0</b></div>
+    <div class="kpi"><small>Open disputes</small><b id="kDisp">0</b></div>
+    <div class="kpi"><small>Unpaid invoices</small><b id="kInv">0</b></div>
+    <div class="kpi"><small>Held orders</small><b id="kHold">0</b></div>
+  </section>
+
+  <section class="card">
+    <h2>Agent proposals <span class="mute">(nothing reaches PayPal until you approve)</span></h2>
+    <div id="props" class="mute">Click "Run agent" to scan disputes, invoices and held funds.</div>
+  </section>
+
+  <section class="card">
+    <h2>Money at risk</h2>
+    <div id="riskGrid" class="grid ag-theme-quartz"></div>
+  </section>
+
+  <section class="card">
+    <h2>Agent action log</h2>
+    <div id="logGrid" class="grid ag-theme-quartz"></div>
+  </section>
+
+  <section class="card">
+    <h2>Ask the agent</h2>
+    <div class="chat"><input id="q" placeholder="e.g. Which dispute should I worry about most?"><button id="ask">Ask</button></div>
+    <div id="reply"></div>
+  </section>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+const money = (n) => '$' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const api = (p, body) => fetch(p, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}).then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error); return j; });
+
+const riskGrid = agGrid.createGrid($('#riskGrid'), {
+  columnDefs: [
+    { field: 'type', width: 110 }, { field: 'id', headerName: 'ID', flex: 1 }, { field: 'who', headerName: 'Buyer / client', flex: 1 },
+    { field: 'detail', flex: 2 }, { field: 'amount', valueFormatter: (p) => money(p.value), width: 120, sort: 'desc' },
+  ],
+  defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [],
+});
+const logGrid = agGrid.createGrid($('#logGrid'), {
+  columnDefs: [
+    { field: 'at', headerName: 'Time', valueFormatter: (p) => new Date(p.value).toLocaleTimeString(), width: 110 },
+    { field: 'kind', width: 100 }, { field: 'decision', width: 130 }, { field: 'target', flex: 1 },
+    { field: 'amount', valueFormatter: (p) => money(p.value), width: 110 }, { field: 'text', headerName: 'Sent to PayPal', flex: 2, tooltipField: 'text' },
+  ],
+  defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [],
+});
+
+async function refresh() {
+  const s = await api('/api/status');
+  $('#mode').innerHTML = (s.mockPaypal ? '<span class="badge">PayPal mock</span>' : '<span class="badge" style="background:#e6f4ea;color:#137333">PayPal sandbox</span>')
+    + (s.mockAi ? '<span class="badge">AI mock</span>' : '<span class="badge" style="background:#e6f4ea;color:#137333">Claude live</span>');
+  const r = await api('/api/risk');
+  const rows = [
+    ...r.disputes.map((d) => ({ type: 'Dispute', id: d.dispute_id, who: d.transaction_id, detail: d.reason.replaceAll('_', ' ').toLowerCase(), amount: d.amount })),
+    ...r.invoices.map((i) => ({ type: 'Invoice', id: i.id, who: i.recipient, detail: `${i.days_overdue} days overdue: ${i.memo}`, amount: i.amount })),
+    ...r.holds.map((o) => ({ type: 'Hold', id: o.transactionId, who: o.buyer, detail: `${o.item}, held ${o.daysHeld} days`, amount: o.amount })),
+  ];
+  riskGrid.setGridOption('rowData', rows);
+  logGrid.setGridOption('rowData', r.actions);
+  $('#kRisk').textContent = money(rows.reduce((s, x) => s + x.amount, 0));
+  $('#kSaved').textContent = money(r.actions.filter((a) => a.decision !== 'ACCEPT').reduce((s, a) => s + a.amount, 0));
+  $('#kDisp').textContent = r.disputes.length; $('#kInv').textContent = r.invoices.length; $('#kHold').textContent = r.holds.length;
+}
+
+function renderProps(list) {
+  if (!list.length) { $('#props').innerHTML = '<span class="mute">All clear. No pending actions.</span>'; return; }
+  $('#props').innerHTML = '';
+  for (const p of list) {
+    const el = document.createElement('div');
+    el.className = 'prop';
+    el.innerHTML = `<div class="top"><div><span class="tag ${p.decision}">${p.decision}</span> <b>${p.kind}</b> ${p.target} &middot; ${money(p.amount)}</div>
+      <span class="mute">confidence ${Math.round((p.confidence || 0) * 100)}%</span></div>
+      <div class="mute why"></div><textarea></textarea>
+      <div><button>Approve &amp; send to PayPal</button> <button class="ghost">Skip</button></div>`;
+    el.querySelector(".why").textContent = p.reasoning;
+    el.querySelector('textarea').value = p.draft;
+    const [ok, skip] = el.querySelectorAll('button');
+    ok.onclick = async () => {
+      ok.disabled = true;
+      try { await api('/api/agent/approve', { id: p.id, draft: el.querySelector('textarea').value }); el.remove(); await refresh(); }
+      catch (e) { alert(e.message); ok.disabled = false; }
+    };
+    skip.onclick = () => el.remove();
+    $('#props').appendChild(el);
+  }
+}
+
+$('#run').onclick = async () => {
+  $('#run').disabled = true; $('#props').textContent = 'Agent is reviewing every dispute, invoice and hold...';
+  try { renderProps((await api('/api/agent/scan', {})).proposals); } catch (e) { $('#props').textContent = e.message; }
+  $('#run').disabled = false;
+};
+$('#ask').onclick = async () => {
+  $('#reply').textContent = '...';
+  try { $('#reply').textContent = (await api('/api/agent/chat', { message: $('#q').value })).reply; } catch (e) { $('#reply').textContent = e.message; }
+};
+refresh();
+</script>
+</body>
+</html>
