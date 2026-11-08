@@ -128,6 +128,14 @@ async function card(page, html, ms) {
   await cap(page, 'AG Charts: where the money is stuck, and how much of it Seller Protection covers.', 4500);
   await scrollTo(page, '#timeline', 120);
   await cap(page, 'The Bryntum agent calendar: every PayPal deadline, overdue invoice and hold on one timeline.', 4000);
+  const task = page.locator('#timeline .ss-task').first();
+  if (await task.count()) {
+    page.once('dialog', (d) => d.accept(new Date().toISOString().slice(0, 10)));
+    await point(page, task);
+    await cap(page, 'This dispute is missing proof of delivery. The plan: get the carrier confirmation (orange), then the agent submits (arrow).', 5000);
+    await click(page, task); await wait(2500);
+    await cap(page, 'Record the delivery date and the agent re-checks: Seller Protection now covers it, and the draft cites the new fact.', 5000);
+  }
   const plan = page.locator('#timeline .ss-plan').first();
   if (await plan.count()) {
     await cap(page, 'Each purple bar is an action the agent proposes, placed before PayPal\'s deadline.', 4000);

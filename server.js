@@ -263,6 +263,21 @@ app.post('/api/agent/check', (req, res) => {
   });
 });
 
+// Seller records the carrier's delivery confirmation (the missing Seller Protection proof).
+// The agent re-runs: the dispute's coverage and draft update from the new fact.
+app.post('/api/orders/:tx/delivered', async (req, res, next) => {
+  try {
+    const o = store.orders.find((x) => x.transactionId === req.params.tx);
+    if (!o) return res.status(404).json({ error: 'order not found' });
+    const date = String(req.body?.date || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > today()) return res.status(400).json({ error: 'Enter the delivery date as YYYY-MM-DD, today or earlier.' });
+    o.delivered = date;
+    o.deliveredSource = 'carrier confirmation entered by seller';
+    activity('agent', `Delivery confirmation recorded for ${o.item} (${o.carrier} ${o.trackingNumber}, delivered ${date}). Re-checking Seller Protection.`);
+    res.json(await runAgent('delivery confirmed'));
+  } catch (e) { next(e); }
+});
+
 // ---------- Agent calendar (Bryntum): scheduling an action approves it for that day ----------
 app.post('/api/schedule', (req, res) => {
   const { id, at, fingerprint: fp } = req.body || {};

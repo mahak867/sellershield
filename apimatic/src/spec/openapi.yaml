@@ -214,6 +214,26 @@ paths:
         - { in: query, name: id, required: true, schema: { type: string } }
       responses:
         '200': { description: Cancelled }
+  /api/orders/{tx}/delivered:
+    post:
+      tags: [Agent]
+      operationId: confirmDelivery
+      summary: Record the carrier's delivery confirmation for an order; the agent re-checks Seller Protection
+      parameters:
+        - { in: path, name: tx, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date]
+              properties:
+                date: { type: string, format: date }
+      responses:
+        '200': { description: Agent re-run result }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
   /api/reminders:
     post:
       tags: [Schedule]

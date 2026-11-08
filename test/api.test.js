@@ -158,3 +158,16 @@ test('agent calendar: scheduling approves for a day; today runs automatically; d
   }
   assert.ok(done, 'calendar action ran');
 });
+
+test('recording a delivery confirmation flips a dispute to covered', async () => {
+  await post('/api/demo/reset');
+  const before = await (await post('/api/agent/scan')).json();
+  const d = before.proposals.find((x) => x.target === 'PP-D-1004');
+  assert.equal(d.protection.status, 'NEEDS_EVIDENCE');
+  const today = new Date().toISOString().slice(0, 10);
+  assert.equal((await post(`/api/orders/${d.orderTx}/delivered`, { date: '2999-01-01' })).status, 400);
+  const after = await (await post(`/api/orders/${d.orderTx}/delivered`, { date: today })).json();
+  const d2 = after.proposals.find((x) => x.target === 'PP-D-1004');
+  assert.equal(d2.protection.status, 'LIKELY_COVERED');
+  assert.ok(d2.records.some((r) => r.fields.delivered_source));
+});

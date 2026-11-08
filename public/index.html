@@ -81,8 +81,9 @@
   .chat { display:flex; gap:8px; } .chat input { flex:1; min-width:0; font:inherit; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); }
   .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
   .chips button { font-size:12px; padding:5px 10px; }
-  .charts { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; }
-  @media (max-width:900px) { .charts { grid-template-columns:1fr; } }
+  .charts { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:16px; }
+  @media (max-width:1100px) { .charts { grid-template-columns:1fr 1fr; } }
+  @media (max-width:700px) { .charts { grid-template-columns:1fr; } }
   .chart { height:260px; }
   .timeline { height:380px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
   .grid { height:280px; } .grid.tall { height:360px; }
@@ -146,6 +147,7 @@
 
   <section class="card charts">
     <div><h2>Where your money is stuck</h2><p class="sub">At risk vs protected by the agent, per category (AG Charts).</p><div id="chartRisk" class="chart"></div></div>
+    <div><h2>Protected over time</h2><p class="sub">Running total of money the agent protected; hover a point to see who acted (seller, autopilot, calendar, chat).</p><div id="chartTime" class="chart"></div></div>
     <div><h2>Disputes by Seller Protection</h2><p class="sub">Dollars in dispute, by PayPal coverage. Run the agent to classify.</p><div id="chartCover" class="chart"></div></div>
   </section>
 
@@ -260,6 +262,8 @@ const actionCell = (p) => {
   };
   return b;
 };
+// Saved column layout (per browser; optional).
+function saveLayout() { try { localStorage.setItem('ss.riskGrid', JSON.stringify(riskGrid.getColumnState())); } catch {} }
 // Drafts edited inside the grid: { [proposalId]: { draft, fingerprint, issues } }
 const gridEdits = {};
 const riskGrid = agGrid.createGrid($('#riskGrid'), {
@@ -283,6 +287,8 @@ const riskGrid = agGrid.createGrid($('#riskGrid'), {
   rowSelection: { mode: 'multiRow', checkboxes: true, headerCheckbox: true, enableClickSelection: false, isRowSelectable: (n) => !!n.data?.proposal },
   onSelectionChanged: () => { const n = riskGrid.getSelectedRows().length; $('#bulk').disabled = !n; $('#bulk').textContent = n ? `Approve selected (${n})` : 'Approve selected'; },
   getRowId: (p) => p.data.key, rowData: [], overlayNoRowsTemplate: 'Nothing at risk. Nice.', tooltipShowDelay: 300,
+  undoRedoCellEditing: true, undoRedoCellEditingLimit: 20, // Ctrl+Z / Ctrl+Y on draft edits
+  onColumnMoved: saveLayout, onColumnResized: (e) => e.finished && saveLayout(), onSortChanged: saveLayout, onColumnPinned: saveLayout,
   // Every grid edit is re-fingerprinted and citation-checked on the server before it can be approved.
   onCellValueChanged: async (e) => {
     if (e.colDef.colId !== 'draft' || !e.data?.proposal) return;
@@ -306,6 +312,7 @@ const logGrid = agGrid.createGrid($('#logGrid'), {
   ],
   defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [], overlayNoRowsTemplate: 'No actions yet.', tooltipShowDelay: 300,
 });
+try { const st = JSON.parse(localStorage.getItem('ss.riskGrid') || 'null'); if (st) riskGrid.applyColumnState({ state: st, applyOrder: true }); } catch {}
 $('#qf').oninput = () => riskGrid.setGridOption('quickFilterText', $('#qf').value);
 $('#csv1').onclick = () => riskGrid.exportDataAsCsv({ fileName: 'sellershield-money-at-risk.csv', columnKeys: ['type', 'urgency', 'amount', 'detail', 'who', 'id'] });
 $('#csv2').onclick = () => logGrid.exportDataAsCsv({ fileName: 'sellershield-audit-log.csv' });
@@ -455,7 +462,7 @@ function protBox(pr) {
 // ---------- AG Charts ----------
 const dark = matchMedia('(prefers-color-scheme: dark)').matches;
 const chartTheme = { baseTheme: dark ? 'ag-default-dark' : 'ag-default', overrides: { common: { background: { fill: 'transparent' } } } };
-let riskChart, coverChart;
+let riskChart, coverChart, timeChart;
 function renderCharts(r) {
   if (!window.agCharts) return;
   const cat = (k) => (k === 'dispute' ? 'Disputes' : k === 'invoice' ? 'Overdue invoices' : 'Tracking / holds');
@@ -492,6 +499,19 @@ function renderCharts(r) {
       innerLabels: [{ text: '$' + Math.round(sum(r.disputes)).toLocaleString(), fontSize: 20, fontWeight: 'bold' }, { text: 'in dispute' }] }],
     legend: { position: 'bottom' },
   };
+  // Running total protected (non-ACCEPT actions), one series per actor.
+  const acts = r.actions.filter((a) => a.decision !== 'ACCEPT').slice().sort((a, b) => a.at.localeCompare(b.at));
+  let run = 0;
+  const timeData = acts.map((a) => { run += a.amount; return { t: new Date(a.at), total: run, amount: a.amount, by: a.by }; });
+  const timeOpts = {
+    container: $('#chartTime'), data: timeData, theme: chartTheme,
+    series: [{ type: 'line', xKey: 't', yKey: 'total', yName: 'Protected (running total)', stroke: '#1e8e3e', marker: { fill: '#1e8e3e' },
+      tooltip: { renderer: ({ datum }) => ({ content: `+$${datum.amount.toFixed(2)} by ${datum.by} · $${datum.total.toFixed(2)} total` }) } }],
+    axes: [{ type: 'time', position: 'bottom', label: { format: '%H:%M' } }, { type: 'number', position: 'left', label: { formatter: ({ value }) => '$' + value.toLocaleString() } }],
+    legend: { position: 'bottom' },
+    overlays: { noData: { text: 'No actions yet. Approve something or turn on autopilot.' } },
+  };
+  if (timeChart) timeChart.update(timeOpts); else timeChart = agCharts.AgCharts.create(timeOpts);
   if (riskChart) riskChart.update(riskOpts); else riskChart = agCharts.AgCharts.create(riskOpts);
   if (coverChart) coverChart.update(coverOpts); else coverChart = agCharts.AgCharts.create(coverOpts);
 }
@@ -547,6 +567,7 @@ const sched = new Scheduler({
   eventStyle: 'rounded',
   features: {
     timeRanges: { showCurrentTimeLine: true },
+    dependencies: { allowCreate: false, showTooltip: false, radius: 6 },
     eventEdit: false, eventResize: false, eventDragCreate: false, eventMenu: false, scheduleMenu: false, cellEdit: false,
     eventDrag: { constrainDragToResource: true },
     eventTooltip: { template: ({ eventRecord }) => StringHelper.encodeHtml(eventRecord.get('tip') || eventRecord.name) },
@@ -557,6 +578,16 @@ const sched = new Scheduler({
   ],
   eventRenderer: ({ eventRecord }) => StringHelper.encodeHtml(eventRecord.name),
   listeners: {
+    // Seller evidence task: record the carrier's delivery date; the agent re-checks coverage.
+    async eventClick({ eventRecord }) {
+      const tx = eventRecord.get('orderTx');
+      if (!eventRecord.get('isTask') || !tx) return;
+      const date = prompt(`Carrier delivery date for ${eventRecord.get('item') || 'this order'} (YYYY-MM-DD):`, iso(today));
+      if (!date) return;
+      const r = await fetch(`/api/orders/${encodeURIComponent(tx)}/delivered`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date }) });
+      window.ssToast?.(r.ok ? 'Delivery recorded. Seller Protection re-checked.' : (await r.json()).error);
+      window.ssRefresh?.();
+    },
     async eventDrop({ eventRecords }) {
       for (const e of eventRecords) {
         const proposalId = e.get('proposalId');
@@ -608,9 +639,24 @@ window.sellershieldTimeline = (r) => {
       name: 'Est. release (typical 21-day hold)', tip: 'Estimate only: PayPal sets the actual release date.' });
   }
   // Agent calendar: every proposed action sits on its row. Drag it onto a day to approve it for that day.
+  // Disputes missing proof get a two-step plan: seller task (get delivery confirmation) -> agent action.
+  const deps = [];
+  const dueOf = Object.fromEntries((r.disputes || []).map((d) => [d.dispute_id, d.seller_response_due_date]));
   for (const p of r.proposals || []) {
     if (!resources.some((x) => x.id === p.id)) continue;
-    const on = at(p.scheduledAt || today);
+    const missingDelivery = p.kind === 'dispute' && p.protection?.status === 'NEEDS_EVIDENCE' && p.orderTx
+      && p.protection.checks.some((c) => !c.pass && /delivered/i.test(c.rule));
+    let taskDay = null;
+    if (missingDelivery) {
+      const due = dueOf[p.target] ? at(dueOf[p.target]) : plus(today, 7);
+      const latest = plus(due, -2) < today ? today : plus(due, -2);
+      taskDay = today;
+      events.push({ id: 'task:' + p.id, resourceId: p.id, startDate: taskDay, endDate: plus(taskDay, 1), draggable: false,
+        eventColor: 'orange', cls: 'ss-task', isTask: true, orderTx: p.orderTx, name: '📦 proof',
+        tip: `Seller task: get the carrier's delivery confirmation (latest ${iso(latest)}, 2 days before PayPal's deadline). Click to record the delivery date; the agent re-checks Seller Protection.` });
+      deps.push({ id: 'dep:' + p.id, from: 'task:' + p.id, to: 'plan:' + p.id });
+    }
+    const on = at(p.scheduledAt || (taskDay ? plus(taskDay, 2) : today));
     const verb = { FIGHT: 'fight', ACCEPT: 'accept', REMIND: 'remind', ADD_TRACKING: 'tracking' }[p.decision] || p.decision.toLowerCase();
     events.push({ id: 'plan:' + p.id, resourceId: p.id, startDate: on, endDate: plus(on, 1), draggable: true,
       eventColor: p.scheduledAt ? 'green' : 'indigo', proposalId: p.id, fingerprint: p.fingerprint, cls: p.scheduledAt ? 'ss-plan ss-approved' : 'ss-plan',
@@ -626,6 +672,7 @@ window.sellershieldTimeline = (r) => {
   }
   sched.resourceStore.data = resources;
   sched.eventStore.data = events;
+  sched.dependencyStore.data = deps;
 };
 if (window.__ssData) window.sellershieldTimeline(window.__ssData);
 </script>
