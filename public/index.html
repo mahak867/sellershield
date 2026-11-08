@@ -4,141 +4,272 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SellerShield</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z' fill='%230b57d0'/></svg>">
 <link rel="stylesheet" href="/vendor/ag-grid/styles/ag-grid.css">
 <link rel="stylesheet" href="/vendor/ag-grid/styles/ag-theme-quartz.css">
 <script src="/vendor/ag-grid/dist/ag-grid-community.min.js"></script>
 <style>
-  :root { --bg:#f6f7f9; --card:#fff; --ink:#14181f; --mute:#5b6472; --line:#e3e6eb; --accent:#0b57d0; --good:#137333; --warn:#b06000; --bad:#b3261e; }
+  :root {
+    --bg:#f5f6f8; --card:#fff; --ink:#111827; --mute:#5b6472; --line:#e4e7ec;
+    --accent:#0b57d0; --accent-soft:#e8effc; --good:#137333; --good-soft:#e6f4ea;
+    --warn:#a35200; --warn-soft:#fff3e0; --bad:#b3261e; --bad-soft:#fdecea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1218; --card:#171b23; --ink:#e8eaee; --mute:#9aa3b2; --line:#2a303b;
+      --accent:#7aa7ff; --accent-soft:#1d2a44; --good:#6fd08c; --good-soft:#15291c;
+      --warn:#f0b46a; --warn-soft:#2e2414; --bad:#ff8a80; --bad-soft:#331a19; }
+    .ag-theme-quartz { --ag-background-color:var(--card); --ag-foreground-color:var(--ink); --ag-header-background-color:#1d222c; --ag-border-color:var(--line); --ag-odd-row-background-color:#1a1f28; }
+  }
   * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif; background:var(--bg); color:var(--ink); }
-  header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 24px; background:var(--card); border-bottom:1px solid var(--line); flex-wrap:wrap; }
-  h1 { margin:0; font-size:20px; } h1 span { color:var(--accent); }
-  .badge { font-size:12px; padding:3px 8px; border-radius:99px; background:#fff4e5; color:var(--warn); margin-left:8px; }
-  main { max-width:1200px; margin:0 auto; padding:20px 16px; display:grid; gap:16px; }
-  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
-  .kpi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
-  .kpi b { display:block; font-size:26px; font-variant-numeric:tabular-nums; } .kpi small { color:var(--mute); }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
-  .card h2 { margin:0 0 10px; font-size:16px; }
-  button { font:inherit; border:0; border-radius:8px; padding:9px 14px; background:var(--accent); color:#fff; cursor:pointer; }
-  button.ghost { background:#eef2fb; color:var(--accent); } button:disabled { opacity:.5; cursor:wait; }
-  .prop { border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px; display:grid; gap:8px; }
-  .prop .top { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; }
-  .tag { font-size:12px; font-weight:600; padding:2px 8px; border-radius:6px; background:#eef2fb; color:var(--accent); }
-  .tag.ACCEPT { background:#fdecea; color:var(--bad); } .tag.FIGHT { background:#e6f4ea; color:var(--good); }
-  textarea { width:100%; min-height:70px; font:inherit; padding:8px; border:1px solid var(--line); border-radius:8px; }
+  body { margin:0; font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); }
+  header { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 20px; background:var(--card); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; }
+  .brand svg { width:26px; height:26px; }
+  .badges { display:flex; gap:6px; flex-wrap:wrap; }
+  .badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:99px; background:var(--warn-soft); color:var(--warn); }
+  .badge.live { background:var(--good-soft); color:var(--good); }
+  .actions { display:flex; gap:8px; }
+  main { max-width:1240px; margin:0 auto; padding:20px 16px 48px; display:grid; gap:16px; }
+  .hero h1 { margin:4px 0 2px; font-size:26px; letter-spacing:-.01em; }
+  .hero p { margin:0; color:var(--mute); }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+  .kpi small { color:var(--mute); font-size:13px; }
+  .kpi b { display:block; font-size:28px; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+  .kpi.good b { color:var(--good); }
+  .cols { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; align-items:start; }
+  @media (max-width:900px) { .cols { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; min-width:0; }
+  .card h2 { margin:0 0 4px; font-size:16px; }
+  .card .sub { margin:0 0 12px; color:var(--mute); font-size:13px; }
+  button { font:inherit; font-weight:600; border:0; border-radius:9px; padding:9px 14px; background:var(--accent); color:#fff; cursor:pointer; }
+  @media (prefers-color-scheme: dark) { button { color:#0f1218; } }
+  button.ghost { background:var(--accent-soft); color:var(--accent); }
+  button:disabled { opacity:.5; cursor:progress; }
+  .prop { border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; display:grid; gap:8px; }
+  .prop .top { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; align-items:center; }
+  .tag { font-size:12px; font-weight:700; padding:2px 8px; border-radius:6px; background:var(--accent-soft); color:var(--accent); }
+  .tag.FIGHT { background:var(--good-soft); color:var(--good); } .tag.ACCEPT { background:var(--bad-soft); color:var(--bad); }
+  .tag.demo { background:var(--warn-soft); color:var(--warn); }
+  .meter { width:90px; height:6px; border-radius:6px; background:var(--line); overflow:hidden; display:inline-block; vertical-align:middle; margin-left:6px; }
+  .meter i { display:block; height:100%; background:var(--good); }
+  textarea { width:100%; min-height:72px; font:inherit; font-size:14px; padding:8px 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); resize:vertical; }
   .mute { color:var(--mute); font-size:13px; }
-  .chat { display:flex; gap:8px; } .chat input { flex:1; font:inherit; padding:9px; border:1px solid var(--line); border-radius:8px; min-width:0; }
-  #reply { white-space:pre-wrap; margin-top:10px; }
-  .grid { height:300px; }
+  .empty { padding:22px; text-align:center; color:var(--mute); border:1px dashed var(--line); border-radius:12px; }
+  .ap { display:grid; gap:12px; }
+  .ap label { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:14px; }
+  .ap input[type=range] { width:55%; }
+  .switch { position:relative; width:44px; height:24px; flex:none; }
+  .switch input { opacity:0; width:0; height:0; }
+  .switch span { position:absolute; inset:0; background:var(--line); border-radius:24px; transition:.2s; cursor:pointer; }
+  .switch span::before { content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+  .switch input:checked + span { background:var(--good); }
+  .switch input:checked + span::before { transform:translateX(20px); }
+  .chatlog { max-height:320px; overflow:auto; display:grid; gap:8px; margin-bottom:10px; }
+  .msg { padding:9px 12px; border-radius:12px; white-space:pre-wrap; font-size:14px; }
+  .msg.me { background:var(--accent-soft); justify-self:end; max-width:85%; }
+  .msg.bot { background:var(--bg); border:1px solid var(--line); max-width:95%; }
+  .steps { font-size:12px; color:var(--mute); margin-top:4px; }
+  .chat { display:flex; gap:8px; } .chat input { flex:1; min-width:0; font:inherit; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .chips button { font-size:12px; padding:5px 10px; }
+  .grid { height:280px; }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--card); padding:10px 16px; border-radius:10px; font-size:14px; opacity:0; transition:.3s; pointer-events:none; }
+  .toast.show { opacity:1; }
 </style>
 </head>
 <body>
 <header>
-  <h1><span>Seller</span>Shield <span id="mode"></span></h1>
-  <button id="run">Run agent</button>
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z" fill="var(--accent)"/><path d="m11 16 3.5 3.5L21.5 12" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    SellerShield <span class="badges" id="mode"></span>
+  </div>
+  <div class="actions">
+    <button class="ghost" id="seed" title="Create real overdue invoices in the PayPal sandbox">Load sandbox data</button>
+    <button id="run">Run agent</button>
+  </div>
 </header>
+
 <main>
-  <section class="kpis">
-    <div class="kpi"><small>Money at risk</small><b id="kRisk">$0</b></div>
-    <div class="kpi"><small>Recovered by agent</small><b id="kSaved" style="color:var(--good)">$0</b></div>
-    <div class="kpi"><small>Open disputes</small><b id="kDisp">0</b></div>
-    <div class="kpi"><small>Unpaid invoices</small><b id="kInv">0</b></div>
-    <div class="kpi"><small>Held orders</small><b id="kHold">0</b></div>
+  <section class="hero">
+    <h1>Your money, defended by an AI agent.</h1>
+    <p>SellerShield watches your PayPal account for disputes, held funds and unpaid invoices, decides what to do, and does it.</p>
   </section>
 
-  <section class="card">
-    <h2>Agent proposals <span class="mute">(nothing reaches PayPal until you approve)</span></h2>
-    <div id="props" class="mute">Click "Run agent" to scan disputes, invoices and held funds.</div>
+  <section class="kpis">
+    <div class="kpi"><small>Money at risk</small><b id="kRisk">$0</b></div>
+    <div class="kpi good"><small>Protected by agent</small><b id="kSaved">$0</b></div>
+    <div class="kpi"><small>Hours saved</small><b id="kTime">0</b></div>
+    <div class="kpi"><small>Actions taken</small><b id="kActs">0</b></div>
+    <div class="kpi"><small>Needs your review</small><b id="kReview">0</b></div>
   </section>
+
+  <div class="cols">
+    <section class="card">
+      <h2>Agent proposals</h2>
+      <p class="sub">The agent drafted these. Edit if you like, then approve. Nothing reaches PayPal without approval or an autopilot rule.</p>
+      <div id="props"><div class="empty">Click <b>Run agent</b> to review every dispute, invoice and held payment.</div></div>
+    </section>
+
+    <div style="display:grid;gap:16px;min-width:0">
+      <section class="card">
+        <h2>Autopilot</h2>
+        <p class="sub">Let the agent act alone on small, high-confidence cases.</p>
+        <div class="ap">
+          <label>Enabled <span class="switch"><input type="checkbox" id="apOn"><span></span></span></label>
+          <label>Max amount <input type="range" id="apMax" min="0" max="500" step="5"> <b id="apMaxV"></b></label>
+          <label>Min confidence <input type="range" id="apConf" min="0.5" max="1" step="0.05"> <b id="apConfV"></b></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Ask the agent</h2>
+        <p class="sub">It can look up your account and take action when you ask.</p>
+        <div class="chips">
+          <button class="ghost" data-q="What's my biggest risk right now?">Biggest risk?</button>
+          <button class="ghost" data-q="Handle everything you're confident about.">Handle it</button>
+        </div>
+        <div class="chatlog" id="chatlog"></div>
+        <div class="chat"><input id="q" placeholder="Ask about your money..."><button id="ask">Send</button></div>
+      </section>
+    </div>
+  </div>
 
   <section class="card">
     <h2>Money at risk</h2>
+    <p class="sub">Live from PayPal Disputes and Invoicing APIs, plus your held orders.</p>
     <div id="riskGrid" class="grid ag-theme-quartz"></div>
   </section>
 
   <section class="card">
-    <h2>Agent action log</h2>
+    <h2>Agent audit log</h2>
+    <p class="sub">Every action the agent took, who triggered it, and exactly what it sent to PayPal.</p>
     <div id="logGrid" class="grid ag-theme-quartz"></div>
   </section>
-
-  <section class="card">
-    <h2>Ask the agent</h2>
-    <div class="chat"><input id="q" placeholder="e.g. Which dispute should I worry about most?"><button id="ask">Ask</button></div>
-    <div id="reply"></div>
-  </section>
 </main>
+<div class="toast" id="toast"></div>
+
 <script>
 const $ = (s) => document.querySelector(s);
 const money = (n) => '$' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const api = (p, body) => fetch(p, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}).then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error); return j; });
+const api = (p, body) => fetch(p, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {})
+  .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error); return j; });
+const toast = (t) => { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2600); };
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+const typeCell = (p) => p.data?.demo ? `${p.value} <span class="tag demo">demo</span>` : p.value;
 const riskGrid = agGrid.createGrid($('#riskGrid'), {
   columnDefs: [
-    { field: 'type', width: 110 }, { field: 'id', headerName: 'ID', flex: 1 }, { field: 'who', headerName: 'Buyer / client', flex: 1 },
-    { field: 'detail', flex: 2 }, { field: 'amount', valueFormatter: (p) => money(p.value), width: 120, sort: 'desc' },
+    { field: 'type', width: 165, cellRenderer: typeCell }, { field: 'id', headerName: 'ID', flex: 1, minWidth: 160 },
+    { field: 'who', headerName: 'Buyer / client', flex: 1, minWidth: 160 }, { field: 'detail', flex: 2, minWidth: 200 },
+    { field: 'amount', valueFormatter: (p) => money(p.value), width: 120, sort: 'desc', type: 'rightAligned' },
   ],
-  defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [],
+  defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [], overlayNoRowsTemplate: 'Nothing at risk. Nice.',
 });
 const logGrid = agGrid.createGrid($('#logGrid'), {
   columnDefs: [
-    { field: 'at', headerName: 'Time', valueFormatter: (p) => new Date(p.value).toLocaleTimeString(), width: 110 },
-    { field: 'kind', width: 100 }, { field: 'decision', width: 130 }, { field: 'target', flex: 1 },
-    { field: 'amount', valueFormatter: (p) => money(p.value), width: 110 }, { field: 'text', headerName: 'Sent to PayPal', flex: 2, tooltipField: 'text' },
+    { field: 'at', headerName: 'Time', valueFormatter: (p) => new Date(p.value).toLocaleTimeString(), width: 105 },
+    { field: 'by', headerName: 'Triggered by', width: 130 },
+    { field: 'kind', width: 95 }, { field: 'decision', width: 135 }, { field: 'target', flex: 1, minWidth: 150 },
+    { field: 'amount', valueFormatter: (p) => money(p.value), width: 110, type: 'rightAligned' },
+    { headerName: 'PayPal call', width: 120, cellDataType: 'text', valueGetter: (p) => p.data.simulated ? 'simulated' : 'live' },
+    { field: 'text', headerName: 'Sent to PayPal', flex: 2, minWidth: 220, tooltipField: 'text' },
   ],
-  defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [],
+  defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [], overlayNoRowsTemplate: 'No actions yet.',
 });
 
 async function refresh() {
-  const s = await api('/api/status');
-  $('#mode').innerHTML = (s.mockPaypal ? '<span class="badge">PayPal mock</span>' : '<span class="badge" style="background:#e6f4ea;color:#137333">PayPal sandbox</span>')
-    + (s.mockAi ? '<span class="badge">AI mock</span>' : '<span class="badge" style="background:#e6f4ea;color:#137333">Claude live</span>');
   const r = await api('/api/risk');
   const rows = [
-    ...r.disputes.map((d) => ({ type: 'Dispute', id: d.dispute_id, who: d.transaction_id, detail: d.reason.replaceAll('_', ' ').toLowerCase(), amount: d.amount })),
-    ...r.invoices.map((i) => ({ type: 'Invoice', id: i.id, who: i.recipient, detail: `${i.days_overdue} days overdue: ${i.memo}`, amount: i.amount })),
-    ...r.holds.map((o) => ({ type: 'Hold', id: o.transactionId, who: o.buyer, detail: `${o.item}, held ${o.daysHeld} days`, amount: o.amount })),
+    ...r.disputes.map((d) => ({ type: 'Dispute', demo: d.demo, id: d.dispute_id, who: d.transaction_id, detail: d.reason.replaceAll('_', ' ').toLowerCase(), amount: d.amount })),
+    ...r.invoices.map((i) => ({ type: 'Invoice', demo: i.demo, id: i.id, who: i.recipient, detail: `${i.days_overdue} days overdue · ${i.memo}`, amount: i.amount })),
+    ...r.holds.map((o) => ({ type: 'Held funds', demo: o.demo, id: o.transactionId, who: o.buyer, detail: `${o.item} · held ${o.daysHeld} days`, amount: o.amount })),
   ];
   riskGrid.setGridOption('rowData', rows);
   logGrid.setGridOption('rowData', r.actions);
+  const protectedAmt = r.actions.filter((a) => a.decision !== 'ACCEPT').reduce((s, a) => s + a.amount, 0);
   $('#kRisk').textContent = money(rows.reduce((s, x) => s + x.amount, 0));
-  $('#kSaved').textContent = money(r.actions.filter((a) => a.decision !== 'ACCEPT').reduce((s, a) => s + a.amount, 0));
-  $('#kDisp').textContent = r.disputes.length; $('#kInv').textContent = r.invoices.length; $('#kHold').textContent = r.holds.length;
+  $('#kSaved').textContent = money(protectedAmt);
+  $('#kTime').textContent = (r.actions.reduce((s, a) => s + (a.minutesSaved || 0), 0) / 60).toFixed(1);
+  $('#kActs').textContent = r.actions.length;
+  $('#kReview').textContent = r.proposals.length;
+  renderProps(r.proposals, r.actions.length > 0);
 }
 
-function renderProps(list) {
-  if (!list.length) { $('#props').innerHTML = '<span class="mute">All clear. No pending actions.</span>'; return; }
-  $('#props').innerHTML = '';
+function renderProps(list, scanned) {
+  const box = $('#props');
+  if (!list.length) { box.innerHTML = `<div class="empty">${scanned ? 'All clear. Nothing waiting for you.' : 'Click <b>Run agent</b> to review every dispute, invoice and held payment.'}</div>`; return; }
+  box.innerHTML = '';
   for (const p of list) {
     const el = document.createElement('div');
     el.className = 'prop';
-    el.innerHTML = `<div class="top"><div><span class="tag ${p.decision}">${p.decision}</span> <b>${p.kind}</b> ${p.target} &middot; ${money(p.amount)}</div>
-      <span class="mute">confidence ${Math.round((p.confidence || 0) * 100)}%</span></div>
-      <div class="mute why"></div><textarea></textarea>
+    const pct = Math.round((p.confidence || 0) * 100);
+    el.innerHTML = `<div class="top"><div><span class="tag ${esc(p.decision)}">${esc(p.decision)}</span> <b>${esc(p.kind)}</b> <span class="mute">${esc(p.target)}</span> ${p.demo ? '<span class="tag demo">demo</span>' : ''}</div>
+      <div><b>${money(p.amount)}</b> <span class="mute">· ${pct}% confidence</span><span class="meter"><i style="width:${pct}%"></i></span></div></div>
+      <div class="mute">${esc(p.reasoning)}</div>
+      <textarea aria-label="Draft sent to PayPal">${esc(p.draft)}</textarea>
       <div><button>Approve &amp; send to PayPal</button> <button class="ghost">Skip</button></div>`;
-    el.querySelector(".why").textContent = p.reasoning;
-    el.querySelector('textarea').value = p.draft;
     const [ok, skip] = el.querySelectorAll('button');
     ok.onclick = async () => {
       ok.disabled = true;
-      try { await api('/api/agent/approve', { id: p.id, draft: el.querySelector('textarea').value }); el.remove(); await refresh(); }
-      catch (e) { alert(e.message); ok.disabled = false; }
+      try { await api('/api/agent/approve', { id: p.id, draft: el.querySelector('textarea').value }); toast(`Done: ${p.decision.toLowerCase().replace('_', ' ')} on ${p.target}`); await refresh(); }
+      catch (e) { toast(e.message); ok.disabled = false; }
     };
     skip.onclick = () => el.remove();
-    $('#props').appendChild(el);
+    box.appendChild(el);
   }
 }
 
+async function loadStatus() {
+  const s = await api('/api/status');
+  $('#mode').innerHTML = `<span class="badge ${s.mockPaypal ? '' : 'live'}">PayPal ${s.mockPaypal ? 'mock' : 'sandbox'}</span><span class="badge ${s.mockAi ? '' : 'live'}">${s.mockAi ? 'AI mock' : 'Claude live'}</span>`;
+  $('#seed').hidden = s.mockPaypal;
+  setAp(s.autopilot);
+}
+function setAp(a) {
+  $('#apOn').checked = a.enabled; $('#apMax').value = a.maxAmount; $('#apConf').value = a.minConfidence;
+  $('#apMaxV').textContent = '$' + a.maxAmount; $('#apConfV').textContent = Math.round(a.minConfidence * 100) + '%';
+}
+const saveAp = async () => setAp(await api('/api/autopilot', { enabled: $('#apOn').checked, maxAmount: $('#apMax').value, minConfidence: $('#apConf').value }));
+$('#apOn').onchange = saveAp; $('#apMax').oninput = $('#apConf').oninput = saveAp;
+
 $('#run').onclick = async () => {
-  $('#run').disabled = true; $('#props').textContent = 'Agent is reviewing every dispute, invoice and hold...';
-  try { renderProps((await api('/api/agent/scan', {})).proposals); } catch (e) { $('#props').textContent = e.message; }
-  $('#run').disabled = false;
+  $('#run').disabled = true; $('#run').textContent = 'Reviewing...';
+  $('#props').innerHTML = '<div class="empty">Agent is reading disputes, invoices and held payments...</div>';
+  try {
+    const r = await api('/api/agent/scan', {});
+    if (r.auto.length) toast(`Autopilot handled ${r.auto.length} item${r.auto.length > 1 ? 's' : ''} worth ${money(r.auto.reduce((s, a) => s + a.amount, 0))}`);
+    await refresh();
+  } catch (e) { $('#props').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+  $('#run').disabled = false; $('#run').textContent = 'Run agent';
 };
-$('#ask').onclick = async () => {
-  $('#reply').textContent = '...';
-  try { $('#reply').textContent = (await api('/api/agent/chat', { message: $('#q').value })).reply; } catch (e) { $('#reply').textContent = e.message; }
+
+$('#seed').onclick = async () => {
+  $('#seed').disabled = true;
+  try { const r = await api('/api/demo/seed', {}); toast(`Created ${r.created.length} real overdue invoices in PayPal sandbox`); await refresh(); }
+  catch (e) { toast(e.message); }
+  $('#seed').disabled = false;
 };
-refresh();
+
+function addMsg(cls, text, steps) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + cls; el.textContent = text;
+  if (steps?.length) { const s = document.createElement('div'); s.className = 'steps'; s.textContent = 'Tools used: ' + steps.map((x) => x.tool + (x.input?.id ? `(${x.input.id})` : '')).join(', '); el.appendChild(s); }
+  $('#chatlog').appendChild(el); $('#chatlog').scrollTop = 1e9;
+  return el;
+}
+async function ask(q) {
+  if (!q.trim()) return;
+  addMsg('me', q); $('#q').value = '';
+  const pending = addMsg('bot', 'Thinking...');
+  try { const r = await api('/api/agent/chat', { message: q }); pending.remove(); addMsg('bot', r.reply, r.steps); await refresh(); }
+  catch (e) { pending.textContent = e.message; }
+}
+$('#ask').onclick = () => ask($('#q').value);
+$('#q').onkeydown = (e) => { if (e.key === 'Enter') ask($('#q').value); };
+document.querySelectorAll('[data-q]').forEach((b) => (b.onclick = () => ask(b.dataset.q)));
+
+loadStatus().then(refresh);
 </script>
 </body>
 </html>

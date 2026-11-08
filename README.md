@@ -1,49 +1,74 @@
 # SellerShield
 
-An AI agent that protects a small seller's money on PayPal.
+**An AI agent that defends a small seller's money on PayPal.**
 
-Small sellers lose money three ways: buyer disputes they don't have time to fight, funds held for weeks, and invoices clients never pay. SellerShield scans all three, decides what to do, drafts the response, and executes it on PayPal once the seller clicks **Approve**.
+Small sellers lose money three ways: buyer disputes they don't have time to fight, funds held for weeks, and invoices clients never pay. SellerShield watches all three, decides what to do, writes the response, and executes it through PayPal's APIs, either after one click from the seller or on its own under rules the seller sets.
 
-## What it does
+## Features
 
-| Problem | Agent action | PayPal API |
+| Problem | What the agent does | PayPal API |
 |---|---|---|
-| Buyer opens a dispute | Reads dispute + seller's order record, decides FIGHT or ACCEPT, writes evidence citing tracking and delivery date | Disputes API: `GET /v1/customer/disputes`, `provide-evidence`, `accept-claim` |
-| Funds on hold | Finds shipped orders whose tracking never reached PayPal, adds it (can trigger early release) | Tracking API: `POST /v1/shipping/trackers-batch` |
-| Unpaid invoice | Writes a reminder whose tone matches days overdue, sends it | Invoicing API: `GET /v2/invoicing/invoices`, `remind` |
+| Buyer opens a dispute | Reads the dispute and the seller's order record, decides **FIGHT** or **ACCEPT** with a win-confidence score, writes the evidence (tracking, delivery date) | Disputes API: list, get, `provide-evidence`, `accept-claim` |
+| Funds on hold | Finds shipped orders whose tracking never reached PayPal and adds it, which can trigger early release | Tracking API: `POST /v1/shipping/trackers-batch` |
+| Overdue invoice | Writes a reminder whose tone fits how late it is (friendly, firm, final) and sends it | Invoicing API: list, `remind`; create + send for demo data |
 
-- Human in the loop: nothing reaches PayPal until the seller approves. Drafts are editable.
-- AG Grid dashboard: money at risk, money recovered, full agent action log.
-- Chat: ask the agent questions about your PayPal state.
+- **Autopilot:** the seller sets a max amount and minimum confidence. The agent acts alone inside those limits and queues everything else for review.
+- **Chat agent:** a Claude tool-use agent (`get_money_at_risk`, `scan`, `execute_proposal`) answers questions about the account and takes action when asked.
+- **Human in the loop:** every draft is editable. Nothing reaches PayPal without approval or an autopilot rule.
+- **AG Grid dashboards:** money at risk, plus a full audit log of every action, who triggered it, and exactly what was sent.
+- **KPIs:** money at risk, money protected, hours saved, actions taken.
 
 ## AI tools used
 
-- **Claude (Anthropic API)**: dispute triage (fight vs accept with win confidence), evidence writing, reminder writing, chat. See `lib/ai.js`.
-- Mock mode uses rule-based logic so the app runs without keys.
+- **Claude (Anthropic API)** in `lib/ai.js`:
+  - Dispute triage: FIGHT vs ACCEPT, confidence, reasoning, evidence text.
+  - Reminder writing with tone matched to days overdue.
+  - Tool-use agent loop for the chat, which calls the app's own PayPal functions.
+- Without an Anthropic key, a rule-based fallback runs so the app still works.
 
-## Run it
+## Quick start
 
 Requires Node 18+.
 
 ```bash
-git clone <this repo> && cd sellershield
+git clone https://github.com/mahak867/sellershield && cd sellershield
 npm install
-cp .env.example .env   # optional: add keys, or leave blank for mock mode
 npm start
 ```
 
-Open http://localhost:3000 and click **Run agent**.
+Open http://localhost:3000 and click **Run agent**. With no keys, everything runs on built-in demo data.
 
-### Use the real PayPal sandbox
+### Real PayPal sandbox + live Claude
 
-1. Create an app at https://developer.paypal.com/dashboard/applications/sandbox.
-2. Put Client ID + Secret in `.env`.
-3. Add `ANTHROPIC_API_KEY` for live Claude.
-4. Create sandbox disputes/invoices with sandbox buyer and seller accounts.
+```bash
+cp .env.example .env
+```
 
-## Deploy (Render)
+Fill in:
+- `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`: a sandbox REST app from developer.paypal.com. Enable **Invoicing** in the app's features.
+- `ANTHROPIC_API_KEY`: for live Claude.
 
-New Web Service, build `npm install`, start `npm start`, add the env vars.
+Then `npm start`, click **Load sandbox data** to create real overdue invoices in your sandbox, and click **Run agent**.
+
+Data sources in sandbox mode:
+- Invoices: live from PayPal.
+- Disputes: live from PayPal. Sellers cannot create disputes through the API, so when the sandbox has none, demo disputes fill in. They are tagged **demo** and actions on them are simulated. Set `DEMO_FILL=0` to turn this off.
+- Held orders: demo records from the seller's own order book, tagged **demo**.
+- The audit log marks each action as `live` or `simulated`.
+
+## Deploy on Render
+
+The repo includes `render.yaml`. In Render: **New, Blueprint**, pick this repo, then fill in the three secret env vars.
+
+## Project layout
+
+```
+server.js        API: scan, approve, autopilot, chat agent, demo seeding
+lib/paypal.js    PayPal REST client (OAuth, Disputes, Invoicing, Tracking)
+lib/ai.js        Claude prompts, tool-use agent loop, rule-based fallback
+lib/store.js     In-memory order book, proposals, autopilot policy, audit log
+public/          Dashboard (AG Grid)
+```
 
 ## License
 
