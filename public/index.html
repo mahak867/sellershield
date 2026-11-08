@@ -45,7 +45,8 @@
   .card .sub { margin:0 0 12px; color:var(--mute); font-size:13px; }
   button { font:inherit; font-weight:600; border:0; border-radius:9px; padding:9px 14px; background:var(--accent); color:#fff; cursor:pointer; }
   @media (prefers-color-scheme: dark) { button { color:#0f1218; } }
-  button.ghost { background:var(--accent-soft); color:var(--accent); }
+  button.ghost, .btnlink { background:var(--accent-soft); color:var(--accent); }
+  .btnlink { font-weight:600; border-radius:9px; padding:9px 14px; text-decoration:none; }
   button:disabled { opacity:.5; cursor:progress; }
   .prop { border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; display:grid; gap:8px; }
   .prop .top { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; align-items:center; }
@@ -74,7 +75,16 @@
   .chat { display:flex; gap:8px; } .chat input { flex:1; min-width:0; font:inherit; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); }
   .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
   .chips button { font-size:12px; padding:5px 10px; }
-  .grid { height:280px; }
+  .grid { height:280px; } .grid.tall { height:360px; }
+  .gridhead { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
+  .gridhead .tools { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .gridhead input { font:inherit; padding:8px 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); min-width:0; width:180px; }
+  .urg { display:flex; align-items:center; gap:8px; height:100%; }
+  .urg .bar { flex:1; height:8px; border-radius:6px; background:var(--line); overflow:hidden; }
+  .urg .bar i { display:block; height:100%; }
+  .cellbtn { padding:4px 10px; font-size:12px; line-height:1.4; }
+  .ag-row-pinned { font-weight:700; }
+  .live-cell { color:var(--good); font-weight:600; }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--card); padding:10px 16px; border-radius:10px; font-size:14px; opacity:0; transition:.3s; pointer-events:none; }
   .toast.show { opacity:1; }
 </style>
@@ -86,6 +96,7 @@
     SellerShield <span class="badges" id="mode"></span>
   </div>
   <div class="actions">
+    <a class="ghost btnlink" href="/shop.html" target="_blank" rel="noopener">Open store</a>
     <button class="ghost" id="reset" title="Restore demo data and clear the log">Reset</button>
     <button class="ghost" id="seed" title="Create real overdue invoices in the PayPal sandbox">Load sandbox data</button>
     <button id="run">Run agent</button>
@@ -138,14 +149,22 @@
   </div>
 
   <section class="card">
-    <h2>Money at risk</h2>
-    <p class="sub">Live from PayPal Disputes and Invoicing APIs, plus your held orders.</p>
-    <div id="riskGrid" class="grid ag-theme-quartz"></div>
+    <div class="gridhead">
+      <div><h2>Money at risk</h2><p class="sub">Live from PayPal Disputes, Invoicing and Orders APIs. Sorted by urgency.</p></div>
+      <div class="tools">
+        <input id="qf" placeholder="Search..." aria-label="Search money at risk">
+        <button class="ghost" id="bulk" disabled>Approve selected</button>
+        <button class="ghost" id="csv1">Export CSV</button>
+      </div>
+    </div>
+    <div id="riskGrid" class="grid tall ag-theme-quartz"></div>
   </section>
 
   <section class="card">
-    <h2>Agent audit log</h2>
-    <p class="sub">Every action the agent took, who triggered it, and exactly what it sent to PayPal.</p>
+    <div class="gridhead">
+      <div><h2>Agent audit log</h2><p class="sub">Every action the agent took, who triggered it, and exactly what it sent to PayPal.</p></div>
+      <div class="tools"><button class="ghost" id="csv2">Export CSV</button></div>
+    </div>
     <div id="logGrid" class="grid ag-theme-quartz"></div>
   </section>
 </main>
@@ -159,36 +178,89 @@ const api = (p, body) => fetch(p, body ? { method: 'POST', headers: { 'Content-T
 const toast = (t) => { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2600); };
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-const typeCell = (p) => p.data?.demo ? `${p.value} <span class="tag demo">demo</span>` : p.value;
+const typeCell = (p) => {
+  if (p.node.rowPinned) return p.value;
+  const tag = p.data.demo ? '<span class="tag demo">demo</span>' : '<span class="tag FIGHT">live</span>';
+  return `${esc(p.value)} ${tag}`;
+};
+const urgCell = (p) => {
+  if (p.node.rowPinned || p.value == null) return '';
+  const v = p.value, c = v >= 70 ? 'var(--bad)' : v >= 40 ? 'var(--warn)' : 'var(--good)';
+  return `<div class="urg"><span class="bar"><i style="width:${v}%;background:${c}"></i></span><b>${v}</b></div>`;
+};
+const agentCell = (p) => {
+  const pr = p.data?.proposal;
+  if (!pr) return p.node.rowPinned ? '' : '<span class="mute">run agent</span>';
+  return `<span class="tag ${esc(pr.decision)}">${esc(pr.decision)}</span> <span class="mute">${Math.round(pr.confidence * 100)}%</span>`;
+};
+const actionCell = (p) => {
+  const pr = p.data?.proposal;
+  if (!pr) return '';
+  const b = document.createElement('button');
+  b.className = 'cellbtn'; b.textContent = 'Approve';
+  b.onclick = async () => { b.disabled = true; try { await api('/api/agent/approve', { id: pr.id }); toast(`Done: ${pr.target}`); await refresh(); } catch (e) { toast(e.message); b.disabled = false; } };
+  return b;
+};
 const riskGrid = agGrid.createGrid($('#riskGrid'), {
   columnDefs: [
-    { field: 'type', width: 165, cellRenderer: typeCell }, { field: 'id', headerName: 'ID', flex: 1, minWidth: 160 },
-    { field: 'who', headerName: 'Buyer / client', flex: 1, minWidth: 160 }, { field: 'detail', flex: 2, minWidth: 200 },
-    { field: 'amount', valueFormatter: (p) => money(p.value), width: 120, sort: 'desc', type: 'rightAligned' },
+    { field: 'type', width: 150, cellRenderer: typeCell, checkboxSelection: (p) => !!p.data?.proposal, headerCheckboxSelection: true },
+    { field: 'urgency', width: 140, cellRenderer: urgCell, sort: 'desc', filter: 'agNumberColumnFilter' },
+    { field: 'amount', valueFormatter: (p) => money(p.value), width: 120, type: 'rightAligned', filter: 'agNumberColumnFilter' },
+    { headerName: 'Agent says', width: 140, cellRenderer: agentCell, valueGetter: (p) => p.data?.proposal?.decision ?? '' },
+    { field: 'detail', flex: 2, minWidth: 220, tooltipField: 'detail' },
+    { field: 'who', headerName: 'Buyer / client', flex: 1, minWidth: 170 },
+    { field: 'id', headerName: 'PayPal ID', flex: 1, minWidth: 170 },
+    { headerName: '', width: 110, cellRenderer: actionCell, sortable: false, filter: false, pinned: 'right' },
   ],
-  defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [], overlayNoRowsTemplate: 'Nothing at risk. Nice.',
+  defaultColDef: { sortable: true, filter: true, resizable: true },
+  rowSelection: 'multiple', suppressRowClickSelection: true,
+  isRowSelectable: (n) => !!n.data?.proposal,
+  onSelectionChanged: () => { const n = riskGrid.getSelectedRows().length; $('#bulk').disabled = !n; $('#bulk').textContent = n ? `Approve selected (${n})` : 'Approve selected'; },
+  getRowId: (p) => p.data.key, rowData: [], overlayNoRowsTemplate: 'Nothing at risk. Nice.', tooltipShowDelay: 300,
 });
 const logGrid = agGrid.createGrid($('#logGrid'), {
   columnDefs: [
-    { field: 'at', headerName: 'Time', valueFormatter: (p) => new Date(p.value).toLocaleTimeString(), width: 105 },
+    { field: 'at', headerName: 'Time', valueFormatter: (p) => p.value ? new Date(p.value).toLocaleTimeString() : '', width: 105 },
     { field: 'by', headerName: 'Triggered by', width: 130 },
     { field: 'kind', width: 95 }, { field: 'decision', width: 135 }, { field: 'target', flex: 1, minWidth: 150 },
     { field: 'amount', valueFormatter: (p) => money(p.value), width: 110, type: 'rightAligned' },
-    { headerName: 'PayPal call', width: 120, cellDataType: 'text', valueGetter: (p) => p.data.simulated ? 'simulated' : 'live' },
+    { headerName: 'PayPal call', width: 120, cellDataType: 'text', valueGetter: (p) => p.node.rowPinned ? '' : p.data.simulated ? 'simulated' : 'live',
+      cellClassRules: { 'live-cell': (p) => p.value === 'live' } },
     { field: 'text', headerName: 'Sent to PayPal', flex: 2, minWidth: 220, tooltipField: 'text' },
   ],
-  defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [], overlayNoRowsTemplate: 'No actions yet.',
+  defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [], overlayNoRowsTemplate: 'No actions yet.', tooltipShowDelay: 300,
 });
+$('#qf').oninput = () => riskGrid.setGridOption('quickFilterText', $('#qf').value);
+$('#csv1').onclick = () => riskGrid.exportDataAsCsv({ fileName: 'sellershield-money-at-risk.csv', columnKeys: ['type', 'urgency', 'amount', 'detail', 'who', 'id'] });
+$('#csv2').onclick = () => logGrid.exportDataAsCsv({ fileName: 'sellershield-audit-log.csv' });
+$('#bulk').onclick = async () => {
+  const rows = riskGrid.getSelectedRows(); $('#bulk').disabled = true;
+  let done = 0;
+  for (const r of rows) { try { await api('/api/agent/approve', { id: r.proposal.id }); done++; } catch (e) { toast(e.message); } }
+  toast(`Approved ${done} action${done === 1 ? '' : 's'}`); await refresh();
+};
+// Urgency 0-100: bigger amounts and older/closer-to-deadline items rank higher.
+const urgency = (base, amount) => Math.max(1, Math.min(100, Math.round(base + Math.sqrt(amount) * 1.2)));
+const daysUntil = (d) => d ? Math.ceil((new Date(d) - Date.now()) / 86400000) : 30;
 
 async function refresh() {
   const r = await api('/api/risk');
+  const prop = Object.fromEntries(r.proposals.map((p) => [p.id, p]));
   const rows = [
-    ...r.disputes.map((d) => ({ type: 'Dispute', demo: d.demo, id: d.dispute_id, who: d.transaction_id, detail: d.reason.replaceAll('_', ' ').toLowerCase(), amount: d.amount })),
-    ...r.invoices.map((i) => ({ type: 'Invoice', demo: i.demo, id: i.id, who: i.recipient, detail: `${i.days_overdue} days overdue · ${i.memo}`, amount: i.amount })),
-    ...r.holds.map((o) => ({ type: 'Held funds', demo: o.demo, id: o.transactionId, who: o.buyer, detail: `${o.item} · held ${o.daysHeld} days`, amount: o.amount })),
+    ...r.disputes.map((d) => ({ key: 'dispute:' + d.dispute_id, type: 'Dispute', demo: d.demo, id: d.dispute_id, who: d.transaction_id,
+      detail: `${d.reason.replaceAll('_', ' ').toLowerCase()} · respond in ${daysUntil(d.seller_response_due_date)} days`, amount: d.amount,
+      urgency: urgency(60 - daysUntil(d.seller_response_due_date) * 3, d.amount), proposal: prop['dispute:' + d.dispute_id] })),
+    ...r.invoices.map((i) => ({ key: 'invoice:' + i.id, type: 'Invoice', demo: i.demo, id: i.id, who: i.recipient,
+      detail: `${i.days_overdue} days overdue · ${i.memo}`, amount: i.amount,
+      urgency: urgency(i.days_overdue * 1.5, i.amount), proposal: prop['invoice:' + i.id] })),
+    ...r.holds.map((o) => ({ key: 'hold:' + o.transactionId, type: o.live ? 'Needs tracking' : 'Held funds', demo: o.demo, id: o.transactionId, who: o.buyer,
+      detail: o.live ? `${o.item} · paid via PayPal Checkout, no tracking yet` : `${o.item} · held ${o.daysHeld} days`, amount: o.amount,
+      urgency: urgency(25 + o.daysHeld * 2, o.amount), proposal: prop['hold:' + o.transactionId] })),
   ];
   riskGrid.setGridOption('rowData', rows);
+  riskGrid.setGridOption('pinnedBottomRowData', rows.length ? [{ key: 'total', type: 'Total', amount: rows.reduce((s, x) => s + x.amount, 0), detail: `${rows.length} items` }] : []);
   logGrid.setGridOption('rowData', r.actions);
+  logGrid.setGridOption('pinnedBottomRowData', r.actions.length ? [{ by: 'Total', amount: r.actions.reduce((s, a) => s + a.amount, 0), text: `${r.actions.length} actions` }] : []);
   const protectedAmt = r.actions.filter((a) => a.decision !== 'ACCEPT').reduce((s, a) => s + a.amount, 0);
   $('#kRisk').textContent = money(rows.reduce((s, x) => s + x.amount, 0));
   $('#kSaved').textContent = money(protectedAmt);

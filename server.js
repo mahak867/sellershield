@@ -39,8 +39,10 @@ async function scan() {
   for (const o of holds) {
     proposals.push({
       id: `hold:${o.transactionId}`, kind: 'hold', target: o.transactionId, amount: o.amount, demo: !!o.demo,
-      decision: 'ADD_TRACKING', confidence: o.delivered ? 0.92 : 0.8,
-      reasoning: `Funds held ${o.daysHeld} days. Shipped with ${o.carrier} ${o.trackingNumber} but tracking never reached PayPal. Adding it can trigger early release.`,
+      decision: 'ADD_TRACKING', confidence: o.live ? 0.95 : o.delivered ? 0.92 : 0.8,
+      reasoning: o.live
+        ? `Paid through PayPal Checkout (capture ${o.transactionId}, ${o.captureStatus}). Shipped with ${o.carrier} but PayPal has no tracking. Without it you lose "item not received" disputes and new-seller funds can stay held.`
+        : `Funds held ${o.daysHeld} days. Shipped with ${o.carrier} ${o.trackingNumber} but tracking never reached PayPal. Adding it can trigger early release.`,
       draft: `${o.carrier} ${o.trackingNumber}`,
     });
   }
@@ -128,6 +130,39 @@ app.post('/api/demo/seed', async (_req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// ---------- Storefront: real PayPal Checkout ----------
+const PRODUCTS = [
+  { sku: 'wallet', name: 'Leather wallet', price: 85, carrier: 'FEDEX' },
+  { sku: 'candle', name: 'Scented candle bundle', price: 42.5, carrier: 'USPS' },
+  { sku: 'mugs', name: 'Handmade ceramic mug set', price: 64, carrier: 'USPS' },
+];
+app.get('/api/shop/config', (_req, res) => {
+  res.json({ clientId: MOCK_PAYPAL ? null : process.env.PAYPAL_CLIENT_ID, products: PRODUCTS });
+});
+app.post('/api/shop/order', async (req, res, next) => {
+  try {
+    const p = PRODUCTS.find((x) => x.sku === req.body.sku);
+    if (!p) return res.status(400).json({ error: 'unknown product' });
+    res.json({ id: await paypal.createOrder(p) });
+  } catch (e) { next(e); }
+});
+// After capture the seller "ships" it, but tracking hasn't reached PayPal yet: exactly
+// the gap that triggers holds and lost "item not received" disputes. The agent closes it.
+app.post('/api/shop/capture', async (req, res, next) => {
+  try {
+    const sku = req.body.sku;
+    const p = PRODUCTS.find((x) => x.sku === sku) || { name: 'Item', carrier: 'USPS' };
+    const c = await paypal.captureOrder(String(req.body.orderId));
+    const tracking = p.carrier === 'FEDEX' ? String(Date.now()).slice(-12) : '9400' + String(Date.now()).padStart(18, '1').slice(-18);
+    store.orders.unshift({
+      demo: false, live: true, orderId: c.orderId, transactionId: c.captureId, item: p.name,
+      buyer: c.buyer || 'sandbox buyer', amount: c.amount, carrier: p.carrier, trackingNumber: tracking,
+      delivered: null, onHold: true, daysHeld: 0, captureStatus: c.captureStatus,
+    });
+    res.json(c);
+  } catch (e) { next(e); }
+});
+
 // Restore demo data and clear the log (for clean demo retakes). Real sandbox invoices stay.
 app.post('/api/demo/reset', (_req, res) => {
   resetStore();
@@ -142,3 +177,7 @@ app.use((err, _req, res, _next) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`SellerShield on :${port} (paypal ${MOCK_PAYPAL ? 'MOCK' : 'SANDBOX'}, ai ${MOCK_AI ? 'MOCK' : 'LIVE'})`));
+
+// Keep the demo server alive if a stray network socket errors (e.g. a dropped proxy tunnel).
+process.on('uncaughtException', (e) => console.error('uncaught:', e.message));
+process.on('unhandledRejection', (e) => console.error('unhandled:', e?.message ?? e));
