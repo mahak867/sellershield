@@ -4,7 +4,7 @@ import 'dotenv/config';
 import express from 'express';
 import { paypal, MOCK_PAYPAL } from './lib/paypal.js';
 import { ai, MOCK_AI } from './lib/ai.js';
-import { store, logAction } from './lib/store.js';
+import { store, logAction, resetStore } from './lib/store.js';
 
 const app = express();
 app.use(express.json());
@@ -126,6 +126,13 @@ app.post('/api/demo/seed', async (_req, res, next) => {
     for (const s of seeds) created.push(await paypal.seedInvoice(s));
     res.json({ created });
   } catch (e) { next(e); }
+});
+
+// Restore demo data and clear the log (for clean demo retakes). Real sandbox invoices stay.
+app.post('/api/demo/reset', (_req, res) => {
+  resetStore();
+  paypal.resetDemo();
+  res.json({ ok: true });
 });
 
 app.use((err, _req, res, _next) => {

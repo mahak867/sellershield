@@ -23,12 +23,13 @@
   * { box-sizing:border-box; }
   body { margin:0; font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); }
   header { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 20px; background:var(--card); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  @media (max-width:600px) { header { position:static; } .hero h1 { font-size:22px; } }
   .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; }
   .brand svg { width:26px; height:26px; }
   .badges { display:flex; gap:6px; flex-wrap:wrap; }
   .badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:99px; background:var(--warn-soft); color:var(--warn); }
   .badge.live { background:var(--good-soft); color:var(--good); }
-  .actions { display:flex; gap:8px; }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; }
   main { max-width:1240px; margin:0 auto; padding:20px 16px 48px; display:grid; gap:16px; }
   .hero h1 { margin:4px 0 2px; font-size:26px; letter-spacing:-.01em; }
   .hero p { margin:0; color:var(--mute); }
@@ -85,6 +86,7 @@
     SellerShield <span class="badges" id="mode"></span>
   </div>
   <div class="actions">
+    <button class="ghost" id="reset" title="Restore demo data and clear the log">Reset</button>
     <button class="ghost" id="seed" title="Create real overdue invoices in the PayPal sandbox">Load sandbox data</button>
     <button id="run">Run agent</button>
   </div>
@@ -204,7 +206,7 @@ function renderProps(list, scanned) {
     const el = document.createElement('div');
     el.className = 'prop';
     const pct = Math.round((p.confidence || 0) * 100);
-    el.innerHTML = `<div class="top"><div><span class="tag ${esc(p.decision)}">${esc(p.decision)}</span> <b>${esc(p.kind)}</b> <span class="mute">${esc(p.target)}</span> ${p.demo ? '<span class="tag demo">demo</span>' : ''}</div>
+    el.innerHTML = `<div class="top"><div><span class="tag ${esc(p.decision)}">${esc(p.decision)}</span> <b>${esc(p.kind)}</b> <span class="mute">${esc(p.target)}</span> ${p.demo ? '<span class="tag demo">demo</span>' : ''} <span class="mute">· by ${p.source === 'claude' ? 'Claude' : 'rules'}</span></div>
       <div><b>${money(p.amount)}</b> <span class="mute">· ${pct}% confidence</span><span class="meter"><i style="width:${pct}%"></i></span></div></div>
       <div class="mute">${esc(p.reasoning)}</div>
       <textarea aria-label="Draft sent to PayPal">${esc(p.draft)}</textarea>
@@ -243,6 +245,8 @@ $('#run').onclick = async () => {
   } catch (e) { $('#props').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
   $('#run').disabled = false; $('#run').textContent = 'Run agent';
 };
+
+$('#reset').onclick = async () => { await api('/api/demo/reset', {}); $('#chatlog').innerHTML = ''; toast('Demo reset'); await refresh(); };
 
 $('#seed').onclick = async () => {
   $('#seed').disabled = true;
