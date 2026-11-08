@@ -8,6 +8,11 @@
 <link rel="stylesheet" href="/vendor/ag-grid/styles/ag-grid.css">
 <link rel="stylesheet" href="/vendor/ag-grid/styles/ag-theme-quartz.css">
 <script src="/vendor/ag-grid/dist/ag-grid-community.min.js"></script>
+<link rel="stylesheet" href="/vendor/bryntum/scheduler.css">
+<link rel="stylesheet" href="/vendor/bryntum/stockholm-light.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="/vendor/bryntum/stockholm-dark.css" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="/vendor/bryntum/fontawesome/css/fontawesome.css">
+<link rel="stylesheet" href="/vendor/bryntum/fontawesome/css/solid.css">
 <style>
   :root {
     --bg:#f5f6f8; --card:#fff; --ink:#111827; --mute:#5b6472; --line:#e4e7ec;
@@ -75,6 +80,7 @@
   .chat { display:flex; gap:8px; } .chat input { flex:1; min-width:0; font:inherit; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); }
   .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
   .chips button { font-size:12px; padding:5px 10px; }
+  .timeline { height:380px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
   .grid { height:280px; } .grid.tall { height:360px; }
   .gridhead { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
   .gridhead .tools { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
@@ -184,6 +190,13 @@
 
   <section class="card">
     <div class="gridhead">
+      <div><h2>Money timeline</h2><p class="sub">Every deadline, overdue period and hold on one timeline (Bryntum Scheduler). Drag a <b>reminder</b> to reschedule it: the agent and autopilot wait until that day.</p></div>
+    </div>
+    <div id="timeline" class="timeline"></div>
+  </section>
+
+  <section class="card">
+    <div class="gridhead">
       <div><h2>Agent audit log</h2><p class="sub">Every action the agent took, who triggered it, and exactly what it sent to PayPal.</p></div>
       <div class="tools"><button class="ghost" id="csv2">Export CSV</button></div>
     </div>
@@ -286,6 +299,7 @@ async function refresh() {
       detail: o.live ? `${o.item} · paid via PayPal Checkout, no tracking yet` : `${o.item} · held ${o.daysHeld} days`, amount: o.amount,
       urgency: urgency(25 + o.daysHeld * 2, o.amount), proposal: prop['hold:' + o.transactionId] })),
   ];
+  window.__ssData = r; window.sellershieldTimeline?.(r);
   riskGrid.setGridOption('rowData', rows);
   riskGrid.setGridOption('pinnedBottomRowData', rows.length ? [{ key: 'total', type: 'Total', amount: rows.reduce((s, x) => s + x.amount, 0), detail: `${rows.length} items` }] : []);
   logGrid.setGridOption('rowData', r.actions);
@@ -422,6 +436,93 @@ $('#simDispute').onclick = async () => {
 };
 
 loadStatus().then(refresh);
+</script>
+<script type="module">
+// Money timeline: Bryntum Scheduler. One row per item at risk; bars for response windows,
+// overdue periods and holds; draggable reminder events the agent respects.
+import { Scheduler, StringHelper } from '/vendor/bryntum/scheduler.module.js';
+
+const DAY = 864e5;
+const today = new Date(); today.setHours(0, 0, 0, 0);
+const iso = (d) => new Date(d).toISOString().slice(0, 10);
+const at = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const plus = (d, n) => new Date(+at(d) + n * DAY);
+const COVER = { LIKELY_COVERED: 'green', NEEDS_EVIDENCE: 'orange', NOT_COVERED: 'red' };
+
+const sched = new Scheduler({
+  appendTo: 'timeline',
+  startDate: plus(today, -21),
+  endDate: plus(today, 21),
+  viewPreset: 'weekAndDay',
+  tickSize: 64,
+  visibleDate: { date: today, block: 'center' },
+  rowHeight: 42,
+  barMargin: 7,
+  eventStyle: 'rounded',
+  features: {
+    timeRanges: { showCurrentTimeLine: true },
+    eventEdit: false, eventResize: false, eventDragCreate: false, eventMenu: false, scheduleMenu: false, cellEdit: false,
+    eventDrag: { constrainDragToResource: true },
+    eventTooltip: { template: ({ eventRecord }) => StringHelper.encodeHtml(eventRecord.get('tip') || eventRecord.name) },
+  },
+  columns: [
+    { text: 'Money at risk', field: 'name', width: 240 },
+    { text: 'Amount', field: 'amount', width: 110, align: 'right', renderer: ({ value }) => `$${Number(value || 0).toFixed(2)}` },
+  ],
+  eventRenderer: ({ eventRecord }) => StringHelper.encodeHtml(eventRecord.name),
+  listeners: {
+    async eventDrop({ eventRecords }) {
+      for (const e of eventRecords) {
+        const invoiceId = e.get('invoiceId');
+        if (!invoiceId) continue;
+        const r = await fetch('/api/reminders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invoiceId, at: iso(e.startDate) }) });
+        if (!r.ok) alert((await r.json()).error);
+      }
+    },
+  },
+});
+
+window.sellershieldTimeline = (r) => {
+  const prop = Object.fromEntries((r.proposals || []).map((p) => [p.id, p]));
+  const resources = [], events = [];
+  for (const d of r.disputes) {
+    const id = 'dispute:' + d.dispute_id, p = prop[id];
+    resources.push({ id, name: `Dispute ${d.dispute_id}${d.demo ? ' (demo)' : ''}`, amount: d.amount });
+    const due = d.seller_response_due_date ? at(d.seller_response_due_date) : plus(today, 10);
+    events.push({ id: id + ':win', resourceId: id, startDate: today, endDate: due > today ? due : plus(today, 1), draggable: false,
+      name: `Respond by ${iso(due)}`, eventColor: COVER[p?.protection?.status] || 'blue',
+      tip: p?.protection ? `${p.protection.status.replaceAll('_', ' ').toLowerCase()}: ${p.protection.summary}` : 'Run the agent to check Seller Protection' });
+  }
+  for (const i of r.invoices) {
+    const id = 'invoice:' + i.id;
+    resources.push({ id, name: `Invoice ${i.id.slice(0, 14)}${i.demo ? ' (demo)' : ''}`, amount: i.amount });
+    const due = at(i.due_date || today);
+    events.push({ id: id + ':late', resourceId: id, startDate: due, endDate: due < today ? today : plus(due, 1), draggable: false, eventColor: 'red',
+      name: `Overdue ${i.days_overdue}d`, tip: `${i.recipient}: ${i.memo}` });
+    const rem = at(r.reminders?.[i.id] || today);
+    events.push({ id: id + ':rem', resourceId: id, startDate: rem, endDate: plus(rem, 1), draggable: true, eventColor: 'violet', invoiceId: i.id,
+      name: 'Remind', tip: 'Drag to reschedule. The agent waits until this day.' });
+  }
+  for (const o of r.holds) {
+    const id = 'hold:' + o.transactionId;
+    resources.push({ id, name: `${o.live ? 'Needs tracking' : 'Held funds'}: ${o.item}${o.demo ? ' (demo)' : ''}`, amount: o.amount });
+    const since = plus(today, -(o.daysHeld || 0));
+    events.push({ id: id + ':held', resourceId: id, startDate: since, endDate: plus(today, 1), draggable: false, eventColor: 'orange',
+      name: o.live ? 'No tracking on PayPal' : `Held ${o.daysHeld}d`, tip: 'Adding tracking can release funds early and protects against "item not received".' });
+    if (!o.live) events.push({ id: id + ':est', resourceId: id, startDate: plus(today, 1), endDate: plus(since, 21), draggable: false, eventColor: 'gray', eventStyle: 'dashed',
+      name: 'Est. release (typical 21-day hold)', tip: 'Estimate only: PayPal sets the actual release date.' });
+  }
+  const known = new Set(resources.map((x) => x.id));
+  for (const [n, a] of (r.actions || []).entries()) {
+    const id = `${a.kind}:${a.target}`;
+    if (!known.has(id)) { resources.push({ id, name: `${a.kind[0].toUpperCase() + a.kind.slice(1)} ${String(a.target).slice(0, 14)} (handled)`, amount: a.amount }); known.add(id); }
+    events.push({ id: `act:${n}`, resourceId: id, startDate: at(a.at), endDate: plus(a.at, 1), draggable: false, eventColor: 'green',
+      name: `✓ ${a.decision.replaceAll('_', ' ').toLowerCase()}`, tip: `${a.by} · ${a.simulated ? 'simulated' : 'live PayPal call'}` });
+  }
+  sched.resourceStore.data = resources;
+  sched.eventStore.data = events;
+};
+if (window.__ssData) window.sellershieldTimeline(window.__ssData);
 </script>
 </body>
 </html>

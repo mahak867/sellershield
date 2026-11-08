@@ -14,6 +14,7 @@ app.use(express.json());
 app.use(workspaceMiddleware);
 app.use(express.static('public'));
 app.use('/vendor/ag-grid', express.static('node_modules/ag-grid-community'));
+app.use('/vendor/bryntum', express.static('node_modules/@bryntum/scheduler-trial'));
 
 // Minutes a seller would spend doing each action by hand (for the "time saved" KPI).
 const MINUTES_SAVED = { dispute: 45, invoice: 10, hold: 15 };
@@ -42,7 +43,9 @@ async function scan() {
   }
   const invoicePlans = await Promise.all(invoices.map(async (inv) => ({ inv, plan: await ai.planReminder(inv) })));
   for (const { inv, plan } of invoicePlans) {
-    proposals.push({ id: `invoice:${inv.id}`, kind: 'invoice', target: inv.id, amount: inv.amount, demo: !!inv.demo, ...plan });
+    const scheduledFor = store.reminders[inv.id] || today();
+    proposals.push({ id: `invoice:${inv.id}`, kind: 'invoice', target: inv.id, amount: inv.amount, demo: !!inv.demo, scheduledFor, ...plan,
+      reasoning: scheduledFor > today() ? `${plan.reasoning} Scheduled by you for ${scheduledFor}; autopilot will wait.` : plan.reasoning });
   }
   for (const o of holds) {
     proposals.push({
@@ -94,15 +97,18 @@ async function execute(id, draft, by = 'seller', approvedFingerprint) {
   });
 }
 
-// Autopilot never sends a draft that fails the citation check.
-const qualifies = (p, ap) => ap.enabled && p.amount <= ap.maxAmount && p.confidence >= ap.minConfidence && !(p.issues || []).length;
+const today = () => new Date().toISOString().slice(0, 10);
+
+// Autopilot never sends a draft that fails the citation check, and respects reminder dates the seller set.
+const qualifies = (p, ap) => ap.enabled && p.amount <= ap.maxAmount && p.confidence >= ap.minConfidence
+  && !(p.issues || []).length && !(p.kind === 'invoice' && p.scheduledFor > today());
 
 app.get('/api/status', (_req, res) => {
   res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, autopilot: store.autopilot });
 });
 
 app.get('/api/risk', async (_req, res, next) => {
-  try { res.json({ ...(await getRisk()), actions: store.actions, proposals: store.proposals }); } catch (e) { next(e); }
+  try { res.json({ ...(await getRisk()), actions: store.actions, proposals: store.proposals, reminders: store.reminders }); } catch (e) { next(e); }
 });
 
 // Scan, then let autopilot act on what qualifies. The rest waits for the seller.
@@ -190,6 +196,17 @@ app.post('/api/agent/check', (req, res) => {
     fingerprint: fingerprint({ kind: p.kind, decision: p.decision, target: p.target, text }),
     issues: p.kind === 'dispute' && p.decision !== 'ACCEPT' ? checkDraft(text, p.records || []) : [],
   });
+});
+
+// Seller drags a reminder on the Bryntum timeline: the agent waits until that date.
+app.post('/api/reminders', (req, res) => {
+  const { invoiceId, at } = req.body || {};
+  if (!/^[\w-]{3,64}$/.test(String(invoiceId)) || !/^\d{4}-\d{2}-\d{2}$/.test(String(at))) return res.status(400).json({ error: 'invoiceId and at (YYYY-MM-DD) required' });
+  store.reminders[invoiceId] = at;
+  const p = store.proposals.find((x) => x.id === `invoice:${invoiceId}`);
+  if (p) p.scheduledFor = at;
+  activity('agent', `Reminder for ${invoiceId} scheduled for ${at}${at > today() ? '; autopilot will wait until then' : ''}.`);
+  res.json({ ok: true, invoiceId, at });
 });
 
 app.post('/api/autopilot', (req, res) => {

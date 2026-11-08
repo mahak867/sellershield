@@ -86,3 +86,16 @@ test('each visitor gets an isolated workspace', async () => {
   const r = await fetch(URL + '/api/risk', { headers: { Cookie: other.headers.get('set-cookie').split(';')[0] } });
   assert.equal((await r.json()).actions.length, 0);
 });
+
+test('autopilot waits for a reminder the seller rescheduled', async () => {
+  await post('/api/demo/reset');
+  const { proposals } = await (await post('/api/agent/scan')).json();
+  const inv = proposals.find((x) => x.kind === 'invoice');
+  const later = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+  assert.equal((await post('/api/reminders', { invoiceId: inv.target, at: later })).status, 200);
+  await post('/api/autopilot', { enabled: true, maxAmount: 100000, minConfidence: 0 });
+  const r = await (await post('/api/agent/scan')).json();
+  assert.ok(!r.auto.some((a) => a.target === inv.target));
+  await post('/api/autopilot', { enabled: false });
+  assert.equal((await post('/api/reminders', { invoiceId: 'x', at: 'tomorrow' })).status, 400);
+});
