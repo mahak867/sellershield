@@ -5,6 +5,7 @@ import express from 'express';
 import { paypal, MOCK_PAYPAL } from './lib/paypal.js';
 import { ai, MOCK_AI } from './lib/ai.js';
 import { store, logAction, resetStore } from './lib/store.js';
+import { assessProtection } from './lib/protection.js';
 
 const app = express();
 app.use(express.json());
@@ -27,10 +28,11 @@ async function scan() {
   const disputePlans = await Promise.all(disputes.map(async (d) => {
     const detail = await paypal.getDispute(d.dispute_id);
     const order = store.orders.find((o) => o.transactionId === d.transaction_id);
-    return { d, plan: await ai.planDispute(detail, order) };
+    const protection = assessProtection(detail || d, order);
+    return { d, protection, plan: await ai.planDispute(detail, order, protection) };
   }));
-  for (const { d, plan } of disputePlans) {
-    proposals.push({ id: `dispute:${d.dispute_id}`, kind: 'dispute', target: d.dispute_id, amount: d.amount, demo: !!d.demo, ...plan });
+  for (const { d, plan, protection } of disputePlans) {
+    proposals.push({ id: `dispute:${d.dispute_id}`, kind: 'dispute', target: d.dispute_id, amount: d.amount, demo: !!d.demo, protection, ...plan });
   }
   const invoicePlans = await Promise.all(invoices.map(async (inv) => ({ inv, plan: await ai.planReminder(inv) })));
   for (const { inv, plan } of invoicePlans) {
@@ -83,12 +85,64 @@ app.get('/api/risk', async (_req, res, next) => {
 });
 
 // Scan, then let autopilot act on what qualifies. The rest waits for the seller.
+// ---------- Live activity (Server-Sent Events) ----------
+const clients = new Set();
+function activity(kind, text, extra = {}) {
+  const e = { at: new Date().toISOString(), kind, text, ...extra };
+  store.activity.unshift(e);
+  store.activity.length = Math.min(store.activity.length, 50);
+  for (const res of clients) res.write(`data: ${JSON.stringify(e)}\n\n`);
+  return e;
+}
+app.get('/api/events', (req, res) => {
+  res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+  res.flushHeaders();
+  res.write(`data: ${JSON.stringify({ kind: 'hello' })}\n\n`);
+  clients.add(res);
+  const ping = setInterval(() => res.write(': ping\n\n'), 25000);
+  req.on('close', () => { clearInterval(ping); clients.delete(res); });
+});
+app.get('/api/activity', (_req, res) => res.json(store.activity));
+
+// Scan, then let autopilot act on what qualifies. The rest waits for the seller.
+async function runAgent(trigger) {
+  const proposals = await scan();
+  const auto = [];
+  for (const p of proposals.filter((x) => qualifies(x, store.autopilot))) auto.push(await execute(p.id, undefined, 'autopilot'));
+  activity('agent', `Agent reviewed ${proposals.length} item${proposals.length === 1 ? '' : 's'} (${trigger})${auto.length ? `; autopilot handled ${auto.length} worth $${auto.reduce((s, a) => s + a.amount, 0).toFixed(2)}` : ''}; ${store.proposals.length} waiting for you.`);
+  return { proposals: store.proposals, auto };
+}
+
 app.post('/api/agent/scan', async (_req, res, next) => {
+  try { res.json(await runAgent('manual run')); } catch (e) { next(e); }
+});
+
+// ---------- PayPal webhooks: the agent reacts the moment money is at risk ----------
+const WEBHOOK_EVENTS = {
+  'CUSTOMER.DISPUTE.CREATED': 'New dispute opened',
+  'CUSTOMER.DISPUTE.UPDATED': 'Dispute updated',
+  'PAYMENT.CAPTURE.COMPLETED': 'Payment captured',
+  'INVOICING.INVOICE.PAID': 'Invoice paid',
+};
+app.post('/api/webhooks/paypal', async (req, res) => {
+  const ev = req.body || {};
+  if (!MOCK_PAYPAL) {
+    const ok = await paypal.verifyWebhook(req.headers, ev).catch((e) => { console.warn('webhook verify failed:', e.message); return false; });
+    if (!ok) return res.status(400).json({ error: 'signature not verified (set PAYPAL_WEBHOOK_ID)' });
+  }
+  res.sendStatus(200); // ack fast; PayPal retries slow endpoints
+  const label = WEBHOOK_EVENTS[ev.event_type];
+  if (!label) return;
+  activity('webhook', `PayPal webhook: ${label} (${ev.resource?.dispute_id || ev.resource?.id || 'n/a'})`);
+  runAgent(`webhook ${ev.event_type}`).catch((e) => activity('error', `Agent run failed: ${e.message}`));
+});
+
+// Demo: simulate a buyer opening a dispute, to show the real-time loop without a buyer account.
+app.post('/api/demo/simulate-dispute', async (_req, res, next) => {
   try {
-    const proposals = await scan();
-    const auto = [];
-    for (const p of proposals.filter((x) => qualifies(x, store.autopilot))) auto.push(await execute(p.id, undefined, 'autopilot'));
-    res.json({ proposals: store.proposals, auto });
+    const d = paypal.addDemoDispute();
+    activity('webhook', `Simulated: new dispute ${d.dispute_id} for $${d.amount.toFixed(2)} (item not received)`);
+    res.json(await runAgent('new dispute'));
   } catch (e) { next(e); }
 });
 
@@ -160,6 +214,8 @@ app.post('/api/shop/capture', async (req, res, next) => {
       delivered: null, onHold: true, daysHeld: 0, captureStatus: c.captureStatus,
     });
     res.json(c);
+    activity('sale', `New PayPal Checkout sale: ${p.name} for $${c.amount.toFixed(2)} (capture ${c.captureId}). Shipped; tracking not yet on PayPal.`);
+    runAgent('new sale').catch((e) => activity('error', `Agent run failed: ${e.message}`));
   } catch (e) { next(e); }
 });
 

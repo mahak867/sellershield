@@ -85,6 +85,17 @@
   .cellbtn { padding:4px 10px; font-size:12px; line-height:1.4; }
   .ag-row-pinned { font-weight:700; }
   .live-cell { color:var(--good); font-weight:600; }
+  .prot { border-radius:10px; padding:8px 10px; font-size:13px; background:var(--bg); border:1px solid var(--line); }
+  .prot b.LIKELY_COVERED { color:var(--good); } .prot b.NEEDS_EVIDENCE { color:var(--warn); } .prot b.NOT_COVERED { color:var(--bad); }
+  .prot ul { margin:6px 0 0; padding:0; list-style:none; display:grid; gap:2px; }
+  .prot li::before { content:attr(data-i); display:inline-block; width:18px; font-weight:700; }
+  .prot li.ok::before { color:var(--good); } .prot li.no::before { color:var(--bad); }
+  .feed { display:grid; gap:6px; max-height:220px; overflow:auto; font-size:13px; }
+  .feed div.ev { padding:6px 8px; border-left:3px solid var(--accent); background:var(--bg); border-radius:6px; animation:pop .4s ease; }
+  .feed div.ev.webhook { border-color:var(--warn); } .feed div.ev.sale { border-color:var(--good); } .feed div.ev.error { border-color:var(--bad); }
+  .feed time { color:var(--mute); margin-right:6px; font-variant-numeric:tabular-nums; }
+  @keyframes pop { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce) { .feed div.ev { animation:none; } }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--card); padding:10px 16px; border-radius:10px; font-size:14px; opacity:0; transition:.3s; pointer-events:none; }
   .toast.show { opacity:1; }
 </style>
@@ -106,7 +117,7 @@
 <main>
   <section class="hero">
     <h1>Your money, defended by an AI agent.</h1>
-    <p>SellerShield watches your PayPal account for disputes, held funds and unpaid invoices, decides what to do, and does it.</p>
+    <p>SellerShield knows PayPal Seller Protection. It reacts the moment a dispute opens or a sale lands, checks your coverage, closes evidence gaps, and acts within limits you set.</p>
   </section>
 
   <section class="kpis">
@@ -133,6 +144,12 @@
           <label>Max amount <input type="range" id="apMax" min="0" max="500" step="5"> <b id="apMaxV"></b></label>
           <label>Min confidence <input type="range" id="apConf" min="0.5" max="1" step="0.05"> <b id="apConfV"></b></label>
         </div>
+      </section>
+
+      <section class="card">
+        <div class="gridhead"><div><h2>Live activity</h2><p class="sub">PayPal webhooks and sales trigger the agent instantly.</p></div>
+          <div class="tools"><button class="ghost" id="simDispute" title="Simulate a buyer opening a dispute">Simulate dispute</button></div></div>
+        <div id="feed" class="feed"><div class="mute">Waiting for events...</div></div>
       </section>
 
       <section class="card">
@@ -281,6 +298,7 @@ function renderProps(list, scanned) {
     el.innerHTML = `<div class="top"><div><span class="tag ${esc(p.decision)}">${esc(p.decision)}</span> <b>${esc(p.kind)}</b> <span class="mute">${esc(p.target)}</span> ${p.demo ? '<span class="tag demo">demo</span>' : ''} <span class="mute">· by ${p.source === 'claude' ? 'Claude' : 'rules'}</span></div>
       <div><b>${money(p.amount)}</b> <span class="mute">· ${pct}% confidence</span><span class="meter"><i style="width:${pct}%"></i></span></div></div>
       <div class="mute">${esc(p.reasoning)}</div>
+      ${p.protection ? protBox(p.protection) : ''}
       <textarea aria-label="Draft sent to PayPal">${esc(p.draft)}</textarea>
       <div><button>Approve &amp; send to PayPal</button> <button class="ghost">Skip</button></div>`;
     const [ok, skip] = el.querySelectorAll('button');
@@ -318,7 +336,7 @@ $('#run').onclick = async () => {
   $('#run').disabled = false; $('#run').textContent = 'Run agent';
 };
 
-$('#reset').onclick = async () => { await api('/api/demo/reset', {}); $('#chatlog').innerHTML = ''; toast('Demo reset'); await refresh(); };
+$('#reset').onclick = async () => { await api('/api/demo/reset', {}); $('#chatlog').innerHTML = ''; $('#feed').innerHTML = '<div class="mute">Waiting for events...</div>'; toast('Demo reset'); await refresh(); };
 
 $('#seed').onclick = async () => {
   $('#seed').disabled = true;
@@ -344,6 +362,36 @@ async function ask(q) {
 $('#ask').onclick = () => ask($('#q').value);
 $('#q').onkeydown = (e) => { if (e.key === 'Enter') ask($('#q').value); };
 document.querySelectorAll('[data-q]').forEach((b) => (b.onclick = () => ask(b.dataset.q)));
+
+const PROT_LABEL = { LIKELY_COVERED: 'Likely covered by Seller Protection', NEEDS_EVIDENCE: 'Coverable, evidence missing', NOT_COVERED: 'Not covered by Seller Protection' };
+function protBox(pr) {
+  return `<div class="prot"><b class="${esc(pr.status)}">${esc(PROT_LABEL[pr.status] || pr.status)}</b> <span class="mute">· ${esc(pr.summary)}</span>
+    <ul>${pr.checks.map((c) => `<li class="${c.pass ? 'ok' : 'no'}" data-i="${c.pass ? '✓' : '✗'}">${esc(c.rule)} <span class="mute">(${esc(c.detail)})</span></li>`).join('')}</ul></div>`;
+}
+
+function addEvent(e) {
+  if (!e.text) return;
+  const feed = $('#feed');
+  if (feed.querySelector('.mute')) feed.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'ev ' + e.kind;
+  el.innerHTML = `<time>${new Date(e.at).toLocaleTimeString()}</time>${esc(e.text)}`;
+  feed.prepend(el);
+}
+api('/api/activity').then((list) => list.slice().reverse().forEach(addEvent)).catch(() => {});
+let refreshTimer;
+try {
+  const es = new EventSource('/api/events');
+  es.onmessage = (m) => {
+    const e = JSON.parse(m.data); addEvent(e);
+    if (e.kind !== 'hello') { clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 300); }
+  };
+} catch { /* live feed is optional */ }
+$('#simDispute').onclick = async () => {
+  $('#simDispute').disabled = true;
+  try { await api('/api/demo/simulate-dispute', {}); } catch (e) { toast(e.message); }
+  $('#simDispute').disabled = false;
+};
 
 loadStatus().then(refresh);
 </script>

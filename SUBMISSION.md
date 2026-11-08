@@ -10,7 +10,7 @@ SellerShield
 
 ## Tagline (short description)
 
-An AI agent that defends small sellers' money on PayPal: it fights disputes, releases held funds and chases unpaid invoices for you.
+An AI agent that knows PayPal Seller Protection: it checks every dispute against PayPal's rules, closes evidence gaps the moment a sale lands, and acts within limits you set.
 
 ## Inspiration
 
@@ -22,11 +22,20 @@ Small sellers and freelancers don't lose money because they sell bad products. T
 
 Big merchants pay for chargeback teams and collections tools. Small sellers have nobody. We built them an agent.
 
+## What makes it different
+
+We read the public repos of other entries. Most chase invoices or limit what an AI agent spends. SellerShield answers the question sellers actually lose sleep over: **"Will PayPal protect this money, and what do I need to do so it does?"**
+
+- **A deterministic Seller Protection check** for every dispute: claim type covered or not, verifiable tracking, delivered status, shipping address, response deadline. Claude decides on top of these facts, so its advice follows PayPal's real rules.
+- **Prevention, not just response:** when a PayPal Checkout sale lands, the agent sees tracking is missing and posts it to the capture. That's the proof Seller Protection needs if a dispute ever comes.
+- **Real time:** signature-verified PayPal webhooks and new sales trigger the agent immediately.
+- **Measured:** a 30-case policy test suite (`npm run bench`). It caught a real bug: the planner fought a dispute where there was no evidence to collect.
+
 ## What it does
 
 SellerShield connects to a seller's PayPal account and watches three places money gets stuck:
 
-1. **Disputes:** reads each dispute and the seller's order record, decides whether to FIGHT or ACCEPT with a win-confidence score, writes the evidence (carrier, tracking number, delivery date), and submits it through the PayPal Disputes API. For small claims it will lose, it recommends accepting, so the seller doesn't waste time.
+1. **Disputes:** reads each dispute and the seller's order record, runs the Seller Protection check, decides whether to FIGHT or ACCEPT with a win-confidence score, writes the evidence (carrier, tracking number, delivery date), and submits it through the PayPal Disputes API. For small claims it will lose, it recommends accepting, so the seller doesn't waste time.
 2. **Orders missing tracking / held funds:** finds paid, shipped orders whose tracking never reached PayPal and adds it through the Orders v2 tracking API. That wins "item not received" disputes and can release held funds early. Our demo store takes real PayPal Checkout payments, so these orders are real sandbox captures.
 3. **Overdue invoices:** writes a reminder whose tone matches how late the invoice is (friendly, firm, final notice) and sends it through the PayPal Invoicing API.
 
@@ -35,6 +44,7 @@ The seller stays in control:
 - **Approve mode:** every action is a drafted proposal the seller can edit and approve with one click.
 - **Autopilot:** the seller sets two rules, a max amount and a minimum confidence. The agent acts alone inside those limits and queues everything else.
 - **Chat agent built on PayPal's Agent Toolkit:** ask "what's my biggest risk?" or say "handle it". Claude reads the account through `@paypal/agent-toolkit` tools and acts through SellerShield's guarded actions.
+- **Live activity feed:** webhooks and sales appear as they happen, followed by what the agent did about them.
 - **Audit log:** every action, who triggered it (seller, autopilot or chat agent), and exactly what was sent to PayPal.
 
 The dashboard shows money at risk, money protected, hours saved and actions taken.
@@ -53,12 +63,16 @@ The dashboard shows money at risk, money protected, hours saved and actions take
   - Checkbox bulk approve, quick search, number filters, a pinned totals row and CSV export.
   - A second grid holds the audit log.
   - Light and dark mode, works on phones.
+- **Seller Protection engine:** `lib/protection.js` encodes PayPal's published rules as a checklist. Its output is shown to the seller and passed to Claude.
+- **Real time:** a PayPal webhook endpoint verifies signatures with `verify-webhook-signature`, then runs the agent. The dashboard receives events over Server-Sent Events.
+- **Testing:** 30 labelled dispute cases with a runner that reports agreement for Claude or the rules fallback.
 - **Hosting:** **Render** via a `render.yaml` blueprint.
 
 ## Challenges we ran into
 
 - Sellers can't create disputes through the API. To keep the demo honest, sample disputes are clearly tagged **demo**, and the audit log marks each action **live** or **simulated**. Invoices are fully live: one button creates real overdue invoices in the sandbox, and reminders go out through the real Invoicing API. Orders are live when bought through our PayPal Checkout store.
 - PayPal's Agent Toolkit ESM build failed to import lodash under Node 22, so we load its CommonJS build.
+- Seller Protection rules have many conditions, and models can blur them. We made the rules deterministic code and let Claude reason on top. Our test suite then caught the rules planner fighting a case with no evidence, which we fixed.
 - Letting an AI move money needs guardrails. We combined human approval, autopilot limits the seller controls, and a full audit trail.
 
 ## Accomplishments we're proud of
@@ -73,7 +87,8 @@ The hard part of agentic commerce isn't the model. It's trust: clear limits, edi
 
 ## What's next
 
-- PayPal webhooks, so the agent reacts the moment a dispute opens instead of on a scan.
+- Pull carrier delivery status automatically so "evidence missing" cases fix themselves.
+- Per-country Seller Protection rules.
 - Pulling real orders and shipments from Shopify and other stores to fill in the order book.
 - Learning from outcomes: tracking which disputes were won and tuning the fight-or-accept threshold per seller.
 - Notifications by WhatsApp or email: "A $120 dispute came in. I drafted a response. Approve?"
@@ -116,16 +131,16 @@ Click **Load sandbox data**. Point at the Money at risk grid.
 "These invoices are real, in the PayPal sandbox, created through the Invoicing API. Over three thousand dollars is stuck here, across disputes, overdue invoices and held payments."
 
 **0:55–1:25 The agent thinks**
-Click **Run agent**. Point at the **Needs tracking** row from the real sale, then scroll through the proposals.
-"The agent reviews everything. It caught the wallet order: paid, shipped, no tracking. One click fixes it. Here's a dispute where the buyer says the item never arrived. Claude checked the order: tracking shows delivery, so it says fight, with high confidence, and it already wrote the evidence. Here's an $18 dispute it says to accept: fighting costs more than it's worth. And here's an invoice that's 19 days late, with a firm reminder ready to go."
+The agent already ran when the sale landed (point at Live activity). Point at the **Needs tracking** row, then at a dispute's Seller Protection checklist.
+"The sale triggered the agent instantly. It caught the wallet order: paid, shipped, no tracking on PayPal. One click fixes it. And for every dispute it checks PayPal's Seller Protection rules line by line. Here's a dispute where the buyer says the item never arrived. Claude checked the order: tracking shows delivery, so it says fight, with high confidence, and it already wrote the evidence. Here's an $18 dispute it says to accept: fighting costs more than it's worth. And here's an invoice that's 19 days late, with a firm reminder ready to go."
 
 **1:25–1:45 Human in the loop**
 Edit one word in a draft, then click **Approve & send to PayPal**. Show the audit log row marked **live**.
 "I can edit anything, and one click sends it through PayPal's API. The audit log shows exactly what went out, and that it was a live PayPal call."
 
-**1:45–2:15 Autopilot (the agentic part)**
-Click **Reset**. Turn on **Autopilot**, set max $100 and 80% confidence, then click **Run agent**.
-"Now I give the agent a budget. Under $100 and over 80% confidence, act on your own. It handles three cases instantly, and everything bigger waits for me. That's bounded autonomy: the agent works, and I keep control."
+**1:45–2:15 Autopilot + real time (the agentic part)**
+Click **Reset**. Turn on **Autopilot** (max $100, 80% confidence), then click **Simulate dispute**. Point at the Live activity feed.
+"Now I give the agent limits and walk away. A buyer opens a dispute. A PayPal webhook fires, and the agent checks Seller Protection: delivered, tracked, right address, covered. It submits the evidence on its own, because it's under $100 and over 80% confident. Anything bigger waits for me. The agent works, and I keep control."
 
 **2:15–2:35 Chat agent**
 Type "What's my biggest risk?", then click **Handle it**. Point at "Tools used".
@@ -140,6 +155,8 @@ Show the KPIs.
 # Final checklist
 
 - [ ] Render deployed, URL works, **Claude live** badge is green
+- [ ] Webhook added in PayPal app pointing to `<RENDER_URL>/api/webhooks/paypal`, `PAYPAL_WEBHOOK_ID` set on Render
+- [ ] Run `npm run bench` locally with your Anthropic key and commit `bench/RESULTS.md` (shows the Claude result)
 - [ ] Repo is public, and **MIT** shows in the About sidebar
 - [ ] Video under 3:00, public on YouTube
 - [ ] Devpost: description, tools section, repo link, demo URL, video link
