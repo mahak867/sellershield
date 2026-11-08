@@ -131,6 +131,7 @@ Data sources in sandbox mode:
 | **Bryntum Scheduler** | **The agent calendar.** Every PayPal deadline, overdue period and hold is on one timeline. Each action the agent proposes is a bar: **dragging it onto a day approves it for that day**, bound to its SHA-256 fingerprint. PayPal's response deadline is enforced, and a background scheduler runs it on that day. The calendar is the approval interface. | `public/index.html` (module script), `server.js` (`/api/schedule`, `runSchedule`) |
 | **AG Grid** | The money-at-risk command center: urgency ranking, the agent's call per row, per-row and bulk approve, quick search, number filters, totals row, CSV export. Cells flash on live updates. **Drafts can be edited inside the grid**: each edit is re-fingerprinted and citation-checked on the server before Approve unlocks. | `public/index.html` |
 | **AG Charts** | Where the money is stuck (at risk vs protected), and dispute dollars by Seller Protection status | `public/index.html` (`renderCharts`) |
+| **Channel3** | **Independent product facts for "not as described" disputes.** Seller Protection doesn't cover these, so the seller must show the item matched its listing. The agent looks the item up in Channel3's catalog with the official `@channel3/sdk`. Brand, materials, key features and attributes such as size and color become a numbered evidence record. Claude may cite it, and the citation checker verifies it. Without a key, clearly labelled demo facts are used. | `lib/channel3.js`, `lib/evidence.js`, `test/channel3.test.js` |
 | **Render** | One-click Blueprint deploy (`render.yaml`) with health check; webhooks point at the Render URL | `render.yaml` |
 
 ### Generate a SellerShield SDK, docs portal or AI context plugin with APIMatic
@@ -170,7 +171,7 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 34 tests: Seller Protection rules, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 35 tests: Seller Protection rules, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
 
@@ -214,7 +215,9 @@ Every event is checked with PayPal's `verify-webhook-signature` API before the a
 
 ## Deploy on Render
 
-The repo includes `render.yaml`. In Render: **New, Blueprint**, pick this repo, then fill in the three secret env vars.
+The repo includes `render.yaml`. In Render: **New, Blueprint**, pick this repo, then fill in the secret env vars.
+
+Render's free tier sleeps after about 15 idle minutes. To keep the demo awake for judges, and the agent calendar's scheduler running, set the GitHub repository variable `RENDER_URL` (Settings, Secrets and variables, Actions, Variables). `.github/workflows/keepalive.yml` then pings `/api/status` every 10 minutes.
 
 ## Project layout
 

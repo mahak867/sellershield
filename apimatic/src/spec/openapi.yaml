@@ -359,6 +359,7 @@ components:
       properties:
         mockPaypal: { type: boolean }
         mockAi: { type: boolean }
+        channel3: { type: boolean }
         autopilot: { $ref: '#/components/schemas/Autopilot' }
     Autopilot:
       type: object

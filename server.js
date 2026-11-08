@@ -9,6 +9,7 @@ import { assessProtection } from './lib/protection.js';
 import { workspaceMiddleware, workspaceId, SHARED, forEachWorkspace } from './lib/workspace.js';
 import { buildRecords, checkDraft, fingerprint, renderForPayPal } from './lib/evidence.js';
 import { disputePack } from './lib/pdf.js';
+import { catalogFacts, CHANNEL3_ON } from './lib/channel3.js';
 
 const app = express();
 app.use(express.json({ limit: '100kb' }));
@@ -53,6 +54,8 @@ async function scan() {
     const detail = await paypal.getDispute(d.dispute_id);
     const order = store.orders.find((o) => o.transactionId === d.transaction_id);
     const live = await paypal.liveRecords(d, order);
+    // "Not as described" is outside Seller Protection: add independent catalog facts (Channel3).
+    if (d.reason === 'MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED' && order?.item) live.catalog = await catalogFacts(order.item);
     const flag = live.capture?.sellerProtection || order?.paypalProtection;
     const protection = assessProtection(detail || d, order, flag);
     const records = buildRecords({ ...d, ...(detail || {}) }, order, live);
@@ -152,7 +155,7 @@ const qualifies = (p, ap) => ap.enabled && p.amount <= ap.maxAmount && p.confide
   && !(p.issues || []).length && !(p.kind === 'invoice' && p.scheduledFor > today());
 
 app.get('/api/status', (_req, res) => {
-  res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, autopilot: store.autopilot });
+  res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, channel3: CHANNEL3_ON, autopilot: store.autopilot });
 });
 
 app.get('/api/risk', async (_req, res, next) => {

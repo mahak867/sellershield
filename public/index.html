@@ -393,7 +393,7 @@ function renderProps(list, scanned) {
 
 async function loadStatus() {
   const s = await api('/api/status');
-  $('#mode').innerHTML = `<span class="badge ${s.mockPaypal ? '' : 'live'}">PayPal ${s.mockPaypal ? 'mock' : 'sandbox'}</span><span class="badge ${s.mockAi ? '' : 'live'}">${s.mockAi ? 'AI mock' : 'Claude live'}</span>`;
+  $('#mode').innerHTML = `<span class="badge ${s.mockPaypal ? '' : 'live'}">PayPal ${s.mockPaypal ? 'mock' : 'sandbox'}</span><span class="badge ${s.mockAi ? '' : 'live'}">${s.mockAi ? 'AI mock' : 'Claude live'}</span><span class="badge ${s.channel3 ? 'live' : ''}" title="Product catalog facts for not-as-described disputes">Channel3 ${s.channel3 ? 'live' : 'demo'}</span>`;
   $('#seed').hidden = s.mockPaypal;
   setAp(s.autopilot);
 }

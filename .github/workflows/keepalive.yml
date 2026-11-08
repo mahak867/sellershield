@@ -1,0 +1,13 @@
+# Keeps the Render free-tier demo awake for judges (and the agent calendar's scheduler running).
+# Set the repository variable RENDER_URL (Settings > Secrets and variables > Actions > Variables).
+name: keepalive
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    if: ${{ vars.RENDER_URL != '' }}
+    steps:
+      - run: curl -fsS --max-time 90 "${{ vars.RENDER_URL }}/api/status" > /dev/null
