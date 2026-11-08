@@ -56,6 +56,12 @@ These are ranked by urgency, handled under one autopilot policy, and recorded in
   - Checkbox bulk approve, quick search, number filters, a pinned totals row and CSV export.
   - A full audit log shows every action, who triggered it, live or simulated, and exactly what was sent.
 - **KPIs:** money at risk, money protected, hours saved, actions taken.
+- **AG Charts:** a "where your money is stuck" chart (at risk vs protected by category) and a donut of dispute dollars by Seller Protection status.
+- **Bryntum Scheduler money timeline:** each item at risk is a row.
+  - Dispute response windows are colored by Seller Protection status.
+  - Overdue invoice periods and held funds (with an estimated release) are shown as bars.
+  - The agent's actions appear on the rows they acted on.
+  - Drag a **reminder** to reschedule it. The agent and autopilot wait until that day.
 
 ## AI tools used
 
@@ -153,7 +159,7 @@ lib/workspace.js Per-visitor isolated demo workspaces
 test/            npm test: unit + API tests (mock mode, no keys)
 bench/           Policy test suite: 30 labelled disputes, runner, results
 lib/store.js     In-memory order book, proposals, autopilot policy, audit log
-public/          Dashboard (AG Grid) and demo storefront (PayPal Checkout)
+public/          Dashboard (AG Grid, AG Charts, Bryntum Scheduler) and demo storefront (PayPal Checkout)
 ```
 
 ## License

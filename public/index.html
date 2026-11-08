@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="/vendor/ag-grid/styles/ag-grid.css">
 <link rel="stylesheet" href="/vendor/ag-grid/styles/ag-theme-quartz.css">
 <script src="/vendor/ag-grid/dist/ag-grid-community.min.js"></script>
+<script src="/vendor/ag-charts/ag-charts-community.min.js"></script>
 <link rel="stylesheet" href="/vendor/bryntum/scheduler.css">
 <link rel="stylesheet" href="/vendor/bryntum/stockholm-light.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="/vendor/bryntum/stockholm-dark.css" media="(prefers-color-scheme: dark)">
@@ -80,6 +81,9 @@
   .chat { display:flex; gap:8px; } .chat input { flex:1; min-width:0; font:inherit; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); }
   .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
   .chips button { font-size:12px; padding:5px 10px; }
+  .charts { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; }
+  @media (max-width:900px) { .charts { grid-template-columns:1fr; } }
+  .chart { height:260px; }
   .timeline { height:380px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
   .grid { height:280px; } .grid.tall { height:360px; }
   .gridhead { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
@@ -137,6 +141,11 @@
     <div class="kpi"><small>Hours saved</small><b id="kTime">0</b></div>
     <div class="kpi"><small>Actions taken</small><b id="kActs">0</b></div>
     <div class="kpi"><small>Needs your review</small><b id="kReview">0</b></div>
+  </section>
+
+  <section class="card charts">
+    <div><h2>Where your money is stuck</h2><p class="sub">At risk vs protected by the agent, per category (AG Charts).</p><div id="chartRisk" class="chart"></div></div>
+    <div><h2>Disputes by Seller Protection</h2><p class="sub">Dollars in dispute, by PayPal coverage. Run the agent to classify.</p><div id="chartCover" class="chart"></div></div>
   </section>
 
   <div class="cols">
@@ -244,7 +253,7 @@ const actionCell = (p) => {
 };
 const riskGrid = agGrid.createGrid($('#riskGrid'), {
   columnDefs: [
-    { field: 'type', width: 150, cellRenderer: typeCell, checkboxSelection: (p) => !!p.data?.proposal, headerCheckboxSelection: true },
+    { field: 'type', width: 150, cellRenderer: typeCell },
     { field: 'urgency', width: 140, cellRenderer: urgCell, sort: 'desc', filter: 'agNumberColumnFilter' },
     { field: 'amount', valueFormatter: (p) => money(p.value), width: 120, type: 'rightAligned', filter: 'agNumberColumnFilter' },
     { headerName: 'Agent says', width: 140, cellRenderer: agentCell, valueGetter: (p) => p.data?.proposal?.decision ?? '' },
@@ -254,8 +263,7 @@ const riskGrid = agGrid.createGrid($('#riskGrid'), {
     { headerName: '', width: 130, cellRenderer: actionCell, sortable: false, filter: false, pinned: 'right' },
   ],
   defaultColDef: { sortable: true, filter: true, resizable: true },
-  rowSelection: 'multiple', suppressRowClickSelection: true,
-  isRowSelectable: (n) => !!n.data?.proposal,
+  rowSelection: { mode: 'multiRow', checkboxes: true, headerCheckbox: true, enableClickSelection: false, isRowSelectable: (n) => !!n.data?.proposal },
   onSelectionChanged: () => { const n = riskGrid.getSelectedRows().length; $('#bulk').disabled = !n; $('#bulk').textContent = n ? `Approve selected (${n})` : 'Approve selected'; },
   getRowId: (p) => p.data.key, rowData: [], overlayNoRowsTemplate: 'Nothing at risk. Nice.', tooltipShowDelay: 300,
 });
@@ -300,6 +308,7 @@ async function refresh() {
       urgency: urgency(25 + o.daysHeld * 2, o.amount), proposal: prop['hold:' + o.transactionId] })),
   ];
   window.__ssData = r; window.sellershieldTimeline?.(r);
+  try { renderCharts(r); } catch (e) { console.warn('charts', e); }
   riskGrid.setGridOption('rowData', rows);
   riskGrid.setGridOption('pinnedBottomRowData', rows.length ? [{ key: 'total', type: 'Total', amount: rows.reduce((s, x) => s + x.amount, 0), detail: `${rows.length} items` }] : []);
   logGrid.setGridOption('rowData', r.actions);
@@ -409,6 +418,50 @@ function recBox(recs) {
 function protBox(pr) {
   return `<div class="prot"><b class="${esc(pr.status)}">${esc(PROT_LABEL[pr.status] || pr.status)}</b> <span class="mute">· ${esc(pr.summary)}</span>
     <ul>${pr.checks.map((c) => `<li class="${c.pass ? 'ok' : 'no'}" data-i="${c.pass ? '✓' : '✗'}">${esc(c.rule)} <span class="mute">(${esc(c.detail)})</span></li>`).join('')}</ul></div>`;
+}
+
+// ---------- AG Charts ----------
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+const chartTheme = { baseTheme: dark ? 'ag-default-dark' : 'ag-default', overrides: { common: { background: { fill: 'transparent' } } } };
+let riskChart, coverChart;
+function renderCharts(r) {
+  if (!window.agCharts) return;
+  const cat = (k) => (k === 'dispute' ? 'Disputes' : k === 'invoice' ? 'Overdue invoices' : 'Tracking / holds');
+  const sum = (xs) => xs.reduce((s, x) => s + x.amount, 0);
+  const protectedBy = (k) => r.actions.filter((a) => a.kind === k && a.decision !== 'ACCEPT').reduce((s, a) => s + a.amount, 0);
+  const data = [
+    { category: cat('dispute'), risk: sum(r.disputes), saved: protectedBy('dispute') },
+    { category: cat('invoice'), risk: sum(r.invoices), saved: protectedBy('invoice') },
+    { category: cat('hold'), risk: sum(r.holds), saved: protectedBy('hold') },
+  ];
+  const fmt = { formatter: ({ value }) => (value >= 250 ? '$' + Math.round(value).toLocaleString() : '') };
+  const riskOpts = {
+    container: $('#chartRisk'), data, theme: chartTheme,
+    series: [
+      { type: 'bar', direction: 'horizontal', xKey: 'category', yKey: 'risk', yName: 'At risk', stacked: true, fill: '#d93025', label: fmt },
+      { type: 'bar', direction: 'horizontal', xKey: 'category', yKey: 'saved', yName: 'Protected by agent', stacked: true, fill: '#1e8e3e', label: fmt },
+    ],
+    axes: [{ type: 'category', position: 'left' }, { type: 'number', position: 'bottom', label: { formatter: ({ value }) => '$' + value.toLocaleString() } }],
+    legend: { position: 'bottom' },
+  };
+  const byStatus = { LIKELY_COVERED: 0, NEEDS_EVIDENCE: 0, NOT_COVERED: 0, UNCHECKED: 0 };
+  const prop = Object.fromEntries(r.proposals.map((p) => [p.target, p]));
+  for (const d of r.disputes) byStatus[prop[d.dispute_id]?.protection?.status || 'UNCHECKED'] += d.amount;
+  const coverData = [
+    { status: 'Likely covered', amount: byStatus.LIKELY_COVERED, color: '#1e8e3e' },
+    { status: 'Evidence missing', amount: byStatus.NEEDS_EVIDENCE, color: '#e37400' },
+    { status: 'Not covered', amount: byStatus.NOT_COVERED, color: '#d93025' },
+    { status: 'Not checked yet', amount: byStatus.UNCHECKED, color: '#9aa0a6' },
+  ].filter((x) => x.amount > 0);
+  const coverOpts = {
+    container: $('#chartCover'), data: coverData, theme: chartTheme,
+    series: [{ type: 'donut', angleKey: 'amount', legendItemKey: 'status', innerRadiusRatio: 0.62, fills: coverData.map((x) => x.color),
+      calloutLabel: { enabled: false }, sectorLabel: { formatter: ({ value }) => '$' + Math.round(value) },
+      innerLabels: [{ text: '$' + Math.round(sum(r.disputes)).toLocaleString(), fontSize: 20, fontWeight: 'bold' }, { text: 'in dispute' }] }],
+    legend: { position: 'bottom' },
+  };
+  if (riskChart) riskChart.update(riskOpts); else riskChart = agCharts.AgCharts.create(riskOpts);
+  if (coverChart) coverChart.update(coverOpts); else coverChart = agCharts.AgCharts.create(coverOpts);
 }
 
 function addEvent(e) {

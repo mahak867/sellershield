@@ -14,6 +14,7 @@ app.use(express.json());
 app.use(workspaceMiddleware);
 app.use(express.static('public'));
 app.use('/vendor/ag-grid', express.static('node_modules/ag-grid-community'));
+app.use('/vendor/ag-charts', express.static('node_modules/ag-charts-community/dist/umd'));
 app.use('/vendor/bryntum', express.static('node_modules/@bryntum/scheduler-trial'));
 
 // Minutes a seller would spend doing each action by hand (for the "time saved" KPI).
