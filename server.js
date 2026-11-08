@@ -8,6 +8,7 @@ import { store, logAction, resetStore } from './lib/store.js';
 import { assessProtection } from './lib/protection.js';
 import { workspaceMiddleware, workspaceId, SHARED } from './lib/workspace.js';
 import { buildRecords, checkDraft, fingerprint, renderForPayPal } from './lib/evidence.js';
+import { disputePack } from './lib/pdf.js';
 
 const app = express();
 app.use(express.json({ limit: '100kb' }));
@@ -117,7 +118,7 @@ async function executeOnce(p, id, draft, by, approvedFingerprint) {
     const order = store.orders.find((o) => o.transactionId === p.orderTx);
     result = p.decision === 'ACCEPT'
       ? await paypal.acceptClaim(p.target, text)
-      : await paypal.provideEvidence(p.target, renderForPayPal(text, p.records || []), order);
+      : await paypal.provideEvidence(p.target, renderForPayPal(text, p.records || []), order, disputePack(p, text));
   } else if (p.kind === 'invoice') {
     result = await paypal.remindInvoice(p.target, text);
   } else if (p.kind === 'hold') {
@@ -227,6 +228,14 @@ app.post('/api/demo/simulate-dispute', async (_req, res, next) => {
 
 app.post('/api/agent/approve', async (req, res, next) => {
   try { res.json({ ok: true, entry: await execute(req.body.id, req.body.draft, 'seller', req.body.fingerprint) }); } catch (e) { next(e); }
+});
+
+// Download the evidence pack (PDF) for a dispute proposal, with the seller's current draft.
+app.post('/api/agent/pack', (req, res) => {
+  const p = store.proposals.find((x) => x.id === req.body?.id && x.kind === 'dispute');
+  if (!p) return res.status(404).json({ error: 'dispute proposal not found' });
+  res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="evidence-${p.target}.pdf"` });
+  res.send(disputePack(p, String(req.body.draft ?? p.draft).slice(0, 5000)));
 });
 
 app.post('/api/agent/check', (req, res) => {

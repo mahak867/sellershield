@@ -62,6 +62,7 @@ These are ranked by urgency, handled under one autopilot policy, and recorded in
   - the seller's order book.
 
   Any sentence with an amount, date or ID must cite a record, like `[R2]`, and every value in it must appear in that record. Otherwise the Approve button is disabled and the API refuses with `422`. PayPal receives the text plus a records appendix.
+- **Evidence PDF pack:** one document holding the response, the Seller Protection checklist and every cited record. It's attached to the Disputes API `provide-evidence` call; if PayPal won't take a file at that stage, the text is sent alone. Sellers can also download it from the dispute card. It's generated with a small, dependency-free PDF writer (`lib/pdf.js`).
 - **Approval fingerprints:** each proposal carries a SHA-256 fingerprint of exactly what will be sent. An approval must present the fingerprint of the current text: edit one character and it's a different payload (`409` if stale). The audit log records the approved fingerprint. Autopilot and the chat agent can only send the exact draft they proposed, and never one that fails the citation check.
 - **AG Grid dashboards:**
   - Money at risk is ranked by an urgency score with colored bars, shows the agent's decision in each row, and has per-row Approve buttons.
@@ -130,7 +131,7 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 21 tests: Seller Protection rules, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 25 tests: Seller Protection rules, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
 

@@ -118,3 +118,15 @@ test('webhook events are processed once even if PayPal retries', async () => {
   assert.equal((await post('/api/webhooks/paypal', ev, false)).status, 200);
   assert.equal((await post('/api/webhooks/paypal', ev, false)).status, 200);
 });
+
+test('evidence pack is a valid PDF with the response and records', async () => {
+  await post('/api/demo/reset');
+  const { proposals } = await (await post('/api/agent/scan')).json();
+  const p = proposals.find((x) => x.kind === 'dispute' && x.decision === 'FIGHT');
+  const r = await post('/api/agent/pack', { id: p.id });
+  assert.equal(r.headers.get('content-type'), 'application/pdf');
+  const buf = Buffer.from(await r.arrayBuffer());
+  assert.equal(buf.subarray(0, 5).toString(), '%PDF-');
+  assert.match(buf.toString('latin1'), /Records cited/);
+  assert.match(buf.toString('latin1'), /%%EOF\n$/);
+});

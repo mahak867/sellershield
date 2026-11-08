@@ -337,7 +337,7 @@ function renderProps(list, scanned) {
       ${p.records?.length ? recBox(p.records) : ''}
       <textarea aria-label="Draft sent to PayPal">${esc(p.draft)}</textarea>
       <div class="issues"></div>
-      <div class="approve-row"><button class="approve">Approve &amp; send to PayPal</button> <button class="ghost skip">Skip</button>
+      <div class="approve-row"><button class="approve">Approve &amp; send to PayPal</button> <button class="ghost skip">Skip</button>${p.kind === 'dispute' ? ' <button class="ghost pack" title="Response, Seller Protection check and cited records in one PDF">Evidence PDF</button>' : ''}
         <span class="fp mute" title="SHA-256 of exactly what will be sent. Editing the draft changes it.">fingerprint <code></code></span></div>`;
     const ok = el.querySelector(".approve"), skip = el.querySelector('.skip'), ta = el.querySelector('textarea');
     let fp = p.fingerprint;
@@ -355,6 +355,12 @@ function renderProps(list, scanned) {
       catch (e) { toast(e.message); ok.disabled = false; }
     };
     skip.onclick = () => el.remove();
+    const pack = el.querySelector('.pack');
+    if (pack) pack.onclick = async () => {
+      const r = await fetch('/api/agent/pack', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: p.id, draft: ta.value }) });
+      if (!r.ok) return toast('Could not build the PDF');
+      const a = document.createElement('a'); a.href = URL.createObjectURL(await r.blob()); a.download = `evidence-${p.target}.pdf`; a.click();
+    };
     box.appendChild(el);
   }
 }
