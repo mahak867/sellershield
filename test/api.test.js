@@ -19,7 +19,13 @@ before(async () => {
 });
 after(() => srv.kill());
 
-const post = (path, body) => fetch(URL + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}) });
+let cookie = '';
+const post = async (path, body, jar = true) => {
+  const r = await fetch(URL + path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(jar && cookie ? { Cookie: cookie } : {}) }, body: JSON.stringify(body ?? {}) });
+  const set = r.headers.get('set-cookie');
+  if (jar && set) cookie = set.split(';')[0];
+  return r;
+};
 
 test('scan proposes an action for every item, with fingerprints and records', async () => {
   const r = await (await post('/api/agent/scan')).json();
@@ -66,4 +72,17 @@ test('autopilot acts only within limits', async () => {
 test('sandbox settle refuses demo disputes (400)', async () => {
   const r = await post('/api/disputes/PP-D-1001/sandbox-settle');
   assert.equal(r.status, 400);
+});
+
+test('each visitor gets an isolated workspace', async () => {
+  await post('/api/demo/reset');
+  const mine = await (await post('/api/agent/scan')).json();
+  const p = mine.proposals.find((x) => x.kind === 'invoice');
+  await post('/api/agent/approve', { id: p.id, fingerprint: p.fingerprint });
+  // A second visitor (no cookie) still sees that invoice and an empty audit log.
+  const other = await post('/api/agent/scan', {}, false);
+  const theirs = await other.json();
+  assert.ok(theirs.proposals.some((x) => x.id === p.id));
+  const r = await fetch(URL + '/api/risk', { headers: { Cookie: other.headers.get('set-cookie').split(';')[0] } });
+  assert.equal((await r.json()).actions.length, 0);
 });

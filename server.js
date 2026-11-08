@@ -6,10 +6,12 @@ import { paypal, MOCK_PAYPAL } from './lib/paypal.js';
 import { ai, MOCK_AI } from './lib/ai.js';
 import { store, logAction, resetStore } from './lib/store.js';
 import { assessProtection } from './lib/protection.js';
+import { workspaceMiddleware, workspaceId, SHARED } from './lib/workspace.js';
 import { buildRecords, checkDraft, fingerprint, renderForPayPal } from './lib/evidence.js';
 
 const app = express();
 app.use(express.json());
+app.use(workspaceMiddleware);
 app.use(express.static('public'));
 app.use('/vendor/ag-grid', express.static('node_modules/ag-grid-community'));
 
@@ -105,19 +107,21 @@ app.get('/api/risk', async (_req, res, next) => {
 
 // Scan, then let autopilot act on what qualifies. The rest waits for the seller.
 // ---------- Live activity (Server-Sent Events) ----------
-const clients = new Set();
+const clients = new Map(); // res -> workspace id
+// Activity goes to the current visitor; events from PayPal itself (shared workspace) go to everyone.
 function activity(kind, text, extra = {}) {
   const e = { at: new Date().toISOString(), kind, text, ...extra };
   store.activity.unshift(e);
   store.activity.length = Math.min(store.activity.length, 50);
-  for (const res of clients) res.write(`data: ${JSON.stringify(e)}\n\n`);
+  const ws = workspaceId();
+  for (const [res, id] of clients) if (ws === SHARED || id === ws) res.write(`data: ${JSON.stringify(e)}\n\n`);
   return e;
 }
 app.get('/api/events', (req, res) => {
   res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
   res.flushHeaders();
   res.write(`data: ${JSON.stringify({ kind: 'hello' })}\n\n`);
-  clients.add(res);
+  clients.set(res, workspaceId());
   const ping = setInterval(() => res.write(': ping\n\n'), 25000);
   req.on('close', () => { clearInterval(ping); clients.delete(res); });
 });

@@ -11,7 +11,7 @@ SellerShield reacts the moment one of these happens: a PayPal webhook fires or a
 
 ## How to judge in 5 minutes
 
-1. Open the hosted demo (link at the top of the Devpost page). It runs on the real PayPal sandbox.
+1. Open the hosted demo (link at the top of the Devpost page). It runs on the real PayPal sandbox, and your browser gets its own isolated workspace, so other judges can't reset or approve your items.
 2. Click **Load sandbox data**: real overdue invoices are created in the sandbox.
 3. Click **Run agent**. Every item gets a proposal, and every dispute shows a **Seller Protection checklist**.
 4. Turn on **Autopilot** (max $100, 80%), then click **Simulate dispute**. The **Live activity** feed shows the agent reacting and acting within the limits.
@@ -111,7 +111,7 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 20 tests: Seller Protection rules, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 21 tests: Seller Protection rules, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
 
@@ -147,6 +147,7 @@ lib/ai.js        Claude prompts, tool-use agent loop, rule-based fallback
 lib/toolkit.js   PayPal Agent Toolkit tools exposed to the Claude agent
 lib/protection.js  PayPal Seller Protection eligibility check
 lib/evidence.js  Evidence records, citation checker, approval fingerprints
+lib/workspace.js Per-visitor isolated demo workspaces
 test/            npm test: unit + API tests (mock mode, no keys)
 bench/           Policy test suite: 30 labelled disputes, runner, results
 lib/store.js     In-memory order book, proposals, autopilot policy, audit log
