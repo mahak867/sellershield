@@ -6,6 +6,7 @@ import { paypal, MOCK_PAYPAL } from './lib/paypal.js';
 import { ai, MOCK_AI } from './lib/ai.js';
 import { store, logAction, resetStore } from './lib/store.js';
 import { assessProtection } from './lib/protection.js';
+import { buildRecords, checkDraft, fingerprint, renderForPayPal } from './lib/evidence.js';
 
 const app = express();
 app.use(express.json());
@@ -29,10 +30,13 @@ async function scan() {
     const detail = await paypal.getDispute(d.dispute_id);
     const order = store.orders.find((o) => o.transactionId === d.transaction_id);
     const protection = assessProtection(detail || d, order);
-    return { d, protection, plan: await ai.planDispute(detail, order, protection) };
+    const records = buildRecords({ ...d, ...(detail || {}) }, order, await paypal.liveRecords(d, order));
+    const plan = await ai.planDispute(detail, order, protection, records);
+    return { d, protection, records, order, plan, issues: checkDraft(plan.draft, records) };
   }));
-  for (const { d, plan, protection } of disputePlans) {
-    proposals.push({ id: `dispute:${d.dispute_id}`, kind: 'dispute', target: d.dispute_id, amount: d.amount, demo: !!d.demo, protection, ...plan });
+  for (const { d, plan, protection, records, order, issues } of disputePlans) {
+    proposals.push({ id: `dispute:${d.dispute_id}`, kind: 'dispute', target: d.dispute_id, amount: d.amount, demo: !!d.demo,
+      protection, records, issues, orderTx: order?.transactionId, ...plan });
   }
   const invoicePlans = await Promise.all(invoices.map(async (inv) => ({ inv, plan: await ai.planReminder(inv) })));
   for (const { inv, plan } of invoicePlans) {
@@ -48,20 +52,33 @@ async function scan() {
       draft: `${o.carrier} ${o.trackingNumber}`,
     });
   }
+  for (const p of proposals) p.fingerprint = fingerprint({ kind: p.kind, decision: p.decision, target: p.target, text: p.draft });
   store.proposals = proposals;
   return proposals;
 }
 
 // Execute one proposal on PayPal.
-async function execute(id, draft, by = 'seller') {
+// The approval must carry the fingerprint of exactly the text being sent: a changed draft
+// is a different payload and needs its own approval. Dispute text must pass the citation check.
+async function execute(id, draft, by = 'seller', approvedFingerprint) {
   const p = store.proposals.find((x) => x.id === id);
   if (!p) throw Object.assign(new Error(`proposal ${id} not found; run a scan first`), { status: 404 });
   const text = draft ?? p.draft;
+  const fp = fingerprint({ kind: p.kind, decision: p.decision, target: p.target, text });
+  if (by === 'seller' && approvedFingerprint !== fp) {
+    throw Object.assign(new Error('Approval fingerprint does not match the text being sent. Review the draft and approve again.'), { status: 409 });
+  }
+  if (by !== 'seller' && fp !== p.fingerprint) throw Object.assign(new Error('Agent may only send the draft it proposed.'), { status: 409 });
+  if (p.kind === 'dispute' && p.decision !== 'ACCEPT') {
+    const issues = checkDraft(text, p.records || []);
+    if (issues.length) throw Object.assign(new Error(`Citation check failed: ${issues.map((i) => `${i.code} (${i.detail})`).join('; ')}`), { status: 422, issues });
+  }
   let result;
   if (p.kind === 'dispute') {
+    const order = store.orders.find((o) => o.transactionId === p.orderTx);
     result = p.decision === 'ACCEPT'
       ? await paypal.acceptClaim(p.target, text)
-      : await paypal.provideEvidence(p.target, text, store.orders.find((o) => o.disputeId === p.target || o.transactionId === p.target));
+      : await paypal.provideEvidence(p.target, renderForPayPal(text, p.records || []), order);
   } else if (p.kind === 'invoice') {
     result = await paypal.remindInvoice(p.target, text);
   } else if (p.kind === 'hold') {
@@ -70,12 +87,13 @@ async function execute(id, draft, by = 'seller') {
   store.proposals = store.proposals.filter((x) => x.id !== id);
   return logAction({
     kind: p.kind, target: p.target, decision: p.decision, amount: p.amount, confidence: p.confidence,
-    by, simulated: !!result?.simulated, text: result?.via ? `[sent as buyer message: PayPal not taking evidence at this stage] ${text}` : text,
+    by, fingerprint: fp, simulated: !!result?.simulated, text: result?.via ? `[sent as buyer message: PayPal not taking evidence at this stage] ${text}` : text,
     minutesSaved: MINUTES_SAVED[p.kind],
   });
 }
 
-const qualifies = (p, ap) => ap.enabled && p.amount <= ap.maxAmount && p.confidence >= ap.minConfidence;
+// Autopilot never sends a draft that fails the citation check.
+const qualifies = (p, ap) => ap.enabled && p.amount <= ap.maxAmount && p.confidence >= ap.minConfidence && !(p.issues || []).length;
 
 app.get('/api/status', (_req, res) => {
   res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, autopilot: store.autopilot });
@@ -157,7 +175,17 @@ app.post('/api/demo/simulate-dispute', async (_req, res, next) => {
 });
 
 app.post('/api/agent/approve', async (req, res, next) => {
-  try { res.json({ ok: true, entry: await execute(req.body.id, req.body.draft) }); } catch (e) { next(e); }
+  try { res.json({ ok: true, entry: await execute(req.body.id, req.body.draft, 'seller', req.body.fingerprint) }); } catch (e) { next(e); }
+});
+
+app.post('/api/agent/check', (req, res) => {
+  const p = store.proposals.find((x) => x.id === req.body.id);
+  if (!p) return res.status(404).json({ error: 'proposal not found' });
+  const text = String(req.body.draft ?? p.draft);
+  res.json({
+    fingerprint: fingerprint({ kind: p.kind, decision: p.decision, target: p.target, text }),
+    issues: p.kind === 'dispute' && p.decision !== 'ACCEPT' ? checkDraft(text, p.records || []) : [],
+  });
 });
 
 app.post('/api/autopilot', (req, res) => {

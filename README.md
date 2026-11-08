@@ -44,6 +44,13 @@ These are ranked by urgency, handled under one autopilot policy, and recorded in
 - **Chat agent built on the PayPal Agent Toolkit:** a Claude tool-use agent combines `@paypal/agent-toolkit` (read-only: invoices, disputes, orders, transactions, shipment tracking) with SellerShield's own guarded actions (`scan`, `execute_proposal`).
 - **Real storefront:** `/shop.html` is a demo store with PayPal Checkout buttons. A sandbox buyer pays for real (Orders v2 create + capture), and the paid order appears in SellerShield needing tracking.
 - **Human in the loop:** every draft is editable. Nothing reaches PayPal without approval or an autopilot rule.
+- **Record-cited evidence:** each dispute response may only state facts from numbered records:
+  - the PayPal dispute,
+  - the PayPal capture and order (fetched live),
+  - the seller's order book.
+
+  Any sentence with an amount, date or ID must cite a record, like `[R2]`, and every value in it must appear in that record. Otherwise the Approve button is disabled and the API refuses with `422`. PayPal receives the text plus a records appendix.
+- **Approval fingerprints:** each proposal carries a SHA-256 fingerprint of exactly what will be sent. An approval must present the fingerprint of the current text: edit one character and it's a different payload (`409` if stale). The audit log records the approved fingerprint. Autopilot and the chat agent can only send the exact draft they proposed, and never one that fails the citation check.
 - **AG Grid dashboards:**
   - Money at risk is ranked by an urgency score with colored bars, shows the agent's decision in each row, and has per-row Approve buttons.
   - Checkbox bulk approve, quick search, number filters, a pinned totals row and CSV export.
@@ -101,6 +108,13 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 4. Approve it. If PayPal isn't accepting evidence yet (inquiry stage), SellerShield sends the same facts as a message to the buyer and logs that it did so.
 5. Click **PayPal decides** (sandbox only). SellerShield asks PayPal's sandbox to settle the dispute, escalating it first if needed, and shows PayPal's outcome in the live feed.
 
+## Tests
+
+```bash
+npm test         # 20 tests: Seller Protection rules, citation checker, fingerprints, API guardrails, autopilot limits
+npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
+```
+
 ## Policy test suite
 
 ```bash
@@ -132,6 +146,8 @@ lib/paypal.js    PayPal REST client (OAuth, Disputes, Invoicing, Tracking)
 lib/ai.js        Claude prompts, tool-use agent loop, rule-based fallback
 lib/toolkit.js   PayPal Agent Toolkit tools exposed to the Claude agent
 lib/protection.js  PayPal Seller Protection eligibility check
+lib/evidence.js  Evidence records, citation checker, approval fingerprints
+test/            npm test: unit + API tests (mock mode, no keys)
 bench/           Policy test suite: 30 labelled disputes, runner, results
 lib/store.js     In-memory order book, proposals, autopilot policy, audit log
 public/          Dashboard (AG Grid) and demo storefront (PayPal Checkout)

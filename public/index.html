@@ -90,6 +90,11 @@
   .prot ul { margin:6px 0 0; padding:0; list-style:none; display:grid; gap:2px; }
   .prot li::before { content:attr(data-i); display:inline-block; width:18px; font-weight:700; }
   .prot li.ok::before { color:var(--good); } .prot li.no::before { color:var(--bad); }
+  .recs { font-size:13px; } .recs summary { cursor:pointer; color:var(--accent); font-weight:600; }
+  .recs ul { margin:6px 0 0; padding-left:18px; display:grid; gap:3px; } .recs code, .fp code { font-size:12px; }
+  .issuebox { font-size:13px; padding:8px 10px; border-radius:10px; background:var(--bad-soft); color:var(--bad); }
+  .issuebox ul { margin:4px 0 0; padding-left:18px; }
+  .approve-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; } .fp { margin-left:auto; }
   .feed { display:grid; gap:6px; max-height:220px; overflow:auto; font-size:13px; }
   .feed div.ev { padding:6px 8px; border-left:3px solid var(--accent); background:var(--bg); border-radius:6px; animation:pop .4s ease; }
   .feed div.ev.webhook { border-color:var(--warn); } .feed div.ev.sale { border-color:var(--good); } .feed div.ev.error { border-color:var(--bad); }
@@ -221,7 +226,7 @@ const actionCell = (p) => {
   if (!pr) return '';
   const b = document.createElement('button');
   b.className = 'cellbtn'; b.textContent = 'Approve';
-  b.onclick = async () => { b.disabled = true; try { await api('/api/agent/approve', { id: pr.id }); toast(`Done: ${pr.target}`); await refresh(); } catch (e) { toast(e.message); b.disabled = false; } };
+  b.onclick = async () => { b.disabled = true; try { await api('/api/agent/approve', { id: pr.id, fingerprint: pr.fingerprint }); toast(`Done: ${pr.target}`); await refresh(); } catch (e) { toast(e.message); b.disabled = false; } };
   return b;
 };
 const riskGrid = agGrid.createGrid($('#riskGrid'), {
@@ -249,6 +254,7 @@ const logGrid = agGrid.createGrid($('#logGrid'), {
     { field: 'amount', valueFormatter: (p) => money(p.value), width: 110, type: 'rightAligned' },
     { headerName: 'PayPal call', width: 120, cellDataType: 'text', valueGetter: (p) => p.node.rowPinned ? '' : p.data.simulated ? 'simulated' : 'live',
       cellClassRules: { 'live-cell': (p) => p.value === 'live' } },
+    { field: 'fingerprint', headerName: 'Approved fingerprint', width: 150, valueFormatter: (p) => p.value ? p.value.slice(0, 12) : '', tooltipField: 'fingerprint' },
     { field: 'text', headerName: 'Sent to PayPal', flex: 2, minWidth: 220, tooltipField: 'text' },
   ],
   defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [], overlayNoRowsTemplate: 'No actions yet.', tooltipShowDelay: 300,
@@ -259,7 +265,7 @@ $('#csv2').onclick = () => logGrid.exportDataAsCsv({ fileName: 'sellershield-aud
 $('#bulk').onclick = async () => {
   const rows = riskGrid.getSelectedRows(); $('#bulk').disabled = true;
   let done = 0;
-  for (const r of rows) { try { await api('/api/agent/approve', { id: r.proposal.id }); done++; } catch (e) { toast(e.message); } }
+  for (const r of rows) { try { await api('/api/agent/approve', { id: r.proposal.id, fingerprint: r.proposal.fingerprint }); done++; } catch (e) { toast(e.message); } }
   toast(`Approved ${done} action${done === 1 ? '' : 's'}`); await refresh();
 };
 // Urgency 0-100: bigger amounts and older/closer-to-deadline items rank higher.
@@ -305,12 +311,24 @@ function renderProps(list, scanned) {
       <div><b>${money(p.amount)}</b> <span class="mute">· ${pct}% confidence</span><span class="meter"><i style="width:${pct}%"></i></span></div></div>
       <div class="mute">${esc(p.reasoning)}</div>
       ${p.protection ? protBox(p.protection) : ''}
+      ${p.records?.length ? recBox(p.records) : ''}
       <textarea aria-label="Draft sent to PayPal">${esc(p.draft)}</textarea>
-      <div><button>Approve &amp; send to PayPal</button> <button class="ghost">Skip</button></div>`;
-    const [ok, skip] = el.querySelectorAll('button');
+      <div class="issues"></div>
+      <div class="approve-row"><button class="approve">Approve &amp; send to PayPal</button> <button class="ghost skip">Skip</button>
+        <span class="fp mute" title="SHA-256 of exactly what will be sent. Editing the draft changes it.">fingerprint <code></code></span></div>`;
+    const ok = el.querySelector(".approve"), skip = el.querySelector('.skip'), ta = el.querySelector('textarea');
+    let fp = p.fingerprint;
+    const show = (f, issues) => {
+      fp = f; el.querySelector('.fp code').textContent = f.slice(0, 12);
+      el.querySelector('.issues').innerHTML = issues.length
+        ? `<div class="issuebox"><b>Citation check failed:</b> fix before sending<ul>${issues.map((i) => `<li><code>${esc(i.code)}</code> ${esc(i.detail)}</li>`).join('')}</ul></div>` : '';
+      ok.disabled = issues.length > 0;
+    };
+    show(p.fingerprint, p.issues || []);
+    let t; ta.oninput = () => { ok.disabled = true; clearTimeout(t); t = setTimeout(async () => { const r = await api('/api/agent/check', { id: p.id, draft: ta.value }); show(r.fingerprint, r.issues); }, 250); };
     ok.onclick = async () => {
       ok.disabled = true;
-      try { await api('/api/agent/approve', { id: p.id, draft: el.querySelector('textarea').value }); toast(`Done: ${p.decision.toLowerCase().replace('_', ' ')} on ${p.target}`); await refresh(); }
+      try { await api('/api/agent/approve', { id: p.id, draft: ta.value, fingerprint: fp }); toast(`Done: ${p.decision.toLowerCase().replace('_', ' ')} on ${p.target}`); await refresh(); }
       catch (e) { toast(e.message); ok.disabled = false; }
     };
     skip.onclick = () => el.remove();
@@ -370,6 +388,10 @@ $('#q').onkeydown = (e) => { if (e.key === 'Enter') ask($('#q').value); };
 document.querySelectorAll('[data-q]').forEach((b) => (b.onclick = () => ask(b.dataset.q)));
 
 const PROT_LABEL = { LIKELY_COVERED: 'Likely covered by Seller Protection', NEEDS_EVIDENCE: 'Coverable, evidence missing', NOT_COVERED: 'Not covered by Seller Protection' };
+function recBox(recs) {
+  return `<details class="recs"><summary>Evidence records the draft may cite (${recs.length})</summary><ul>${recs.map((r) =>
+    `<li><b>${esc(r.ref)}</b> ${esc(r.source)} <code>${esc(r.id)}</code> <span class="mute">${esc(Object.entries(r.fields).map(([k, v]) => `${k}: ${v}`).join(' · '))}</span></li>`).join('')}</ul></details>`;
+}
 function protBox(pr) {
   return `<div class="prot"><b class="${esc(pr.status)}">${esc(PROT_LABEL[pr.status] || pr.status)}</b> <span class="mute">· ${esc(pr.summary)}</span>
     <ul>${pr.checks.map((c) => `<li class="${c.pass ? 'ok' : 'no'}" data-i="${c.pass ? '✓' : '✗'}">${esc(c.rule)} <span class="mute">(${esc(c.detail)})</span></li>`).join('')}</ul></div>`;

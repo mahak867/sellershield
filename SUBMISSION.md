@@ -35,7 +35,16 @@ How it works:
 - **Seller Protection checklist** for every dispute (claim type, tracking, delivered status, address, deadline), computed in code from PayPal's published rules. Claude decides on top of those facts.
 - **Prevention:** when a PayPal Checkout sale lands without tracking, the agent flags it and posts tracking to the capture.
 - **Real time:** signature-verified PayPal webhooks and new sales trigger the agent at once.
-- **Measured:** a 30-case policy test suite (`npm run bench`) that caught and fixed a real planner bug.
+- **Facts must be cited:** a dispute response may only state facts from numbered records:
+  - the PayPal dispute,
+  - the PayPal capture and order,
+  - the seller's order book.
+
+  Code checks that every amount, date and ID matches its cited record, and refuses to send anything that doesn't.
+- **Approvals bound to the exact text:** every approval carries a SHA-256 fingerprint of what will be sent. Change a word and it needs a new approval. The audit log keeps the fingerprint.
+- **Measured:** 20 automated tests (`npm test`) plus a 30-case policy suite (`npm run bench`). These caught two real bugs, both fixed:
+  - the planner fought a dispute with no evidence,
+  - an Approve button was wired to the wrong element.
 
 ## What it does
 
@@ -71,7 +80,11 @@ The dashboard shows money at risk, money protected, hours saved and actions take
   - Light and dark mode, works on phones.
 - **Seller Protection engine:** `lib/protection.js` encodes PayPal's published rules as a checklist. Its output is shown to the seller and passed to Claude.
 - **Real time:** a PayPal webhook endpoint verifies signatures with `verify-webhook-signature`, then runs the agent. The dashboard receives events over Server-Sent Events.
-- **Testing:** 30 labelled dispute cases with a runner that reports agreement for Claude or the rules fallback.
+- **Guardrails in code:**
+  - `lib/evidence.js` builds the citable records, checks every value in a draft against its cited record, and fingerprints the exact payload.
+  - The server refuses stale fingerprints (409) and uncited facts (422).
+  - Autopilot skips anything that fails these checks.
+- **Testing:** 20 automated tests (Node's test runner, mock mode, no keys), plus 30 labelled dispute cases with a runner that reports agreement for Claude or the rules fallback.
 - **Hosting:** **Render** via a `render.yaml` blueprint.
 
 ## Challenges we ran into
@@ -141,8 +154,8 @@ The agent already ran when the sale landed (point at Live activity). Point at th
 "The sale triggered the agent instantly. It caught the wallet order: paid, shipped, no tracking on PayPal. One click fixes it. And for every dispute it checks PayPal's Seller Protection rules line by line. Here's a dispute where the buyer says the item never arrived. Claude checked the order: tracking shows delivery, so it says fight, with high confidence, and it already wrote the evidence. Here's an $18 dispute it says to accept: fighting costs more than it's worth. And here's an invoice that's 19 days late, with a firm reminder ready to go."
 
 **1:25–1:45 Human in the loop**
-Edit one word in a draft, then click **Approve & send to PayPal**. Show the audit log row marked **live**.
-"I can edit anything, and one click sends it through PayPal's API. The audit log shows exactly what went out, and that it was a live PayPal call."
+Open a dispute card's evidence records. Type a fake date into the draft: the citation check blocks it and the fingerprint changes. Undo it, approve, and show the audit log row with **live** and the fingerprint.
+"The agent can only tell PayPal facts it can cite. If I type something it can't back up, it won't send. And every approval is tied to the exact text, so what I approved is exactly what PayPal got."
 
 **1:45–2:15 Autopilot + real time (the agentic part)**
 Click **Reset**. Turn on **Autopilot** (max $100, 80% confidence), then click **Simulate dispute**. Point at the Live activity feed.
