@@ -9,21 +9,27 @@ Small sellers lose money three ways:
 
 SellerShield reacts the moment one of these happens: a PayPal webhook fires or a sale lands. It checks the case against PayPal's Seller Protection rules, decides what to do, writes the response, and executes it through PayPal's APIs. It acts either after one click from the seller or on its own under limits the seller sets.
 
-## What makes it different
+## How to judge in 5 minutes
 
-We read the public repos of other PayPal AI Hackathon entries on 2026-11-08. Most agents in this space chase invoices or guard what an AI agent spends. SellerShield is built around a different question: **"Will PayPal protect this money, and what do I need to do so it does?"**
+1. Open the hosted demo (link at the top of the Devpost page). It runs on the real PayPal sandbox.
+2. Click **Load sandbox data**: real overdue invoices are created in the sandbox.
+3. Click **Run agent**. Every item gets a proposal, and every dispute shows a **Seller Protection checklist**.
+4. Turn on **Autopilot** (max $100, 80%), then click **Simulate dispute**. The **Live activity** feed shows the agent reacting and acting within the limits.
+5. Click **Open store** and buy something with a PayPal sandbox buyer account. The sale triggers the agent, which flags the missing tracking. Approve it to post tracking to that real capture.
+6. Open the **Agent audit log**: each action shows who triggered it and whether the PayPal call was **live** or **simulated**.
 
-- **Seller Protection eligibility check** (`lib/protection.js`). For every dispute, the agent works through a deterministic checklist from PayPal's published rules:
-  - claim type covered or not (for example, "not as described" is excluded),
-  - verifiable tracking,
-  - "delivered" status with a date,
-  - shipped to the transaction address,
-  - response deadline.
+Disputes tagged **demo** are sample data, and actions on them are simulated. A real sandbox dispute (see "Real dispute, end to end" below) is handled live.
 
-  Claude decides FIGHT or ACCEPT on top of that checklist, not instead of it.
-- **Closes the tracking gap at the source.** When a sale lands through PayPal Checkout, the agent sees that tracking is missing and posts it to the capture. That's the proof Seller Protection needs later.
-- **Real time.** PayPal webhooks (signature verified) and new sales trigger the agent immediately, and the dashboard shows it live.
-- **A published policy test suite.** `npm run bench` runs 30 labelled dispute cases and writes `bench/RESULTS.md`.
+## Where SellerShield fits
+
+The PayPal AI Hackathon has many strong single-purpose entries. Some go deeper than SellerShield on disputes alone, and some on invoice collection alone.
+
+SellerShield's angle is **one agent and one inbox for all the seller's money at risk**:
+- disputes, checked against Seller Protection rules,
+- paid orders missing tracking,
+- overdue invoices.
+
+These are ranked by urgency, handled under one autopilot policy, and recorded in one audit log. A small seller doesn't want three tools; they want one place that tells them where their money is stuck and fixes it.
 
 ## Features
 
@@ -84,6 +90,16 @@ Data sources in sandbox mode:
 - Disputes: live from PayPal. Sellers cannot create disputes through the API, so when the sandbox has none, demo disputes fill in. They are tagged **demo** and actions on them are simulated. Set `DEMO_FILL=0` to turn this off.
 - Orders: real when bought through `/shop.html`. Pre-loaded held-funds examples are demo records, tagged **demo**.
 - The audit log marks each action as `live` or `simulated`.
+
+## Real dispute, end to end (sandbox)
+
+PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open one:
+
+1. Buy something in **Open store** with your sandbox buyer account.
+2. Log in to sandbox.paypal.com as that buyer, open the payment, and report a problem (item not received).
+3. In SellerShield, click **Run agent**. The real dispute appears, without a **demo** tag, linked to the order. The agent runs the Seller Protection check and drafts a response.
+4. Approve it. If PayPal isn't accepting evidence yet (inquiry stage), SellerShield sends the same facts as a message to the buyer and logs that it did so.
+5. Click **PayPal decides** (sandbox only). SellerShield asks PayPal's sandbox to settle the dispute, escalating it first if needed, and shows PayPal's outcome in the live feed.
 
 ## Policy test suite
 

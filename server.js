@@ -70,7 +70,8 @@ async function execute(id, draft, by = 'seller') {
   store.proposals = store.proposals.filter((x) => x.id !== id);
   return logAction({
     kind: p.kind, target: p.target, decision: p.decision, amount: p.amount, confidence: p.confidence,
-    by, simulated: !!result?.simulated, text, minutesSaved: MINUTES_SAVED[p.kind],
+    by, simulated: !!result?.simulated, text: result?.via ? `[sent as buyer message: PayPal not taking evidence at this stage] ${text}` : text,
+    minutesSaved: MINUTES_SAVED[p.kind],
   });
 }
 
@@ -135,6 +136,15 @@ app.post('/api/webhooks/paypal', async (req, res) => {
   if (!label) return;
   activity('webhook', `PayPal webhook: ${label} (${ev.resource?.dispute_id || ev.resource?.id || 'n/a'})`);
   runAgent(`webhook ${ev.event_type}`).catch((e) => activity('error', `Agent run failed: ${e.message}`));
+});
+
+// SANDBOX ONLY: let PayPal decide a real sandbox dispute, to show the full lifecycle.
+app.post('/api/disputes/:id/sandbox-settle', async (req, res, next) => {
+  try {
+    const r = await paypal.sandboxSettle(req.params.id, req.body?.outcome === 'BUYER_FAVOR' ? 'BUYER_FAVOR' : 'SELLER_FAVOR');
+    activity('webhook', `PayPal (sandbox) decided dispute ${req.params.id}: ${r.outcome || r.status} [${r.steps.join('; ')}]`);
+    res.json(r);
+  } catch (e) { next(e); }
 });
 
 // Demo: simulate a buyer opening a dispute, to show the real-time loop without a buyer account.

@@ -22,14 +22,20 @@ Small sellers and freelancers don't lose money because they sell bad products. T
 
 Big merchants pay for chargeback teams and collections tools. Small sellers have nobody. We built them an agent.
 
-## What makes it different
+## Where it fits
 
-We read the public repos of other entries. Most chase invoices or limit what an AI agent spends. SellerShield answers the question sellers actually lose sleep over: **"Will PayPal protect this money, and what do I need to do so it does?"**
+This hackathon has strong single-purpose entries for disputes, for invoices and for fraud. SellerShield's angle is **one agent and one inbox for all of a small seller's money at risk**:
+- disputes, checked against PayPal Seller Protection rules,
+- paid orders still missing tracking,
+- overdue invoices.
 
-- **A deterministic Seller Protection check** for every dispute: claim type covered or not, verifiable tracking, delivered status, shipping address, response deadline. Claude decides on top of these facts, so its advice follows PayPal's real rules.
-- **Prevention, not just response:** when a PayPal Checkout sale lands, the agent sees tracking is missing and posts it to the capture. That's the proof Seller Protection needs if a dispute ever comes.
-- **Real time:** signature-verified PayPal webhooks and new sales trigger the agent immediately.
-- **Measured:** a 30-case policy test suite (`npm run bench`). It caught a real bug: the planner fought a dispute where there was no evidence to collect.
+They're ranked by urgency, handled under a single autopilot policy the seller controls, and recorded in one audit log. A seller with ten orders a week won't run three tools. They need one place that says where their money is stuck, and fixes it.
+
+How it works:
+- **Seller Protection checklist** for every dispute (claim type, tracking, delivered status, address, deadline), computed in code from PayPal's published rules. Claude decides on top of those facts.
+- **Prevention:** when a PayPal Checkout sale lands without tracking, the agent flags it and posts tracking to the capture.
+- **Real time:** signature-verified PayPal webhooks and new sales trigger the agent at once.
+- **Measured:** a 30-case policy test suite (`npm run bench`) that caught and fixed a real planner bug.
 
 ## What it does
 
@@ -70,7 +76,7 @@ The dashboard shows money at risk, money protected, hours saved and actions take
 
 ## Challenges we ran into
 
-- Sellers can't create disputes through the API. To keep the demo honest, sample disputes are clearly tagged **demo**, and the audit log marks each action **live** or **simulated**. Invoices are fully live: one button creates real overdue invoices in the sandbox, and reminders go out through the real Invoicing API. Orders are live when bought through our PayPal Checkout store.
+- Sellers can't create disputes through the API. A sandbox buyer can open a real one against a store order: SellerShield then handles it live and can ask PayPal's sandbox to decide it. To keep the zero-setup demo honest, sample disputes are clearly tagged **demo**, and the audit log marks each action **live** or **simulated**. Invoices are fully live: one button creates real overdue invoices in the sandbox, and reminders go out through the real Invoicing API. Orders are live when bought through our PayPal Checkout store.
 - PayPal's Agent Toolkit ESM build failed to import lodash under Node 22, so we load its CommonJS build.
 - Seller Protection rules have many conditions, and models can blur them. We made the rules deterministic code and let Claude reason on top. Our test suite then caught the rules planner fighting a case with no evidence, which we fixed.
 - Letting an AI move money needs guardrails. We combined human approval, autopilot limits the seller controls, and a full audit trail.

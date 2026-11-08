@@ -212,6 +212,12 @@ const agentCell = (p) => {
 };
 const actionCell = (p) => {
   const pr = p.data?.proposal;
+  if (!pr && p.data?.type === 'Dispute' && !p.data.demo && !p.node.rowPinned) {
+    const b = document.createElement('button');
+    b.className = 'cellbtn ghost'; b.textContent = 'PayPal decides'; b.title = 'Sandbox only: ask PayPal to settle this dispute';
+    b.onclick = async () => { b.disabled = true; try { const r = await api(`/api/disputes/${encodeURIComponent(p.data.id)}/sandbox-settle`, {}); toast(`PayPal: ${r.outcome || r.status}`); await refresh(); } catch (e) { toast(e.message); b.disabled = false; } };
+    return b;
+  }
   if (!pr) return '';
   const b = document.createElement('button');
   b.className = 'cellbtn'; b.textContent = 'Approve';
@@ -227,7 +233,7 @@ const riskGrid = agGrid.createGrid($('#riskGrid'), {
     { field: 'detail', flex: 2, minWidth: 220, tooltipField: 'detail' },
     { field: 'who', headerName: 'Buyer / client', flex: 1, minWidth: 170 },
     { field: 'id', headerName: 'PayPal ID', flex: 1, minWidth: 170 },
-    { headerName: '', width: 110, cellRenderer: actionCell, sortable: false, filter: false, pinned: 'right' },
+    { headerName: '', width: 130, cellRenderer: actionCell, sortable: false, filter: false, pinned: 'right' },
   ],
   defaultColDef: { sortable: true, filter: true, resizable: true },
   rowSelection: 'multiple', suppressRowClickSelection: true,
@@ -265,7 +271,7 @@ async function refresh() {
   const prop = Object.fromEntries(r.proposals.map((p) => [p.id, p]));
   const rows = [
     ...r.disputes.map((d) => ({ key: 'dispute:' + d.dispute_id, type: 'Dispute', demo: d.demo, id: d.dispute_id, who: d.transaction_id,
-      detail: `${d.reason.replaceAll('_', ' ').toLowerCase()} · respond in ${daysUntil(d.seller_response_due_date)} days`, amount: d.amount,
+      detail: `${d.reason.replaceAll('_', ' ').toLowerCase()}${d.stage ? ' · ' + d.stage.toLowerCase() : ''}${d.status && !d.demo ? ' · ' + d.status.toLowerCase().replaceAll('_', ' ') : ''} · respond in ${daysUntil(d.seller_response_due_date)} days`, amount: d.amount,
       urgency: urgency(60 - daysUntil(d.seller_response_due_date) * 3, d.amount), proposal: prop['dispute:' + d.dispute_id] })),
     ...r.invoices.map((i) => ({ key: 'invoice:' + i.id, type: 'Invoice', demo: i.demo, id: i.id, who: i.recipient,
       detail: `${i.days_overdue} days overdue · ${i.memo}`, amount: i.amount,
