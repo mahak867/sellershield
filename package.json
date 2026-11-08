@@ -9,7 +9,11 @@
     "dev": "node --watch server.js",
     "bench": "node bench/run.js",
     "test": "node --test test/*.test.js",
-    "record-demo": "node scripts/record-demo.cjs"
+    "record-demo": "node scripts/record-demo.cjs",
+    "apimatic:validate": "apimatic api validate -i apimatic",
+    "apimatic:sdk": "apimatic sdk generate -l typescript -i apimatic",
+    "apimatic:portal": "apimatic portal generate -i apimatic",
+    "apimatic:plugin": "apimatic plugin generate -i apimatic"
   },
   "engines": {
     "node": ">=18"

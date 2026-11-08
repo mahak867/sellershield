@@ -127,15 +127,16 @@ async function card(page, html, ms) {
   await scrollTo(page, '.charts');
   await cap(page, 'AG Charts: where the money is stuck, and how much of it Seller Protection covers.', 4500);
   await scrollTo(page, '#timeline', 120);
-  await cap(page, 'A Bryntum timeline of every deadline, overdue period and hold.', 4000);
-  const rem = page.locator('#timeline .b-sch-event', { hasText: 'Remind' }).first();
-  if (await rem.count()) {
-    const b = await rem.boundingBox();
-    await point(page, rem);
-    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2); await page.mouse.down();
-    for (let i = 1; i <= 12; i++) { await page.mouse.move(b.x + b.width / 2 + i * 16, b.y + b.height / 2); await wait(40); }
-    await page.mouse.up(); await wait(800);
-    await cap(page, 'Drag a reminder to a later day: the agent and autopilot wait until then.', 4500);
+  await cap(page, 'The Bryntum agent calendar: every PayPal deadline, overdue invoice and hold on one timeline.', 4000);
+  const plan = page.locator('#timeline .ss-plan').first();
+  if (await plan.count()) {
+    await cap(page, 'Each purple bar is an action the agent proposes, placed before PayPal\'s deadline.', 4000);
+    const b = await plan.boundingBox();
+    await point(page, plan);
+    await page.mouse.move(b.x + 8, b.y + b.height / 2); await page.mouse.down();
+    for (let i = 1; i <= 10; i++) { await page.mouse.move(b.x + 8 + i * 17, b.y + b.height / 2); await wait(45); }
+    await page.mouse.up(); await wait(1200);
+    await cap(page, 'Drag it onto a day to approve it for that day. It turns green and the agent runs it then, tied to its fingerprint.', 5500);
   }
 
   // 6. Grid + audit

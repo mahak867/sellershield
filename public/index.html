@@ -94,6 +94,7 @@
   .urg .bar i { display:block; height:100%; }
   .cellbtn { padding:4px 10px; font-size:12px; line-height:1.4; }
   .ag-row-pinned { font-weight:700; }
+  .cell-edited { background: var(--accent-soft); } .cell-bad { background: var(--bad-soft); color: var(--bad); }
   .live-cell { color:var(--good); font-weight:600; }
   .prot { border-radius:10px; padding:8px 10px; font-size:13px; background:var(--bg); border:1px solid var(--line); }
   .prot b.LIKELY_COVERED { color:var(--good); } .prot b.NEEDS_EVIDENCE { color:var(--warn); } .prot b.NOT_COVERED { color:var(--bad); }
@@ -199,7 +200,7 @@
 
   <section class="card">
     <div class="gridhead">
-      <div><h2>Money timeline</h2><p class="sub">Every deadline, overdue period and hold on one timeline (Bryntum Scheduler). Drag a <b>reminder</b> to reschedule it: the agent and autopilot wait until that day.</p></div>
+      <div><h2>Agent calendar</h2><p class="sub">Every deadline, overdue period and hold on one timeline (Bryntum Scheduler). Each <b>purple</b> bar is an action the agent proposes: <b>drag it onto a day to approve it for that day</b> (bound to its fingerprint; PayPal deadlines enforced). Green = approved; the agent runs it on that day.</p></div>
     </div>
     <div id="timeline" class="timeline"></div>
   </section>
@@ -248,15 +249,31 @@ const actionCell = (p) => {
   if (!pr) return '';
   const b = document.createElement('button');
   b.className = 'cellbtn'; b.textContent = 'Approve';
-  b.onclick = async () => { b.disabled = true; try { await api('/api/agent/approve', { id: pr.id, fingerprint: pr.fingerprint }); toast(`Done: ${pr.target}`); await refresh(); } catch (e) { toast(e.message); b.disabled = false; } };
+  const ed = gridEdits[pr.id];
+  if (ed?.issues?.length) { b.disabled = true; b.title = 'Edited draft fails the citation check'; }
+  b.onclick = async () => {
+    b.disabled = true;
+    try {
+      await api('/api/agent/approve', ed ? { id: pr.id, draft: ed.draft, fingerprint: ed.fingerprint } : { id: pr.id, fingerprint: pr.fingerprint });
+      delete gridEdits[pr.id]; toast(`Done: ${pr.target}`); await refresh();
+    } catch (e) { toast(e.message); b.disabled = false; }
+  };
   return b;
 };
+// Drafts edited inside the grid: { [proposalId]: { draft, fingerprint, issues } }
+const gridEdits = {};
 const riskGrid = agGrid.createGrid($('#riskGrid'), {
   columnDefs: [
     { field: 'type', width: 150, cellRenderer: typeCell },
-    { field: 'urgency', width: 140, cellRenderer: urgCell, sort: 'desc', filter: 'agNumberColumnFilter' },
-    { field: 'amount', valueFormatter: (p) => money(p.value), width: 120, type: 'rightAligned', filter: 'agNumberColumnFilter' },
-    { headerName: 'Agent says', width: 140, cellRenderer: agentCell, valueGetter: (p) => p.data?.proposal?.decision ?? '' },
+    { field: 'urgency', width: 140, cellRenderer: urgCell, sort: 'desc', filter: 'agNumberColumnFilter', enableCellChangeFlash: true },
+    { field: 'amount', valueFormatter: (p) => money(p.value), width: 120, type: 'rightAligned', filter: 'agNumberColumnFilter', enableCellChangeFlash: true },
+    { headerName: 'Agent says', width: 140, cellRenderer: agentCell, valueGetter: (p) => p.data?.proposal?.decision ?? '', enableCellChangeFlash: true },
+    { headerName: 'Draft (double-click to edit)', colId: 'draft', flex: 2, minWidth: 240, tooltipValueGetter: (p) => p.value,
+      editable: (p) => !!p.data?.proposal && !p.node.rowPinned, cellEditor: 'agLargeTextCellEditor', cellEditorPopup: true,
+      cellEditorParams: { maxLength: 4000, rows: 8, cols: 70 },
+      valueGetter: (p) => p.data?.proposal ? (gridEdits[p.data.proposal.id]?.draft ?? p.data.proposal.draft) : '',
+      valueSetter: (p) => { if (!p.data?.proposal) return false; gridEdits[p.data.proposal.id] = { draft: String(p.newValue ?? '') }; return true; },
+      cellClassRules: { 'cell-bad': (p) => !!gridEdits[p.data?.proposal?.id]?.issues?.length, 'cell-edited': (p) => !!gridEdits[p.data?.proposal?.id] } },
     { field: 'detail', flex: 2, minWidth: 220, tooltipField: 'detail' },
     { field: 'who', headerName: 'Buyer / client', flex: 1, minWidth: 170 },
     { field: 'id', headerName: 'PayPal ID', flex: 1, minWidth: 170 },
@@ -266,6 +283,15 @@ const riskGrid = agGrid.createGrid($('#riskGrid'), {
   rowSelection: { mode: 'multiRow', checkboxes: true, headerCheckbox: true, enableClickSelection: false, isRowSelectable: (n) => !!n.data?.proposal },
   onSelectionChanged: () => { const n = riskGrid.getSelectedRows().length; $('#bulk').disabled = !n; $('#bulk').textContent = n ? `Approve selected (${n})` : 'Approve selected'; },
   getRowId: (p) => p.data.key, rowData: [], overlayNoRowsTemplate: 'Nothing at risk. Nice.', tooltipShowDelay: 300,
+  // Every grid edit is re-fingerprinted and citation-checked on the server before it can be approved.
+  onCellValueChanged: async (e) => {
+    if (e.colDef.colId !== 'draft' || !e.data?.proposal) return;
+    const id = e.data.proposal.id, ed = gridEdits[id];
+    const r = await api('/api/agent/check', { id, draft: ed.draft });
+    Object.assign(ed, r);
+    e.api.refreshCells({ rowNodes: [e.node], force: true });
+    toast(r.issues.length ? `Citation check failed: ${r.issues.map((i) => i.code).join(', ')}` : `Draft updated (fingerprint ${r.fingerprint.slice(0, 12)})`);
+  },
 });
 const logGrid = agGrid.createGrid($('#logGrid'), {
   columnDefs: [
@@ -286,7 +312,7 @@ $('#csv2').onclick = () => logGrid.exportDataAsCsv({ fileName: 'sellershield-aud
 $('#bulk').onclick = async () => {
   const rows = riskGrid.getSelectedRows(); $('#bulk').disabled = true;
   let done = 0;
-  for (const r of rows) { try { await api('/api/agent/approve', { id: r.proposal.id, fingerprint: r.proposal.fingerprint }); done++; } catch (e) { toast(e.message); } }
+  for (const r of rows) { try { const ed = gridEdits[r.proposal.id]; if (ed?.issues?.length) throw new Error(`${r.proposal.target}: fails citation check`); await api('/api/agent/approve', ed ? { id: r.proposal.id, draft: ed.draft, fingerprint: ed.fingerprint } : { id: r.proposal.id, fingerprint: r.proposal.fingerprint }); delete gridEdits[r.proposal.id]; done++; } catch (e) { toast(e.message); } }
   toast(`Approved ${done} action${done === 1 ? '' : 's'}`); await refresh();
 };
 // Urgency 0-100: bigger amounts and older/closer-to-deadline items rank higher.
@@ -494,6 +520,7 @@ $('#simDispute').onclick = async () => {
   $('#simDispute').disabled = false;
 };
 
+window.ssRefresh = refresh; window.ssToast = toast;
 loadStatus().then(refresh);
 </script>
 <script type="module">
@@ -513,7 +540,7 @@ const sched = new Scheduler({
   startDate: plus(today, -21),
   endDate: plus(today, 21),
   viewPreset: 'weekAndDay',
-  tickSize: 64,
+  tickSize: 84,
   visibleDate: { date: today, block: 'center' },
   rowHeight: 42,
   barMargin: 7,
@@ -532,6 +559,14 @@ const sched = new Scheduler({
   listeners: {
     async eventDrop({ eventRecords }) {
       for (const e of eventRecords) {
+        const proposalId = e.get('proposalId');
+        if (proposalId) {
+          const r = await fetch('/api/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: proposalId, at: iso(e.startDate), fingerprint: e.get('fingerprint') }) });
+          if (!r.ok) { window.ssToast?.((await r.json()).error); }
+          window.ssRefresh?.();
+          continue;
+        }
         const invoiceId = e.get('invoiceId');
         if (!invoiceId) continue;
         const r = await fetch('/api/reminders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invoiceId, at: iso(e.startDate) }) });
@@ -558,6 +593,7 @@ window.sellershieldTimeline = (r) => {
     const due = at(i.due_date || today);
     events.push({ id: id + ':late', resourceId: id, startDate: due, endDate: due < today ? today : plus(due, 1), draggable: false, eventColor: 'red',
       name: `Overdue ${i.days_overdue}d`, tip: `${i.recipient}: ${i.memo}` });
+    if (prop[id]) continue; // the agent's own action event (below) replaces the plain reminder
     const rem = at(r.reminders?.[i.id] || today);
     events.push({ id: id + ':rem', resourceId: id, startDate: rem, endDate: plus(rem, 1), draggable: true, eventColor: 'violet', invoiceId: i.id,
       name: 'Remind', tip: 'Drag to reschedule. The agent waits until this day.' });
@@ -570,6 +606,16 @@ window.sellershieldTimeline = (r) => {
       name: o.live ? 'No tracking on PayPal' : `Held ${o.daysHeld}d`, tip: 'Adding tracking can release funds early and protects against "item not received".' });
     if (!o.live) events.push({ id: id + ':est', resourceId: id, startDate: plus(today, 1), endDate: plus(since, 21), draggable: false, eventColor: 'gray', eventStyle: 'dashed',
       name: 'Est. release (typical 21-day hold)', tip: 'Estimate only: PayPal sets the actual release date.' });
+  }
+  // Agent calendar: every proposed action sits on its row. Drag it onto a day to approve it for that day.
+  for (const p of r.proposals || []) {
+    if (!resources.some((x) => x.id === p.id)) continue;
+    const on = at(p.scheduledAt || today);
+    const verb = { FIGHT: 'fight', ACCEPT: 'accept', REMIND: 'remind', ADD_TRACKING: 'tracking' }[p.decision] || p.decision.toLowerCase();
+    events.push({ id: 'plan:' + p.id, resourceId: p.id, startDate: on, endDate: plus(on, 1), draggable: true,
+      eventColor: p.scheduledAt ? 'green' : 'indigo', proposalId: p.id, fingerprint: p.fingerprint, cls: p.scheduledAt ? 'ss-plan ss-approved' : 'ss-plan',
+      name: p.scheduledAt ? `✓ ${verb}` : `${verb} ⇢`,
+      tip: p.scheduledAt ? `Approved to run on ${p.scheduledAt}. Fingerprint ${p.fingerprint.slice(0, 12)}.` : `Drag onto a day to approve this action for that day (fingerprint ${p.fingerprint.slice(0, 12)}). Today = runs within seconds.` });
   }
   const known = new Set(resources.map((x) => x.id));
   for (const [n, a] of (r.actions || []).entries()) {

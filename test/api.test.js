@@ -130,3 +130,31 @@ test('evidence pack is a valid PDF with the response and records', async () => {
   assert.match(buf.toString('latin1'), /Records cited/);
   assert.match(buf.toString('latin1'), /%%EOF\n$/);
 });
+
+test('agent calendar: scheduling approves for a day; today runs automatically; deadlines enforced', async () => {
+  await post('/api/demo/reset');
+  const { proposals } = await (await post('/api/agent/scan')).json();
+  const inv = proposals.find((x) => x.kind === 'invoice');
+  const today = new Date().toISOString().slice(0, 10);
+  // stale fingerprint refused
+  assert.equal((await post('/api/schedule', { id: inv.id, at: today, fingerprint: 'nope' })).status, 409);
+  // a dispute cannot be scheduled after PayPal's deadline
+  const d = proposals.find((x) => x.kind === 'dispute' && x.decision === 'FIGHT');
+  assert.equal((await post('/api/schedule', { id: d.id, at: '2099-01-01', fingerprint: d.fingerprint })).status, 400);
+  // future day: stays scheduled, survives a re-scan with the same fingerprint
+  const later = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+  assert.equal((await post('/api/schedule', { id: d.id, at: later, fingerprint: d.fingerprint })).status, 200);
+  const again = await (await post('/api/agent/scan')).json();
+  const kept = again.proposals.find((x) => x.id === d.id);
+  assert.equal(kept.fingerprint, d.fingerprint);
+  assert.equal(kept.scheduledAt, later);
+  // today: the scheduler runs it within its next tick
+  assert.equal((await post('/api/schedule', { id: inv.id, at: today, fingerprint: inv.fingerprint })).status, 200);
+  let done = false;
+  for (let i = 0; i < 40 && !done; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+    const risk = await (await fetch(URL + '/api/risk', { headers: { Cookie: cookie } })).json();
+    done = risk.actions.some((a) => a.target === inv.target && a.by === 'calendar');
+  }
+  assert.ok(done, 'calendar action ran');
+});

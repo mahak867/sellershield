@@ -6,7 +6,7 @@ import { paypal, MOCK_PAYPAL } from './lib/paypal.js';
 import { ai, MOCK_AI } from './lib/ai.js';
 import { store, logAction, resetStore } from './lib/store.js';
 import { assessProtection } from './lib/protection.js';
-import { workspaceMiddleware, workspaceId, SHARED } from './lib/workspace.js';
+import { workspaceMiddleware, workspaceId, SHARED, forEachWorkspace } from './lib/workspace.js';
 import { buildRecords, checkDraft, fingerprint, renderForPayPal } from './lib/evidence.js';
 import { disputePack } from './lib/pdf.js';
 
@@ -32,6 +32,7 @@ app.use('/api', (req, res, next) => {
 });
 app.use(express.static('public'));
 app.use('/vendor/ag-grid', express.static('node_modules/ag-grid-community'));
+app.get('/api/openapi.yaml', (_req, res) => res.type('text/yaml').sendFile('apimatic/src/spec/openapi.yaml', { root: process.cwd() }));
 app.use('/vendor/ag-charts', express.static('node_modules/ag-charts-community/dist/umd'));
 app.use('/vendor/bryntum', express.static('node_modules/@bryntum/scheduler-trial'));
 
@@ -58,6 +59,7 @@ async function scan() {
     const plan = await ai.planDispute(detail, order, protection, records);
     return { d, protection, records, order, plan, issues: checkDraft(plan.draft, records) };
   }));
+  store.disputeDue = Object.fromEntries(disputes.map((d) => [d.dispute_id, d.seller_response_due_date]));
   for (const { d, plan, protection, records, order, issues } of disputePlans) {
     proposals.push({ id: `dispute:${d.dispute_id}`, kind: 'dispute', target: d.dispute_id, amount: d.amount, demo: !!d.demo,
       protection, records, issues, orderTx: order?.transactionId, ...plan });
@@ -79,6 +81,12 @@ async function scan() {
     });
   }
   for (const p of proposals) p.fingerprint = fingerprint({ kind: p.kind, decision: p.decision, target: p.target, text: p.draft });
+  // A scheduled action was approved with a specific fingerprint: keep that exact proposal.
+  for (const [i, p] of proposals.entries()) {
+    const prev = store.schedule[p.id] && store.proposals.find((x) => x.id === p.id);
+    if (prev) proposals[i] = prev;
+  }
+  for (const p of proposals) if (store.schedule[p.id]) p.scheduledAt = store.schedule[p.id].at;
   store.proposals = proposals;
   return proposals;
 }
@@ -111,6 +119,7 @@ async function executeOnce(p, id, draft, by, approvedFingerprint) {
     throw Object.assign(new Error('Approval fingerprint does not match the text being sent. Review the draft and approve again.'), { status: 409 });
   }
   if (by !== 'seller' && fp !== p.fingerprint) throw Object.assign(new Error('Agent may only send the draft it proposed.'), { status: 409 });
+  if (by === 'calendar' && store.schedule[id]?.fingerprint !== fp) throw Object.assign(new Error('Scheduled approval does not match the draft.'), { status: 409 });
   if (p.kind === 'dispute' && p.decision !== 'ACCEPT') {
     const issues = checkDraft(text, p.records || []);
     if (issues.length) throw Object.assign(new Error(`Citation check failed: ${issues.map((i) => `${i.code} (${i.detail})`).join('; ')}`), { status: 422, issues });
@@ -127,6 +136,7 @@ async function executeOnce(p, id, draft, by, approvedFingerprint) {
     result = await paypal.addTracking(store.orders.find((x) => x.transactionId === p.target));
   }
   store.proposals = store.proposals.filter((x) => x.id !== id);
+  delete store.schedule[id];
   if (!p.demo && !result?.simulated) realWrites.set(id, Date.now());
   return logAction({
     kind: p.kind, target: p.target, decision: p.decision, amount: p.amount, confidence: p.confidence,
@@ -146,7 +156,7 @@ app.get('/api/status', (_req, res) => {
 });
 
 app.get('/api/risk', async (_req, res, next) => {
-  try { res.json({ ...(await getRisk()), actions: store.actions, proposals: store.proposals, reminders: store.reminders }); } catch (e) { next(e); }
+  try { res.json({ ...(await getRisk()), actions: store.actions, proposals: store.proposals, reminders: store.reminders, schedule: Object.fromEntries(Object.entries(store.schedule).map(([k, v]) => [k, v.at])) }); } catch (e) { next(e); }
 });
 
 // Scan, then let autopilot act on what qualifies. The rest waits for the seller.
@@ -249,6 +259,50 @@ app.post('/api/agent/check', (req, res) => {
     issues: p.kind === 'dispute' && p.decision !== 'ACCEPT' ? checkDraft(text, p.records || []) : [],
   });
 });
+
+// ---------- Agent calendar (Bryntum): scheduling an action approves it for that day ----------
+app.post('/api/schedule', (req, res) => {
+  const { id, at, fingerprint: fp } = req.body || {};
+  const p = store.proposals.find((x) => x.id === id);
+  if (!p) return res.status(404).json({ error: 'proposal not found; run the agent first' });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(at))) return res.status(400).json({ error: 'at must be YYYY-MM-DD' });
+  if (at < today()) return res.status(400).json({ error: 'Pick today or a later day.' });
+  if (fp !== p.fingerprint) return res.status(409).json({ error: 'The draft changed. Review it, then schedule again.' });
+  if ((p.issues || []).length) return res.status(422).json({ error: 'This draft fails the citation check. Fix it before scheduling.' });
+  if (p.kind === 'dispute') {
+    const due = store.disputeDue?.[p.target];
+    if (due && at > due) return res.status(400).json({ error: `PayPal needs a response by ${due}. Pick that day or earlier.` });
+  }
+  store.schedule[id] = { at, fingerprint: fp };
+  p.scheduledAt = at;
+  if (p.kind === 'invoice') store.reminders[p.target] = at;
+  activity('agent', `Approved ${p.decision.replaceAll('_', ' ').toLowerCase()} on ${p.target} to run ${at === today() ? 'today' : 'on ' + at}.`);
+  res.json({ ok: true, id, at });
+});
+app.delete('/api/schedule', (req, res) => {
+  const id = String(req.query.id || '');
+  const p = store.proposals.find((x) => x.id === id);
+  delete store.schedule[id];
+  if (p) delete p.scheduledAt;
+  res.json({ ok: true });
+});
+
+// Background scheduler: runs approved actions when their day arrives, in every workspace.
+async function runSchedule() {
+  await forEachWorkspace(async () => {
+    for (const [id, s] of Object.entries(store.schedule || {})) {
+      if (s.at > today()) continue;
+      try {
+        const e = await execute(id, undefined, 'calendar');
+        activity('agent', `Calendar: ran ${e.decision.replaceAll('_', ' ').toLowerCase()} on ${e.target} ($${e.amount.toFixed(2)}).`);
+      } catch (err) {
+        delete store.schedule[id];
+        activity('error', `Calendar: could not run ${id}: ${err.message}`);
+      }
+    }
+  });
+}
+setInterval(() => runSchedule().catch((e) => console.error('scheduler', e)), 15_000).unref();
 
 // Seller drags a reminder on the Bryntum timeline: the agent waits until that date.
 app.post('/api/reminders', (req, res) => {

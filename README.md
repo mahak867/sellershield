@@ -70,7 +70,7 @@ These are ranked by urgency, handled under one autopilot policy, and recorded in
   - A full audit log shows every action, who triggered it, live or simulated, and exactly what was sent.
 - **KPIs:** money at risk, money protected, hours saved, actions taken.
 - **AG Charts:** a "where your money is stuck" chart (at risk vs protected by category) and a donut of dispute dollars by Seller Protection status.
-- **Bryntum Scheduler money timeline:** each item at risk is a row.
+- **Bryntum Scheduler agent calendar:** each item at risk is a row. Drag a proposed action onto a day to approve it for that day (details below).
   - Dispute response windows are colored by Seller Protection status.
   - Overdue invoice periods and held funds (with an estimated release) are shown as bars.
   - The agent's actions appear on the rows they acted on.
@@ -121,6 +121,42 @@ Data sources in sandbox mode:
 - Orders: real when bought through `/shop.html`. Pre-loaded held-funds examples are demo records, tagged **demo**.
 - The audit log marks each action as `live` or `simulated`.
 
+## How each sponsor tool is used
+
+| Tool | What it does in SellerShield | Code |
+|---|---|---|
+| **PayPal** (Disputes, Invoicing, Orders v2, Tracking, Webhooks, JS SDK) | The whole product: reads money at risk and acts on it in the sandbox | `lib/paypal.js`, `public/shop.html` |
+| **PayPal Agent Toolkit** | Claude's read-only PayPal tools (invoices, disputes, orders, transactions, tracking) | `lib/toolkit.js` |
+| **APIMatic** | 1. **Consumes** APIMatic's PayPal Server SDK for every Orders and Payments call (idempotent captures, PayPal's own `seller_protection` flag). 2. **Publishes** SellerShield's own OpenAPI spec in APIMatic's `src/spec` layout, so APIMatic can generate SDKs, a docs portal and an AI context plugin for other agents and storefronts to call SellerShield. The spec is lint-clean, served at `/api/openapi.yaml`, and a test keeps it in sync with the server. | `lib/paypal-sdk.js`, `apimatic/src/spec/openapi.yaml`, `test/openapi.test.js` |
+| **Bryntum Scheduler** | **The agent calendar.** Every PayPal deadline, overdue period and hold is on one timeline. Each action the agent proposes is a bar: **dragging it onto a day approves it for that day**, bound to its SHA-256 fingerprint. PayPal's response deadline is enforced, and a background scheduler runs it on that day. The calendar is the approval interface. | `public/index.html` (module script), `server.js` (`/api/schedule`, `runSchedule`) |
+| **AG Grid** | The money-at-risk command center: urgency ranking, the agent's call per row, per-row and bulk approve, quick search, number filters, totals row, CSV export. Cells flash on live updates. **Drafts can be edited inside the grid**: each edit is re-fingerprinted and citation-checked on the server before Approve unlocks. | `public/index.html` |
+| **AG Charts** | Where the money is stuck (at risk vs protected), and dispute dollars by Seller Protection status | `public/index.html` (`renderCharts`) |
+| **Render** | One-click Blueprint deploy (`render.yaml`) with health check; webhooks point at the Render URL | `render.yaml` |
+
+### Generate a SellerShield SDK, docs portal or AI context plugin with APIMatic
+
+```bash
+npm i -g @apimatic/cli && apimatic auth login
+```
+
+Then run any of:
+
+```bash
+npm run apimatic:validate
+```
+
+```bash
+npm run apimatic:sdk
+```
+
+```bash
+npm run apimatic:portal
+```
+
+```bash
+npm run apimatic:plugin
+```
+
 ## Real dispute, end to end (sandbox)
 
 PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open one:
@@ -134,7 +170,7 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 31 tests: Seller Protection rules, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 34 tests: Seller Protection rules, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
 

@@ -1,0 +1,448 @@
+openapi: 3.0.3
+info:
+  title: SellerShield API
+  version: 1.0.0
+  description: |
+    SellerShield is an AI agent that protects a small seller's money on PayPal: disputes
+    (checked against PayPal Seller Protection), paid orders missing tracking, and overdue invoices.
+
+    Other agents and storefronts can use this API to ask SellerShield what money is at risk,
+    get a proposed action for each item, and approve actions. Every write is bound to a
+    SHA-256 fingerprint of the exact payload, and dispute evidence must cite records.
+
+    Each caller gets an isolated demo workspace through the `ss_ws` cookie; real PayPal
+    sandbox data is shared. All PayPal calls go to the PayPal sandbox.
+  license:
+    name: MIT
+    url: https://github.com/mahak867/sellershield/blob/main/LICENSE
+servers:
+  - url: http://localhost:3000
+    description: Local
+security:
+  - workspaceCookie: []
+tags:
+  - name: Risk
+    description: What money is at risk, and the live activity stream.
+  - name: Agent
+    description: Proposals, guarded approvals, evidence packs, chat and autopilot.
+  - name: Schedule
+    description: The agent calendar. Scheduling an action approves it for that day.
+  - name: Storefront
+    description: Demo store checkout through PayPal Orders v2.
+  - name: Webhooks
+    description: PayPal webhook receiver.
+  - name: Demo
+    description: Demo data helpers for judges.
+paths:
+  /api/status:
+    get:
+      tags: [Risk]
+      operationId: getStatus
+      summary: Which integrations are live, and the autopilot policy
+      responses:
+        '200':
+          description: Status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Status' }
+  /api/risk:
+    get:
+      tags: [Risk]
+      operationId: getRisk
+      summary: Everything at risk, plus proposals, the audit log and scheduled actions
+      responses:
+        '200':
+          description: Money at risk
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Risk' }
+  /api/agent/scan:
+    post:
+      tags: [Agent]
+      operationId: scan
+      summary: Run the agent; autopilot acts on what qualifies, the rest is proposed
+      responses:
+        '200':
+          description: Proposals and autopilot actions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [proposals, auto]
+                properties:
+                  proposals: { type: array, items: { $ref: '#/components/schemas/Proposal' } }
+                  auto: { type: array, items: { $ref: '#/components/schemas/Action' } }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/agent/check:
+    post:
+      tags: [Agent]
+      operationId: checkDraft
+      summary: Fingerprint and citation check for a (possibly edited) draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DraftRequest' }
+      responses:
+        '200':
+          description: Check result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [fingerprint, issues]
+                properties:
+                  fingerprint: { type: string, description: SHA-256 of the exact payload }
+                  issues: { type: array, items: { $ref: '#/components/schemas/CitationIssue' } }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/agent/approve:
+    post:
+      tags: [Agent]
+      operationId: approve
+      summary: Execute a proposal on PayPal
+      description: The fingerprint must match the text being sent. Dispute evidence must pass the citation check.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ApproveRequest' }
+      responses:
+        '200':
+          description: Executed and logged
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, entry]
+                properties:
+                  ok: { type: boolean }
+                  entry: { $ref: '#/components/schemas/Action' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /api/agent/pack:
+    post:
+      tags: [Agent]
+      operationId: evidencePack
+      summary: Evidence pack (PDF) for a dispute proposal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DraftRequest' }
+      responses:
+        '200':
+          description: PDF
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/agent/chat:
+    post:
+      tags: [Agent]
+      operationId: chat
+      summary: Ask the tool-using agent a question, or ask it to act
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message: { type: string, maxLength: 2000 }
+      responses:
+        '200':
+          description: Reply and the tools the agent used
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reply, steps]
+                properties:
+                  reply: { type: string }
+                  steps:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        tool: { type: string }
+                        input: { type: object, additionalProperties: true }
+  /api/autopilot:
+    post:
+      tags: [Agent]
+      operationId: setAutopilot
+      summary: Set the autopilot policy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Autopilot' }
+      responses:
+        '200':
+          description: Current policy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Autopilot' }
+  /api/schedule:
+    post:
+      tags: [Schedule]
+      operationId: scheduleAction
+      summary: Approve a proposal to run on a given day (the agent calendar)
+      description: Scheduling is an approval bound to the proposal's fingerprint. The agent runs it on that day.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, at, fingerprint]
+              properties:
+                id: { type: string }
+                at: { type: string, format: date }
+                fingerprint: { type: string }
+      responses:
+        '200': { description: Scheduled }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [Schedule]
+      operationId: unscheduleAction
+      summary: Cancel a scheduled action
+      parameters:
+        - { in: query, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Cancelled }
+  /api/reminders:
+    post:
+      tags: [Schedule]
+      operationId: scheduleReminder
+      summary: Set the day the agent may next remind about an invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoiceId, at]
+              properties:
+                invoiceId: { type: string }
+                at: { type: string, format: date }
+      responses:
+        '200': { description: Saved }
+        '400': { $ref: '#/components/responses/Error' }
+  /api/disputes/{id}/sandbox-settle:
+    post:
+      tags: [Agent]
+      operationId: sandboxSettle
+      summary: Sandbox only - ask PayPal to decide a real sandbox dispute
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: PayPal outcome }
+        '400': { $ref: '#/components/responses/Error' }
+  /api/events:
+    get:
+      tags: [Risk]
+      operationId: events
+      summary: Live activity stream (Server-Sent Events)
+      responses:
+        '200':
+          description: text/event-stream of ActivityEvent JSON objects
+          content:
+            text/event-stream:
+              schema: { type: string }
+  /api/shop/order:
+    post:
+      tags: [Storefront]
+      operationId: createOrder
+      summary: Create a PayPal order for a store product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sku]
+              properties:
+                sku: { type: string, enum: [wallet, candle, mugs] }
+      responses:
+        '200':
+          description: PayPal order ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+  /api/shop/capture:
+    post:
+      tags: [Storefront]
+      operationId: captureOrder
+      summary: Capture an approved PayPal order (idempotent per order)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId, sku]
+              properties:
+                orderId: { type: string }
+                sku: { type: string }
+      responses:
+        '200': { description: Capture result }
+  /api/webhooks/paypal:
+    post:
+      tags: [Webhooks]
+      operationId: paypalWebhook
+      summary: PayPal webhook receiver (signature verified, deduplicated)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200': { description: Accepted }
+        '400': { $ref: '#/components/responses/Error' }
+  /api/demo/reset:
+    post:
+      tags: [Demo]
+      operationId: resetDemo
+      summary: Restore this workspace's demo data
+      responses:
+        '200': { description: Reset }
+  /api/demo/seed:
+    post:
+      tags: [Demo]
+      operationId: seedSandbox
+      summary: Create real overdue invoices in the PayPal sandbox
+      responses:
+        '200': { description: Created }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/demo/simulate-dispute:
+    post:
+      tags: [Demo]
+      operationId: simulateDispute
+      summary: Add a demo dispute and run the agent
+      responses:
+        '200': { description: Agent result }
+components:
+  securitySchemes:
+    workspaceCookie:
+      type: apiKey
+      in: cookie
+      name: ss_ws
+      description: Isolated demo workspace. Set automatically on the first request.
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        issues: { type: array, items: { $ref: '#/components/schemas/CitationIssue' } }
+    Status:
+      type: object
+      properties:
+        mockPaypal: { type: boolean }
+        mockAi: { type: boolean }
+        autopilot: { $ref: '#/components/schemas/Autopilot' }
+    Autopilot:
+      type: object
+      properties:
+        enabled: { type: boolean }
+        maxAmount: { type: number }
+        minConfidence: { type: number, minimum: 0, maximum: 1 }
+    Risk:
+      type: object
+      properties:
+        disputes: { type: array, items: { type: object, additionalProperties: true } }
+        invoices: { type: array, items: { type: object, additionalProperties: true } }
+        holds: { type: array, items: { type: object, additionalProperties: true } }
+        proposals: { type: array, items: { $ref: '#/components/schemas/Proposal' } }
+        actions: { type: array, items: { $ref: '#/components/schemas/Action' } }
+        reminders: { type: object, additionalProperties: { type: string, format: date } }
+        schedule: { type: object, additionalProperties: { type: string, format: date } }
+    Proposal:
+      type: object
+      required: [id, kind, target, amount, decision, confidence, draft, fingerprint]
+      properties:
+        id: { type: string, example: 'dispute:PP-D-1001' }
+        kind: { type: string, enum: [dispute, invoice, hold] }
+        target: { type: string }
+        amount: { type: number }
+        demo: { type: boolean }
+        decision: { type: string, enum: [FIGHT, ACCEPT, REMIND, ADD_TRACKING] }
+        confidence: { type: number }
+        reasoning: { type: string }
+        draft: { type: string }
+        source: { type: string, enum: [claude, rules] }
+        fingerprint: { type: string }
+        protection: { $ref: '#/components/schemas/Protection' }
+        records: { type: array, items: { $ref: '#/components/schemas/Record' } }
+        issues: { type: array, items: { $ref: '#/components/schemas/CitationIssue' } }
+    Protection:
+      type: object
+      properties:
+        status: { type: string, enum: [LIKELY_COVERED, NEEDS_EVIDENCE, NOT_COVERED] }
+        summary: { type: string }
+        note: { type: string }
+        checks:
+          type: array
+          items:
+            type: object
+            properties:
+              rule: { type: string }
+              pass: { type: boolean }
+              detail: { type: string }
+    Record:
+      type: object
+      properties:
+        ref: { type: string, example: R2 }
+        source: { type: string }
+        id: { type: string }
+        fields: { type: object, additionalProperties: { type: string } }
+    CitationIssue:
+      type: object
+      properties:
+        code: { type: string, enum: [NO_CITATION, VALUE_NOT_IN_CITED_RECORD, UNKNOWN_RECORD] }
+        sentence: { type: string }
+        detail: { type: string }
+    Action:
+      type: object
+      properties:
+        at: { type: string, format: date-time }
+        kind: { type: string }
+        target: { type: string }
+        decision: { type: string }
+        amount: { type: number }
+        by: { type: string }
+        fingerprint: { type: string }
+        simulated: { type: boolean }
+        text: { type: string }
+    DraftRequest:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string }
+        draft: { type: string }
+    ApproveRequest:
+      type: object
+      required: [id, fingerprint]
+      properties:
+        id: { type: string }
+        draft: { type: string }
+        fingerprint: { type: string }
