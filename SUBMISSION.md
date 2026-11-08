@@ -22,6 +22,14 @@ Small sellers and freelancers don't lose money because they sell bad products. T
 
 Big merchants pay for chargeback teams and collections tools. Small sellers have nobody. We built them an agent.
 
+## The problem, in PayPal's own words
+
+- **Holds:** "Your funds are usually held for up to 21 days." The first step PayPal lists to avoid that delay is "Uploading tracking information of our supported carriers or printing a shipping label through PayPal." ([PayPal: funds on hold](https://www.paypal.com/au/brc/article/funds-on-hold))
+- **Disputes:** Seller Protection doesn't cover buyer claims for items received that are "Significantly Not As Described". Item-not-received claims need proof of delivery to the address on the transaction. ([PayPal: Seller Protection](https://www.paypal.com/ca/brc/article/seller-protection), [Seller Protection policy](https://www.paypal.com/legalhub/seller-protection))
+- **Unpaid invoices:** in Bonsai's analysis of 100,000+ freelancers, 29% of invoices were paid late ([Bonsai](https://www.hellobonsai.com/blog/late-freelance-payment)).
+
+So a small seller has to know which disputes PayPal will cover, add tracking before trouble starts, and chase late invoices, all while running the business. SellerShield does that work and shows its reasoning.
+
 ## Where it fits
 
 This hackathon has strong single-purpose entries for disputes, for invoices and for fraud. SellerShield's angle is **one agent and one inbox for all of a small seller's money at risk**:

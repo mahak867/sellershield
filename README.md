@@ -9,6 +9,16 @@ Small sellers lose money three ways:
 
 SellerShield reacts the moment one of these happens: a PayPal webhook fires or a sale lands. It checks the case against PayPal's Seller Protection rules, decides what to do, writes the response, and executes it through PayPal's APIs. It acts either after one click from the seller or on its own under limits the seller sets.
 
+![SellerShield dashboard](docs/screenshots/1-dashboard.png)
+
+## The problem, in PayPal's own words
+
+- **Holds:** "Your funds are usually held for up to 21 days." The first step PayPal lists to avoid that delay is "Uploading tracking information of our supported carriers or printing a shipping label through PayPal." ([PayPal: funds on hold](https://www.paypal.com/au/brc/article/funds-on-hold))
+- **Disputes:** Seller Protection doesn't cover buyer claims for items received that are "Significantly Not As Described". Item-not-received claims need proof of delivery to the address on the transaction. ([PayPal: Seller Protection](https://www.paypal.com/ca/brc/article/seller-protection), [Seller Protection policy](https://www.paypal.com/legalhub/seller-protection))
+- **Unpaid invoices:** in Bonsai's analysis of 100,000+ freelancers, 29% of invoices were paid late ([Bonsai](https://www.hellobonsai.com/blog/late-freelance-payment)).
+
+So a small seller has to know which disputes PayPal will cover, add tracking before trouble starts, and chase late invoices, all while running the business. SellerShield does that work and shows its reasoning.
+
 ## How to judge in 5 minutes
 
 1. Open the hosted demo (link at the top of the Devpost page). It runs on the real PayPal sandbox, and your browser gets its own isolated workspace, so other judges can't reset or approve your items.
@@ -121,6 +131,19 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 npm test         # 21 tests: Seller Protection rules, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Seller Protection checklist and cited evidence](docs/screenshots/2-seller-protection-and-citations.png) | ![Bryntum money timeline](docs/screenshots/4-bryntum-timeline.png) |
+| Seller Protection checklist, evidence records, fingerprint | Bryntum Scheduler money timeline |
+| ![AG Grid money at risk](docs/screenshots/5-ag-grid-money-at-risk.png) | ![AG Charts](docs/screenshots/3-ag-charts.png) |
+| AG Grid: urgency, agent decision, inline and bulk approve | AG Charts: where the money is stuck |
+
+## Architecture
+
+![Architecture](docs/screenshots/0-architecture.png)
 
 ## Policy test suite
 
