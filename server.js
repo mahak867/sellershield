@@ -51,8 +51,10 @@ async function scan() {
   const disputePlans = await Promise.all(disputes.map(async (d) => {
     const detail = await paypal.getDispute(d.dispute_id);
     const order = store.orders.find((o) => o.transactionId === d.transaction_id);
-    const protection = assessProtection(detail || d, order);
-    const records = buildRecords({ ...d, ...(detail || {}) }, order, await paypal.liveRecords(d, order));
+    const live = await paypal.liveRecords(d, order);
+    const flag = live.capture?.sellerProtection || order?.paypalProtection;
+    const protection = assessProtection(detail || d, order, flag);
+    const records = buildRecords({ ...d, ...(detail || {}) }, order, live);
     const plan = await ai.planDispute(detail, order, protection, records);
     return { d, protection, records, order, plan, issues: checkDraft(plan.draft, records) };
   }));
@@ -323,7 +325,7 @@ app.post('/api/shop/capture', async (req, res, next) => {
     store.orders.unshift({
       demo: false, live: true, orderId: c.orderId, transactionId: c.captureId, item: p.name,
       buyer: c.buyer || 'sandbox buyer', amount: c.amount, carrier: p.carrier, trackingNumber: tracking,
-      delivered: null, onHold: true, daysHeld: 0, captureStatus: c.captureStatus,
+      delivered: null, onHold: true, daysHeld: 0, captureStatus: c.captureStatus, paypalProtection: c.sellerProtection,
     });
     res.json(c);
     activity('sale', `New PayPal Checkout sale: ${p.name} for $${c.amount.toFixed(2)} (capture ${c.captureId}). Shipped; tracking not yet on PayPal.`);

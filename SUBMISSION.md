@@ -51,7 +51,7 @@ How it works:
   Code checks that every amount, date and ID matches its cited record, and refuses to send anything that doesn't.
 - **One evidence PDF:** the response, the Seller Protection checklist and the cited records go to PayPal as one document. The seller can download it too.
 - **Approvals bound to the exact text:** every approval carries a SHA-256 fingerprint of what will be sent. Change a word and it needs a new approval. The audit log keeps the fingerprint.
-- **Measured:** 28 automated tests (`npm test`) plus a 30-case policy suite (`npm run bench`). These caught two real bugs, both fixed:
+- **Measured:** 31 automated tests (`npm test`) plus a 30-case policy suite (`npm run bench`). These caught two real bugs, both fixed:
   - the planner fought a dispute with no evidence,
   - an Approve button was wired to the wrong element.
 
@@ -93,7 +93,7 @@ The dashboard shows money at risk, money protected, hours saved and actions take
   - `lib/evidence.js` builds the citable records, checks every value in a draft against its cited record, and fingerprints the exact payload.
   - The server refuses stale fingerprints (409) and uncited facts (422).
   - Autopilot skips anything that fails these checks.
-- **Testing:** 28 automated tests (Node's test runner, mock mode, no keys), plus 30 labelled dispute cases with a runner that reports agreement for Claude or the rules fallback.
+- **Testing:** 31 automated tests (Node's test runner, mock mode, no keys), plus 30 labelled dispute cases with a runner that reports agreement for Claude or the rules fallback.
 - **Hosting:** **Render** via a `render.yaml` blueprint.
 
 ## Challenges we ran into

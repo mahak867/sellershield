@@ -77,3 +77,17 @@ test('Policy suite: coverage and decision match every label', async () => {
     assert.equal(plan.decision, c.decision, `${c.id} decision`);
   }
 });
+
+test("Seller Protection: PayPal's NOT_ELIGIBLE flag overrides a full checklist", () => {
+  const r = assessProtection(inr, order, { status: 'NOT_ELIGIBLE', disputeCategories: [] });
+  assert.equal(r.status, 'NOT_COVERED');
+  assert.ok(r.checks.some((c) => c.rule.startsWith("PayPal's own") && !c.pass));
+});
+test("Seller Protection: PayPal's ELIGIBLE flag for the right category passes", () => {
+  const r = assessProtection(inr, order, { status: 'ELIGIBLE', disputeCategories: ['ITEM_NOT_RECEIVED'] });
+  assert.equal(r.status, 'LIKELY_COVERED');
+});
+test("Seller Protection: eligible only for unauthorized does not cover item-not-received", () => {
+  const r = assessProtection(inr, order, { status: 'PARTIALLY_ELIGIBLE', disputeCategories: ['UNAUTHORIZED_TRANSACTION'] });
+  assert.equal(r.status, 'NOT_COVERED');
+});
