@@ -8,7 +8,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "bench": "node bench/run.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "record-demo": "node scripts/record-demo.cjs"
   },
   "engines": {
     "node": ">=18"

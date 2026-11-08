@@ -142,7 +142,18 @@ Each browser gets its own isolated workspace. How to try the live demo: click **
 
 ---
 
-# Demo video script (target 2:45)
+# Demo video
+
+**Automatic recording (recommended).** `scripts/record-demo.cjs` drives the app, shows captions and a cursor, and saves `demo/sellershield-demo.mp4` (about 2:10, no audio, no music). Run it against the deployed app with Claude live:
+
+```bash
+npm i -D playwright && npx playwright install chromium
+node scripts/record-demo.cjs https://<your-app>.onrender.com
+```
+
+It needs `ffmpeg` installed. You can add a voiceover in any editor, reading the captions. Upload the MP4 to YouTube as **Public**.
+
+# Manual demo video script (target 2:45)
 
 Record your screen at 1080p. Use your own voice or a free AI voice, and no copyrighted music. Click **Reset** before each take.
 
