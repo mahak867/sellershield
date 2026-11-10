@@ -10,7 +10,7 @@ SellerShield
 
 ## Tagline (short description)
 
-An AI agent that knows PayPal Seller Protection: it checks every dispute against PayPal's rules, closes evidence gaps the moment a sale lands, and acts within limits you set.
+Get paid sooner, keep what you earn: an AI agent that makes every PayPal sale protection-ready the moment it lands, collects late invoices and answers disputes within limits you set.
 
 ## Inspiration
 
@@ -32,12 +32,15 @@ So a small seller has to know which disputes PayPal will cover, add tracking bef
 
 ## Where it fits
 
-This hackathon has strong single-purpose entries for disputes, for invoices and for fraud. SellerShield's angle is **one agent and one inbox for all of a small seller's money at risk**:
-- disputes, checked against PayPal Seller Protection rules,
-- paid orders still missing tracking,
-- overdue invoices.
+Most seller tools start working after a buyer has opened a dispute. By then the proof is either on PayPal or it isn't.
 
-They're ranked by urgency, handled under a single autopilot policy the seller controls, and recorded in one audit log. A seller with ten orders a week won't run three tools. They need one place that says where their money is stuck, and fixes it.
+SellerShield starts at the sale:
+- **Every sale is checked against Seller Protection the moment it lands**, before any dispute exists. The dashboard shows how many sales are protection-ready and who has to act on the rest: the agent, the carrier or the seller.
+- **The agent closes the gaps it can.** It sends tracking to PayPal, which PayPal lists as the first step to avoid a payment hold and which is the proof an "item not received" claim needs.
+- **Late invoices are collected** with reminders matched to how late they are.
+- **Disputes that still arrive** are answered from records that are already in place.
+
+One autopilot policy and one audit log cover all of it. A small seller doesn't want three tools; they want to get paid sooner and keep what they earn.
 
 How it works:
 - **Seller Protection checklist** for every dispute (claim type, tracking, delivered status, address, deadline), computed in code from PayPal's published rules. Claude decides on top of those facts.
@@ -51,7 +54,7 @@ How it works:
   Code checks that every amount, date and ID matches its cited record, and refuses to send anything that doesn't.
 - **One evidence PDF:** the response, the Seller Protection checklist and the cited records go to PayPal as one document. The seller can download it too.
 - **Approvals bound to the exact text:** every approval carries a SHA-256 fingerprint of what will be sent. Change a word and it needs a new approval. The audit log keeps the fingerprint.
-- **Measured:** 36 automated tests (`npm test`) plus a 30-case policy suite (`npm run bench`). These caught two real bugs, both fixed:
+- **Measured:** 42 automated tests (`npm test`) plus a 30-case policy suite (`npm run bench`). These caught two real bugs, both fixed:
   - the planner fought a dispute with no evidence,
   - an Approve button was wired to the wrong element.
 
@@ -93,7 +96,7 @@ The dashboard shows money at risk, money protected, hours saved and actions take
   - `lib/evidence.js` builds the citable records, checks every value in a draft against its cited record, and fingerprints the exact payload.
   - The server refuses stale fingerprints (409) and uncited facts (422).
   - Autopilot skips anything that fails these checks.
-- **Testing:** 36 automated tests (Node's test runner, mock mode, no keys), plus 30 labelled dispute cases with a runner that reports agreement for Claude or the rules fallback.
+- **Testing:** 42 automated tests (Node's test runner, mock mode, no keys), plus 30 labelled dispute cases with a runner that reports agreement for Claude or the rules fallback.
 - **Hosting:** **Render** via a `render.yaml` blueprint.
 
 ## How each sponsor tool is used

@@ -379,6 +379,13 @@ components:
       properties:
         mockPaypal: { type: boolean }
         mockAi: { type: boolean }
+        ai:
+          type: object
+          description: How many plans came from Claude and how many fell back to rules since the server started
+          properties:
+            claude: { type: integer }
+            rules: { type: integer }
+            lastError: { type: string, nullable: true }
         channel3: { type: boolean }
         autopilot: { $ref: '#/components/schemas/Autopilot' }
     Autopilot:
@@ -393,6 +400,26 @@ components:
         disputes: { type: array, items: { type: object, additionalProperties: true } }
         invoices: { type: array, items: { type: object, additionalProperties: true } }
         holds: { type: array, items: { type: object, additionalProperties: true } }
+        readiness:
+          type: object
+          description: Pre-dispute check of every sale against the Seller Protection proof requirements
+          properties:
+            total: { type: integer }
+            ready: { type: integer }
+            fixable: { type: integer, description: Sales the agent can make ready itself }
+            amountTotal: { type: number }
+            amountReady: { type: number }
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  transactionId: { type: string }
+                  item: { type: string }
+                  amount: { type: number }
+                  demo: { type: boolean }
+                  status: { type: string, enum: [READY, AGENT_CAN_FIX, WAITING, AT_RISK] }
+                  checks: { type: array, items: { type: object, additionalProperties: true } }
         proposals: { type: array, items: { $ref: '#/components/schemas/Proposal' } }
         actions: { type: array, items: { $ref: '#/components/schemas/Action' } }
         reminders: { type: object, additionalProperties: { type: string, format: date } }

@@ -3,9 +3,9 @@
 import 'dotenv/config';
 import express from 'express';
 import { paypal, MOCK_PAYPAL } from './lib/paypal.js';
-import { ai, MOCK_AI } from './lib/ai.js';
+import { ai, MOCK_AI, aiStats } from './lib/ai.js';
 import { store, logAction, resetStore } from './lib/store.js';
-import { assessProtection } from './lib/protection.js';
+import { assessProtection, readinessSummary } from './lib/protection.js';
 import { workspaceMiddleware, workspaceId, SHARED, forEachWorkspace } from './lib/workspace.js';
 import { buildRecords, checkDraft, fingerprint, renderForPayPal } from './lib/evidence.js';
 import { disputePack } from './lib/pdf.js';
@@ -155,11 +155,11 @@ const qualifies = (p, ap) => ap.enabled && p.amount <= ap.maxAmount && p.confide
   && !(p.issues || []).length && !(p.kind === 'invoice' && p.scheduledFor > today());
 
 app.get('/api/status', (_req, res) => {
-  res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, channel3: CHANNEL3_ON, autopilot: store.autopilot });
+  res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, ai: aiStats, channel3: CHANNEL3_ON, autopilot: store.autopilot });
 });
 
 app.get('/api/risk', async (_req, res, next) => {
-  try { res.json({ ...(await getRisk()), actions: store.actions, proposals: store.proposals, reminders: store.reminders, schedule: Object.fromEntries(Object.entries(store.schedule).map(([k, v]) => [k, v.at])) }); } catch (e) { next(e); }
+  try { res.json({ ...(await getRisk()), readiness: readinessSummary(store.orders), actions: store.actions, proposals: store.proposals, reminders: store.reminders, schedule: Object.fromEntries(Object.entries(store.schedule).map(([k, v]) => [k, v.at])) }); } catch (e) { next(e); }
 });
 
 // Scan, then let autopilot act on what qualifies. The rest waits for the seller.
@@ -400,7 +400,7 @@ app.post('/api/shop/capture', async (req, res, next) => {
       delivered: null, onHold: true, daysHeld: 0, captureStatus: c.captureStatus, paypalProtection: c.sellerProtection,
     });
     res.json(c);
-    activity('sale', `New PayPal Checkout sale: ${p.name} for $${c.amount.toFixed(2)} (capture ${c.captureId}). Shipped; tracking not yet on PayPal.`);
+    activity('sale', `New PayPal Checkout sale: ${p.name} for $${c.amount.toFixed(2)} (capture ${c.captureId}). Protection check: not ready, PayPal has no tracking yet. The agent can fix that.`);
     runAgent('new sale').catch((e) => activity('error', `Agent run failed: ${e.message}`));
   } catch (e) { next(e); }
 });

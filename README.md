@@ -2,7 +2,7 @@
 
 [![tests](https://github.com/mahak867/sellershield/actions/workflows/test.yml/badge.svg)](https://github.com/mahak867/sellershield/actions/workflows/test.yml) ![license](https://img.shields.io/badge/license-MIT-blue)
 
-**An AI agent that knows PayPal Seller Protection and defends a small seller's money.**
+**Get paid sooner. Keep what you earn.** An AI agent that makes every PayPal sale protection-ready the moment it lands, collects late invoices and answers disputes, within limits the seller sets.
 
 Small sellers lose money three ways:
 - buyer disputes they don't have time to fight,
@@ -25,7 +25,7 @@ So a small seller has to know which disputes PayPal will cover, add tracking bef
 
 1. Open the hosted demo (link at the top of the Devpost page). On Render's free tier, the first load after idle can take about a minute while the server wakes up. It runs on the real PayPal sandbox, and your browser gets its own isolated workspace, so other judges can't reset or approve your items.
 2. Click **Load sandbox data**: real overdue invoices are created in the sandbox.
-3. Click **Run agent**. Every item gets a proposal, and every dispute shows a **Seller Protection checklist**.
+3. Look at **Is every sale protected?**: each sale is already checked against Seller Protection, with what is missing and who fixes it. Then click **Run agent**. Every item gets a proposal, and every dispute shows a **Seller Protection checklist**.
 4. Turn on **Autopilot** (max $100, 80%), then click **Simulate dispute**. The **Live activity** feed shows the agent reacting and acting within the limits.
 5. Click **Open store** and buy something with a PayPal sandbox buyer account. The sale triggers the agent, which flags the missing tracking. Approve it to post tracking to that real capture.
 6. Open the **Agent audit log**: each action shows who triggered it and whether the PayPal call was **live** or **simulated**.
@@ -34,14 +34,15 @@ Disputes tagged **demo** are sample data, and actions on them are simulated. A r
 
 ## Where SellerShield fits
 
-The PayPal AI Hackathon has many strong single-purpose entries. Some go deeper than SellerShield on disputes alone, and some on invoice collection alone.
+Most seller tools start working after a buyer has opened a dispute. By then the proof is either on PayPal or it isn't.
 
-SellerShield's angle is **one agent and one inbox for all the seller's money at risk**:
-- disputes, checked against Seller Protection rules,
-- paid orders missing tracking,
-- overdue invoices.
+SellerShield starts at the sale:
+- **Every sale is checked against Seller Protection the moment it lands**, before any dispute exists. The dashboard shows how many sales are protection-ready and who has to act on the rest: the agent, the carrier or the seller.
+- **The agent closes the gaps it can.** It sends tracking to PayPal, which PayPal lists as the first step to avoid a payment hold and which is the proof an "item not received" claim needs.
+- **Late invoices are collected** with reminders matched to how late they are.
+- **Disputes that still arrive** are answered from records that are already in place.
 
-These are ranked by urgency, handled under one autopilot policy, and recorded in one audit log. A small seller doesn't want three tools; they want one place that tells them where their money is stuck and fixes it.
+One autopilot policy and one audit log cover all of it. A small seller doesn't want three tools; they want to get paid sooner and keep what they earn.
 
 ## Features
 
@@ -68,7 +69,9 @@ These are ranked by urgency, handled under one autopilot policy, and recorded in
   - Money at risk is ranked by an urgency score with colored bars, shows the agent's decision in each row, and has per-row Approve buttons.
   - Checkbox bulk approve, quick search, number filters, a pinned totals row and CSV export.
   - A full audit log shows every action, who triggered it, live or simulated, and exactly what was sent.
-- **KPIs:** money at risk, money protected, hours saved, actions taken.
+- **Protection-ready check on every sale:** `assessReadiness` in `lib/protection.js` runs the Seller Protection proof requirements on each order before any dispute. Each sale is Ready, Agent can fix, Waiting on carrier or Needs you.
+- **Visible AI source:** every plan is labelled Claude or rules, and the header badge counts how many plans Claude wrote and how many fell back, with the last error on hover.
+- **KPIs:** sales protection-ready, money stuck or at risk, money protected, hours saved (an estimate: 45 minutes per dispute, 15 per tracking fix, 10 per reminder), actions taken.
 - **AG Charts:** a "where your money is stuck" chart (at risk vs protected by category) and a donut of dispute dollars by Seller Protection status.
 - **Bryntum Scheduler agent calendar:** each item at risk is a row. Drag a proposed action onto a day to approve it for that day (details below).
   - Dispute response windows are colored by Seller Protection status.
@@ -171,7 +174,7 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 36 tests: Seller Protection rules, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 42 tests: Seller Protection rules, sale readiness, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
 

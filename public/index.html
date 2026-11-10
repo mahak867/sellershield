@@ -133,16 +133,24 @@
 
 <main>
   <section class="hero">
-    <h1>Your money, defended by an AI agent.</h1>
-    <p>SellerShield knows PayPal Seller Protection. It reacts the moment a dispute opens or a sale lands, checks your coverage, closes evidence gaps, and acts within limits you set.</p>
+    <h1>Get paid sooner. Keep what you earn.</h1>
+    <p>New sellers can wait up to 21 days for their money. SellerShield checks every sale against PayPal Seller Protection the moment it lands, sends PayPal the proof it needs, collects late invoices and answers disputes, all within limits you set.</p>
   </section>
 
   <section class="kpis">
-    <div class="kpi"><small>Money at risk</small><b id="kRisk">$0</b></div>
+    <div class="kpi"><small>Sales protection-ready</small><b id="kReady">0 of 0</b><small id="kReadySub"></small></div>
+    <div class="kpi"><small>Money stuck or at risk</small><b id="kRisk">$0</b></div>
     <div class="kpi good"><small>Protected by agent</small><b id="kSaved">$0</b></div>
-    <div class="kpi"><small>Hours saved</small><b id="kTime">0</b></div>
+    <div class="kpi"><small>Hours saved (estimate)</small><b id="kTime">0</b></div>
     <div class="kpi"><small>Actions taken</small><b id="kActs">0</b></div>
     <div class="kpi"><small>Needs your review</small><b id="kReview">0</b></div>
+  </section>
+
+  <section class="card">
+    <div class="gridhead">
+      <div><h2>Is every sale protected?</h2><p class="sub">Each sale is checked against PayPal's Seller Protection proof requirements <b>before</b> any dispute exists. The agent closes the gaps it can; the rest tells you who has to act.</p></div>
+    </div>
+    <div id="readyGrid" class="grid ag-theme-quartz"></div>
   </section>
 
   <section class="card charts">
@@ -312,6 +320,21 @@ const logGrid = agGrid.createGrid($('#logGrid'), {
   ],
   defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [], overlayNoRowsTemplate: 'No actions yet.', tooltipShowDelay: 300,
 });
+const READY = { READY: ['Ready', 'FIGHT'], AGENT_CAN_FIX: ['Agent can fix', ''], WAITING: ['Waiting on carrier', 'demo'], AT_RISK: ['Needs you', 'ACCEPT'] };
+const readyGrid = agGrid.createGrid($('#readyGrid'), {
+  columnDefs: [
+    { field: 'item', headerName: 'Sale', flex: 1, minWidth: 250, cellRenderer: typeCell },
+    { field: 'amount', valueFormatter: (p) => money(p.value), width: 110, type: 'rightAligned' },
+    { field: 'status', headerName: 'Seller Protection', width: 170, enableCellChangeFlash: true,
+      cellRenderer: (p) => `<span class="tag ${READY[p.value]?.[1] ?? ''}">${esc(READY[p.value]?.[0] ?? p.value)}</span>` },
+    { headerName: 'Proof', width: 120, valueGetter: (p) => `${p.data.checks.filter((c) => c.pass).length} of ${p.data.checks.length}` },
+    { headerName: 'What is missing', flex: 2, minWidth: 260, tooltipValueGetter: (p) => p.value,
+      valueGetter: (p) => p.data.checks.filter((c) => !c.pass).map((c) => `${c.rule} (${c.fix})`).join('; ') || 'Nothing' },
+    { field: 'transactionId', headerName: 'PayPal ID', flex: 1, minWidth: 170 },
+  ],
+  defaultColDef: { sortable: true, filter: true, resizable: true }, getRowId: (p) => p.data.transactionId,
+  rowData: [], overlayNoRowsTemplate: 'No sales yet. Open the store and buy something.', tooltipShowDelay: 300,
+});
 try { const st = JSON.parse(localStorage.getItem('ss.riskGrid') || 'null'); if (st) riskGrid.applyColumnState({ state: st, applyOrder: true }); } catch {}
 $('#qf').oninput = () => riskGrid.setGridOption('quickFilterText', $('#qf').value);
 $('#csv1').onclick = () => riskGrid.exportDataAsCsv({ fileName: 'sellershield-money-at-risk.csv', columnKeys: ['type', 'urgency', 'amount', 'detail', 'who', 'id'] });
@@ -346,6 +369,13 @@ async function refresh() {
   riskGrid.setGridOption('pinnedBottomRowData', rows.length ? [{ key: 'total', type: 'Total', amount: rows.reduce((s, x) => s + x.amount, 0), detail: `${rows.length} items` }] : []);
   logGrid.setGridOption('rowData', r.actions);
   logGrid.setGridOption('pinnedBottomRowData', r.actions.length ? [{ by: 'Total', amount: r.actions.reduce((s, a) => s + a.amount, 0), text: `${r.actions.length} actions` }] : []);
+  const rd = r.readiness;
+  if (rd) {
+    const order = { AT_RISK: 0, AGENT_CAN_FIX: 1, WAITING: 2, READY: 3 };
+    readyGrid.setGridOption('rowData', rd.rows.slice().sort((a, b) => order[a.status] - order[b.status]));
+    $('#kReady').textContent = `${rd.ready} of ${rd.total}`;
+    $('#kReadySub').textContent = rd.fixable ? `agent can fix ${rd.fixable} more` : `${money(rd.amountReady)} of ${money(rd.amountTotal)}`;
+  }
   const protectedAmt = r.actions.filter((a) => a.decision !== 'ACCEPT').reduce((s, a) => s + a.amount, 0);
   $('#kRisk').textContent = money(rows.reduce((s, x) => s + x.amount, 0));
   $('#kSaved').textContent = money(protectedAmt);
@@ -400,7 +430,7 @@ function renderProps(list, scanned) {
 
 async function loadStatus() {
   const s = await api('/api/status');
-  $('#mode').innerHTML = `<span class="badge ${s.mockPaypal ? '' : 'live'}">PayPal ${s.mockPaypal ? 'mock' : 'sandbox'}</span><span class="badge ${s.mockAi ? '' : 'live'}">${s.mockAi ? 'AI mock' : 'Claude live'}</span><span class="badge ${s.channel3 ? 'live' : ''}" title="Product catalog facts for not-as-described disputes">Channel3 ${s.channel3 ? 'live' : 'demo'}</span>`;
+  $('#mode').innerHTML = `<span class="badge ${s.mockPaypal ? '' : 'live'}">PayPal ${s.mockPaypal ? 'mock' : 'sandbox'}</span><span class="badge ${s.mockAi || (s.ai.rules && !s.ai.claude) ? '' : 'live'}" title="${esc(s.ai.lastError ? 'Last Claude error: ' + s.ai.lastError : 'Plans written by Claude vs the rule-based fallback')}">${s.mockAi ? 'AI rules (no key)' : s.ai.rules && !s.ai.claude ? 'Claude failing, using rules' : `Claude live${s.ai.claude ? ` · ${s.ai.claude} plans` : ''}${s.ai.rules ? ` · ${s.ai.rules} fell back` : ''}`}</span><span class="badge ${s.channel3 ? 'live' : ''}" title="Product catalog facts for not-as-described disputes">Channel3 ${s.channel3 ? 'live' : 'demo'}</span>`;
   $('#seed').hidden = s.mockPaypal;
   setAp(s.autopilot);
 }
@@ -417,7 +447,7 @@ $('#run').onclick = async () => {
   try {
     const r = await api('/api/agent/scan', {});
     if (r.auto.length) toast(`Autopilot handled ${r.auto.length} item${r.auto.length > 1 ? 's' : ''} worth ${money(r.auto.reduce((s, a) => s + a.amount, 0))}`);
-    await refresh();
+    await refresh(); loadStatus();
   } catch (e) { $('#props').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
   $('#run').disabled = false; $('#run').textContent = 'Run agent';
 };
@@ -469,9 +499,9 @@ function renderCharts(r) {
   const sum = (xs) => xs.reduce((s, x) => s + x.amount, 0);
   const protectedBy = (k) => r.actions.filter((a) => a.kind === k && a.decision !== 'ACCEPT').reduce((s, a) => s + a.amount, 0);
   const data = [
-    { category: cat('dispute'), risk: sum(r.disputes), saved: protectedBy('dispute') },
-    { category: cat('invoice'), risk: sum(r.invoices), saved: protectedBy('invoice') },
     { category: cat('hold'), risk: sum(r.holds), saved: protectedBy('hold') },
+    { category: cat('invoice'), risk: sum(r.invoices), saved: protectedBy('invoice') },
+    { category: cat('dispute'), risk: sum(r.disputes), saved: protectedBy('dispute') },
   ];
   const fmt = { formatter: ({ value }) => (value >= 250 ? '$' + Math.round(value).toLocaleString() : '') };
   const riskOpts = {
