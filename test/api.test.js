@@ -150,6 +150,25 @@ test('ids that could reach other PayPal paths are rejected', async () => {
   assert.equal((await post('/api/shop/capture', { orderId: '../../v1/x', sku: 'wallet' })).status, 400);
 });
 
+test('any storefront can register a sale with the client library', async () => {
+  const { SellerShield } = await import('../sdk/sellershield.mjs');
+  const shield = new SellerShield({ baseUrl: URL });
+  const bare = await shield.registerSale({ transactionId: 'EXT0000000000001A', item: 'Linen apron', amount: 38 });
+  assert.equal(bare.readiness.status, 'AT_RISK'); // no tracking number: only the seller can fix it
+  const tracked = await shield.registerSale({ transactionId: 'EXT0000000000002B', item: 'Oak spoon set', amount: 27.5, carrier: 'usps', trackingNumber: '9400111899223197400001' });
+  assert.equal(tracked.readiness.status, 'AGENT_CAN_FIX');
+  await assert.rejects(shield.registerSale({ transactionId: 'EXT0000000000002B', item: 'x', amount: 1 }), (e) => e.status === 409);
+  await assert.rejects(shield.registerSale({ transactionId: '../v1/x', item: 'x', amount: 1 }), (e) => e.status === 400);
+  await assert.rejects(shield.registerSale({ transactionId: 'EXT0000000000003C', item: 'x', amount: 5, trackingNumber: '9400111899223197400002' }), (e) => e.status === 400);
+  assert.equal((await shield.readiness()).total, 8);
+  const proposals = await shield.review();
+  assert.ok(!proposals.some((p) => p.target === 'EXT0000000000001A')); // nothing to send without a tracking number
+  const fix = proposals.find((p) => p.target === 'EXT0000000000002B');
+  const { entry } = await shield.approve(fix);
+  assert.equal(entry.api, 'Tracking: trackers-batch');
+  assert.equal((await shield.readiness()).rows.find((r) => r.transactionId === 'EXT0000000000002B').status, 'WAITING');
+});
+
 test('chat agent answers whether sales are protected', async () => {
   await post('/api/demo/reset');
   const r = await (await post('/api/agent/chat', { message: 'Are all my sales protected?' })).json();

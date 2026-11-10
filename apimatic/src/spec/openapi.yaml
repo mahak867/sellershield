@@ -56,6 +56,48 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Risk' }
+  /api/orders:
+    post:
+      tags: [Storefront]
+      operationId: registerSale
+      summary: Register a paid PayPal sale from any storefront
+      description: |
+        Call this once after checkout. SellerShield checks the sale against the Seller Protection
+        proof requirements at once and the agent proposes sending the tracking to PayPal.
+        Against the real sandbox the capture must exist on the PayPal account, and its amount
+        and eligibility are read from PayPal.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [transactionId, item]
+              properties:
+                transactionId: { type: string, description: PayPal capture id }
+                orderId: { type: string, description: PayPal order id (enables Orders v2 tracking) }
+                item: { type: string }
+                amount: { type: number, description: Used in demo mode; read from PayPal otherwise }
+                buyer: { type: string }
+                carrier: { type: string, example: USPS }
+                trackingNumber: { type: string }
+                delivered: { type: string, format: date }
+                addressMatches: { type: boolean, default: true }
+      responses:
+        '201':
+          description: Sale registered, with its readiness
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionId: { type: string }
+                  item: { type: string }
+                  amount: { type: number }
+                  readiness: { type: object, additionalProperties: true }
+        '400': { description: Invalid field }
+        '404': { description: PayPal has no such capture on this account }
+        '409': { description: Sale already registered }
   /api/mcp:
     post:
       tags: [Agent]

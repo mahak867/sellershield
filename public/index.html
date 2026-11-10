@@ -134,7 +134,7 @@
 <main>
   <section class="hero">
     <h1>Get paid sooner. Keep what you earn.</h1>
-    <p>New sellers can wait up to 21 days for their money. SellerShield checks every sale against PayPal Seller Protection the moment it lands, sends PayPal the proof it needs, collects late invoices and answers disputes, all within limits you set.</p>
+    <p><b>Demo seller: Clay &amp; Thread</b>, a small handmade-goods shop. New sellers can wait up to 21 days for their money. SellerShield checks every sale against PayPal Seller Protection the moment it lands, sends PayPal the proof it needs, collects late invoices and answers disputes, all within limits you set.</p>
   </section>
 
   <section class="kpis">
@@ -321,6 +321,7 @@ const logGrid = agGrid.createGrid($('#logGrid'), {
     { field: 'by', headerName: 'Triggered by', width: 130 },
     { field: 'kind', width: 95 }, { field: 'decision', width: 135 }, { field: 'target', flex: 1, minWidth: 150 },
     { field: 'amount', valueFormatter: (p) => money(p.value), width: 110, type: 'rightAligned' },
+    { field: 'api', headerName: 'PayPal API', width: 190 },
     { headerName: 'PayPal call', width: 120, cellDataType: 'text', valueGetter: (p) => p.node.rowPinned ? '' : p.data.simulated ? 'simulated' : 'live',
       cellClassRules: { 'live-cell': (p) => p.value === 'live' } },
     { field: 'fingerprint', headerName: 'Approved fingerprint', width: 150, valueFormatter: (p) => p.value ? p.value.slice(0, 12) : '', tooltipField: 'fingerprint' },

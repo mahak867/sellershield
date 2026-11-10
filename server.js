@@ -5,12 +5,13 @@ import express from 'express';
 import { paypal, MOCK_PAYPAL } from './lib/paypal.js';
 import { ai, MOCK_AI, aiStats } from './lib/ai.js';
 import { store, logAction, resetStore } from './lib/store.js';
-import { assessProtection, readinessSummary } from './lib/protection.js';
+import { assessProtection, assessReadiness, readinessSummary } from './lib/protection.js';
 import { workspaceMiddleware, workspaceId, SHARED, forEachWorkspace } from './lib/workspace.js';
 import { buildRecords, checkDraft, fingerprint, renderForPayPal } from './lib/evidence.js';
 import { disputePack } from './lib/pdf.js';
 import { catalogFacts, CHANNEL3_ON } from './lib/channel3.js';
 import { handleMcp } from './lib/mcp.js';
+import { sdk } from './lib/paypal-sdk.js';
 
 const app = express();
 app.use(express.json({ limit: '100kb' }));
@@ -47,7 +48,7 @@ const MINUTES_SAVED = { dispute: 45, invoice: 10, hold: 15 };
 
 async function getRisk() {
   const [disputes, invoices] = await Promise.all([paypal.listDisputes(), paypal.listUnpaidInvoices()]);
-  const holds = store.orders.filter((o) => o.onHold);
+  const holds = store.orders.filter((o) => o.onHold && o.trackingNumber); // no tracking number: nothing the agent can send
   return { disputes, invoices, holds };
 }
 
@@ -133,6 +134,10 @@ async function executeOnce(p, id, draft, by, approvedFingerprint) {
     if (issues.length) throw Object.assign(new Error(`Citation check failed: ${issues.map((i) => `${i.code} (${i.detail})`).join('; ')}`), { status: 422, issues });
   }
   let result;
+  const holdOrder = p.kind === 'hold' ? store.orders.find((x) => x.transactionId === p.target) : null;
+  // Which PayPal API this action uses (shown in the audit log).
+  let apiUsed = p.kind === 'dispute' ? (p.decision === 'ACCEPT' ? 'Disputes: accept-claim' : 'Disputes: provide-evidence')
+    : p.kind === 'invoice' ? 'Invoicing: remind' : holdOrder?.orderId ? 'Orders v2: track' : 'Tracking: trackers-batch';
   if (p.kind === 'dispute') {
     const order = store.orders.find((o) => o.transactionId === p.orderTx);
     result = p.decision === 'ACCEPT'
@@ -141,7 +146,7 @@ async function executeOnce(p, id, draft, by, approvedFingerprint) {
   } else if (p.kind === 'invoice') {
     result = await paypal.remindInvoice(p.target, text);
   } else if (p.kind === 'hold') {
-    result = await paypal.addTracking(store.orders.find((x) => x.transactionId === p.target));
+    result = await paypal.addTracking(holdOrder);
   }
   store.proposals = store.proposals.filter((x) => x.id !== id);
   delete store.schedule[id];
@@ -149,7 +154,7 @@ async function executeOnce(p, id, draft, by, approvedFingerprint) {
   return logAction({
     kind: p.kind, target: p.target, decision: p.decision, amount: p.amount, confidence: p.confidence,
     by, fingerprint: fp, simulated: !!result?.simulated, text: result?.via ? `[sent as buyer message: PayPal not taking evidence at this stage] ${text}` : text,
-    minutesSaved: MINUTES_SAVED[p.kind],
+    minutesSaved: MINUTES_SAVED[p.kind], api: result?.via ? 'Disputes: send-message' : apiUsed,
   });
 }
 
@@ -433,6 +438,43 @@ app.post('/api/shop/capture', async (req, res, next) => {
     });
     res.json(c);
     activity('sale', `New PayPal Checkout sale: ${p.name} for $${c.amount.toFixed(2)} (capture ${c.captureId}). Protection check: not ready, PayPal has no tracking yet. The agent can fix that.`);
+    runAgent('new sale').catch((e) => activity('error', `Agent run failed: ${e.message}`));
+  } catch (e) { next(e); }
+});
+
+// ---------- Any storefront: register a paid PayPal sale ----------
+// One call after checkout makes SellerShield watch the sale: it is checked against Seller
+// Protection at once, and the agent proposes sending the tracking to PayPal.
+const CARRIERS = /^[A-Z][A-Z0-9_]{1,30}$/;
+app.post('/api/orders', async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const tx = String(b.transactionId || '');
+    if (!PAYPAL_ID.test(tx)) return res.status(400).json({ error: 'transactionId must be the PayPal capture id' });
+    if (b.orderId != null && !PAYPAL_ID.test(String(b.orderId))) return res.status(400).json({ error: 'orderId is not a PayPal order id' });
+    const item = String(b.item || '').trim().slice(0, 120);
+    if (!item) return res.status(400).json({ error: 'item is required' });
+    const tracking = b.trackingNumber == null || b.trackingNumber === '' ? null : String(b.trackingNumber);
+    if (tracking && !/^[A-Za-z0-9-]{6,40}$/.test(tracking)) return res.status(400).json({ error: 'trackingNumber looks wrong' });
+    const carrier = String(b.carrier || '').toUpperCase();
+    if (tracking && !CARRIERS.test(carrier)) return res.status(400).json({ error: 'carrier is required with a tracking number, e.g. USPS' });
+    if (b.delivered != null && (!/^\d{4}-\d{2}-\d{2}$/.test(String(b.delivered)) || b.delivered > today())) return res.status(400).json({ error: 'delivered must be YYYY-MM-DD, today or earlier' });
+    if (store.orders.some((o) => o.transactionId === tx)) return res.status(409).json({ error: 'this sale is already registered' });
+    if (store.orders.length >= 200) return res.status(429).json({ error: 'order book is full in this demo workspace' });
+    let amount = Number(b.amount), protection, captureStatus;
+    if (!MOCK_PAYPAL) { // the capture must exist on this PayPal account; its amount and eligibility come from PayPal
+      const c = await sdk.getCapture(tx).catch(() => null);
+      if (!c) return res.status(404).json({ error: 'PayPal has no capture with that id on this account' });
+      amount = Number(c.amount?.value); protection = c.sellerProtection; captureStatus = c.status;
+    }
+    if (!(amount > 0) || amount > 1e6) return res.status(400).json({ error: 'amount must be a positive number' });
+    const o = { demo: MOCK_PAYPAL, live: !MOCK_PAYPAL, external: true, transactionId: tx, orderId: b.orderId ? String(b.orderId) : undefined, item,
+      buyer: String(b.buyer || 'buyer').slice(0, 120), amount, carrier: carrier || undefined, trackingNumber: tracking, delivered: b.delivered || null,
+      addressMatches: b.addressMatches !== false, onHold: true, daysHeld: 0, captureStatus, paypalProtection: protection };
+    store.orders.unshift(o);
+    const readiness = assessReadiness(o);
+    res.status(201).json({ transactionId: tx, item, amount, readiness });
+    activity('sale', `Sale registered by a storefront: ${item} for $${amount.toFixed(2)} (capture ${tx}). Protection check: ${readiness.status.replaceAll('_', ' ').toLowerCase()}.`);
     runAgent('new sale').catch((e) => activity('error', `Agent run failed: ${e.message}`));
   } catch (e) { next(e); }
 });

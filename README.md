@@ -70,6 +70,8 @@ One autopilot policy and one audit log cover all of it. A small seller doesn't w
   - Checkbox bulk approve, quick search, number filters, a pinned totals row and CSV export.
   - A full audit log shows every action, who triggered it, live or simulated, and exactly what was sent.
 - **Protection-ready check on every sale:** `assessReadiness` in `lib/protection.js` runs the Seller Protection proof requirements on each order before any dispute. Each sale is Ready, Agent can fix, Waiting on carrier or Needs you.
+- **Works with any store:** `POST /api/orders` and a small client library let any PayPal storefront register a sale (details below).
+- **Audit log names the PayPal API** each action used, such as `Disputes: provide-evidence` or `Orders v2: track`.
 - **One click to make sales ready:** the readiness grid has a button that sends tracking to PayPal for every sale the agent can fix. Each upload is an agent proposal approved by its fingerprint.
 - **MCP server for other agents:** `POST /api/mcp` lets another AI agent check readiness, review the account and act, only inside the seller's autopilot limits (details below).
 - **Visible AI source:** every plan is labelled Claude or rules, and the header badge counts how many plans Claude wrote and how many fell back, with the last error on hover.
@@ -163,6 +165,27 @@ npm run apimatic:portal
 npm run apimatic:plugin
 ```
 
+## For developers: protect any store's sales in one call
+
+SellerShield is not tied to its demo shop. Any storefront that takes PayPal can register a sale after checkout, and SellerShield starts watching it: the sale is checked against Seller Protection at once and the agent proposes sending the tracking to PayPal.
+
+```js
+import { SellerShield } from './sdk/sellershield.mjs';
+
+const shield = new SellerShield({ baseUrl: 'https://<your-app>' });
+const { readiness } = await shield.registerSale({
+  transactionId: capture.id,          // the PayPal capture id
+  item: 'Ceramic mug set', amount: 64,
+  carrier: 'USPS', trackingNumber: '9400111899223197428490',
+});
+// readiness.status: READY | AGENT_CAN_FIX | WAITING | AT_RISK
+```
+
+- `sdk/sellershield.mjs` is a small client with no dependencies: `registerSale`, `readiness`, `review`, `approve`.
+- The same call over HTTP is `POST /api/orders`, documented in the OpenAPI spec, so APIMatic can generate clients in other languages.
+- Against the real sandbox, the capture must exist on the PayPal account. Its amount and Seller Protection eligibility are read from PayPal, not trusted from the caller.
+- A sale registered without a tracking number shows as **Needs you**: the agent has nothing to send.
+
 ## Use SellerShield from another agent (MCP)
 
 SellerShield is also a Model Context Protocol server, so a seller's own assistant or a storefront agent can use it. It is one route, `POST /api/mcp` (Streamable HTTP, JSON-RPC 2.0), with no extra dependency (`lib/mcp.js`).
@@ -200,7 +223,7 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 48 tests: Seller Protection rules, sale readiness, MCP limits, plan reuse, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 49 tests: Seller Protection rules, sale readiness, storefront client, MCP limits, plan reuse, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
 
@@ -269,6 +292,7 @@ lib/paypal-sdk.js  Orders + Payments via the APIMatic-generated PayPal Server SD
 lib/protection.js  PayPal Seller Protection eligibility check
 lib/evidence.js  Evidence records, citation checker, approval fingerprints
 lib/mcp.js       MCP endpoint: other agents act only inside the seller's limits
+sdk/             Client library for storefronts (register a sale, check readiness, approve)
 lib/workspace.js Per-visitor isolated demo workspaces
 test/            npm test: unit + API tests (mock mode, no keys)
 bench/           Policy test suite: 30 labelled disputes, runner, results
