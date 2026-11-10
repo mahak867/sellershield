@@ -245,10 +245,12 @@ It needs Playwright (`npm i -D playwright && npx playwright install chromium`).
 
 ## Screenshots
 
+![Every sale checked against Seller Protection](docs/screenshots/7-sale-readiness.png)
+
 | | |
 |---|---|
 | ![Seller Protection checklist and cited evidence](docs/screenshots/2-seller-protection-and-citations.png) | ![Bryntum money timeline](docs/screenshots/4-bryntum-timeline.png) |
-| Seller Protection checklist, evidence records, fingerprint | Bryntum Scheduler money timeline |
+| Seller Protection checklist, evidence records, fingerprint | Bryntum Scheduler: deadlines, holds and sale journeys |
 | ![AG Grid money at risk](docs/screenshots/5-ag-grid-money-at-risk.png) | ![AG Charts](docs/screenshots/3-ag-charts.png) |
 | AG Grid: urgency, agent decision, inline and bulk approve | AG Charts: where the money is stuck |
 

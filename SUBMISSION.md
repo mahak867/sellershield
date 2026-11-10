@@ -165,7 +165,7 @@ Each browser gets its own isolated workspace. How to try the live demo: click **
 
 # Demo video
 
-**Automatic recording (recommended).** `scripts/record-demo.cjs` drives the app, shows captions and a cursor, and saves `demo/sellershield-demo.mp4` (about 2:10, no audio, no music). Run it against the deployed app with Claude live:
+**Automatic recording (recommended).** `scripts/record-demo.cjs` drives the app, shows captions and a cursor, and saves `demo/sellershield-demo.mp4` (about 2:00, no audio, no music). Run it against the deployed app with Claude live:
 
 ```bash
 npm i -D playwright && npx playwright install chromium
@@ -174,40 +174,40 @@ node scripts/record-demo.cjs https://<your-app>.onrender.com
 
 It needs `ffmpeg` installed. You can add a voiceover in any editor, reading the captions. Upload the MP4 to YouTube as **Public**.
 
-# Manual demo video script (target 2:45)
+# Manual demo video script (target 2:40)
 
-Record your screen at 1080p. Use your own voice or a free AI voice, and no copyrighted music. Click **Reset** before each take.
+Record your screen at 1080p. Use your own voice, and no copyrighted music. Click **Reset** before each take. Record against the deployed app so the badges read **PayPal sandbox** and **Claude live**.
 
-**0:00–0:20 Hook (talking over the dashboard)**
-"Small sellers on PayPal lose money in three ways: disputes they don't have time to fight, funds held for weeks, and invoices nobody pays. Big companies have teams for this. Small sellers have no one. So we built them an agent. This is SellerShield."
+**0:00-0:15 Hook (over the dashboard)**
+"PayPal says a new seller's money is usually held for up to 21 days. And if a buyer says an item never arrived, the seller only wins with proof of delivery on PayPal. Most tools start after the dispute. SellerShield starts at the sale."
 
-**0:20–0:40 A real sale (record this part beforehand, then cut it in)**
-Click **Open store** and buy the wallet with the sandbox buyer account in the PayPal popup.
-"This is a small shop taking real PayPal Checkout payments in the sandbox. The seller ships it but forgets to add tracking, which is exactly how sellers lose 'item not received' disputes."
+**0:15-0:35 A real sale (record beforehand, then cut it in)**
+Click **Open store** and buy the wallet with the sandbox buyer account.
+"This is Clay and Thread, a small shop taking real PayPal Checkout payments. The seller ships the order, but the tracking never reaches PayPal."
 
-**0:40–0:55 The problem on screen**
-Click **Load sandbox data**. Point at the Money at risk grid.
-"These invoices are real, in the PayPal sandbox, created through the Invoicing API. Over three thousand dollars is stuck here, across disputes, overdue invoices and held payments."
+**0:35-1:05 Is every sale protected? (the main moment)**
+Point at **Is every sale protected?**. Open the new sale's row. Click **Send tracking to PayPal**. Point at the **Sales protection-ready** number as it goes up.
+"SellerShield checks every sale against PayPal's Seller Protection rules before any dispute exists. This sale is not ready: PayPal has no tracking. One click, and the agent sends it through the PayPal Orders API. That is the first thing PayPal asks for to avoid a hold, and the proof that wins an item-not-received claim."
 
-**0:55–1:25 The agent thinks**
-The agent already ran when the sale landed (point at Live activity). Point at the **Needs tracking** row, then at a dispute's Seller Protection checklist.
-"The sale triggered the agent instantly. It caught the wallet order: paid, shipped, no tracking on PayPal. One click fixes it. And for every dispute it checks PayPal's Seller Protection rules line by line. Here's a dispute where the buyer says the item never arrived. Claude checked the order: tracking shows delivery, so it says fight, with high confidence, and it already wrote the evidence. Here's an $18 dispute it says to accept: fighting costs more than it's worth. And here's an invoice that's 19 days late, with a firm reminder ready to go."
+**1:05-1:35 A dispute still arrives**
+Click **Run agent**. Open a dispute card. Type a fake date into the draft, show the block, undo it, approve. Show the audit log row.
+"When a dispute does arrive, the proof is already in place. Claude decides fight or accept, and can only state facts it can cite from PayPal's records. If I type something it can't back up, it won't send. My approval is tied to the exact text, and the log shows which PayPal API was called."
 
-**1:25–1:45 Human in the loop**
-Open a dispute card's evidence records. Type a fake date into the draft: the citation check blocks it and the fingerprint changes. Undo it, approve, and show the audit log row with **live** and the fingerprint.
-"The agent can only tell PayPal facts it can cite. If I type something it can't back up, it won't send. And every approval is tied to the exact text, so what I approved is exactly what PayPal got."
+**1:35-2:00 Autopilot (the agentic part)**
+Turn on **Autopilot** (max $100, 80%). Click **Simulate dispute**. Point at Live activity.
+"Now I give the agent limits and walk away. A new dispute comes in, it's covered and under a hundred dollars, so the agent answers it on its own. Anything bigger waits for me."
 
-**1:45–2:15 Autopilot + real time (the agentic part)**
-Click **Reset**. Turn on **Autopilot** (max $100, 80% confidence), then click **Simulate dispute**. Point at the Live activity feed.
-"Now I give the agent limits and walk away. A buyer opens a dispute. A PayPal webhook fires, and the agent checks Seller Protection: delivered, tracked, right address, covered. It submits the evidence on its own, because it's under $100 and over 80% confident. Anything bigger waits for me. The agent works, and I keep control."
+**2:00-2:20 Calendar**
+Scroll to the calendar. Point at a sale journey, then drag a purple action onto a day.
+"Every sale's journey is on one timeline: no proof, in transit, protected. And I approve an action for a given day by dragging it there."
 
-**2:15–2:35 Chat agent**
-Type "What's my biggest risk?", then click **Handle it**. Point at "Tools used".
-"I can just talk to it. It reads my account through PayPal's own Agent Toolkit and acts when I ask, within the same guardrails."
+**2:20-2:35 Other agents**
+Ask "Are all my sales protected?" in chat. Point at **Connect your own agent**.
+"I can ask it in plain words. And my own AI assistant can connect to SellerShield too, and can act only inside the same limits."
 
-**2:35–2:45 Close**
+**2:35-2:40 Close**
 Show the KPIs.
-"Money protected, hours saved, every action logged. SellerShield: your money, defended by an AI agent. Built on PayPal and Claude."
+"SellerShield. Every sale protection-ready from day one. Get paid sooner, keep what you earn."
 
 ---
 
