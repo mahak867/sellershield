@@ -9,7 +9,7 @@ let srv;
 
 before(async () => {
   srv = spawn(process.execPath, ['server.js'], {
-    env: { ...process.env, PORT: String(PORT), PAYPAL_CLIENT_ID: '', PAYPAL_CLIENT_SECRET: '', ANTHROPIC_API_KEY: '' },
+    env: { ...process.env, NOTIFY_HOSTS: '127.0.0.1', PORT: String(PORT), PAYPAL_CLIENT_ID: '', PAYPAL_CLIENT_SECRET: '', ANTHROPIC_API_KEY: '' },
     stdio: 'ignore',
   });
   for (let i = 0; i < 50; i++) {
@@ -204,6 +204,32 @@ test('sale journey: sending tracking ends the time a sale spends without proof',
   const after = (await risk()).readiness.rows.find((r) => r.transactionId === wallet.transactionId);
   assert.equal(after.trackingSentAt, new Date().toISOString().slice(0, 10));
   await post('/api/demo/reset');
+});
+
+test('alerts: only allowed webhooks; one alert per item, plus autopilot actions', async () => {
+  const http = await import('node:http');
+  const got = [];
+  const hook = http.createServer((req, res) => { let b = ''; req.on('data', (c) => (b += c)); req.on('end', () => { got.push(JSON.parse(b)); res.end('ok'); }); });
+  await new Promise((r) => hook.listen(0, '127.0.0.1', r));
+  const hookUrl = `http://127.0.0.1:${hook.address().port}/catch`;
+  try {
+    await post('/api/demo/reset');
+    for (const bad of ['http://169.254.169.254/latest', 'https://example.com/x', 'http://hooks.zapier.com/x', 'file:///etc/passwd']) {
+      assert.equal((await post('/api/notify', { url: bad })).status, 400, bad);
+    }
+    assert.equal((await post('/api/notify', { url: 'https://hooks.zapier.com/hooks/catch/1/abc' })).status, 200);
+    assert.equal((await post('/api/notify', { url: hookUrl })).status, 200);
+    assert.equal((await post('/api/notify/test')).status, 200);
+    await post('/api/agent/scan'); await post('/api/agent/scan');
+    await new Promise((r) => setTimeout(r, 300));
+    assert.equal(got.filter((e) => e.event === 'needs_your_review').length, 8); // once each, not twice
+    await post('/api/autopilot', { enabled: true, maxAmount: 100, minConfidence: 0.8 });
+    await post('/api/agent/scan');
+    await new Promise((r) => setTimeout(r, 300));
+    const acted = got.filter((e) => e.event === 'autopilot_acted');
+    assert.ok(acted.length >= 1); assert.ok(acted[0].paypalApi);
+    assert.equal((await post('/api/notify', { url: '' })).status, 200);
+  } finally { hook.close(); await post('/api/autopilot', { enabled: false }); await post('/api/demo/reset'); }
 });
 
 test('chat agent answers whether sales are protected', async () => {

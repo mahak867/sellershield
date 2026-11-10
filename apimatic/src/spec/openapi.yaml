@@ -125,6 +125,36 @@ paths:
         '400': { description: Invalid field }
         '404': { description: Sale not found }
         '409': { description: Tracking already on PayPal }
+  /api/notify:
+    post:
+      tags: [Agent]
+      operationId: setAlertWebhook
+      summary: Set (or clear) the webhook that receives alerts
+      description: Events `needs_your_review` and `autopilot_acted` are posted as JSON. Only Zapier hook URLs are accepted on the hosted demo. An empty url turns alerts off.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url: { type: string, example: 'https://hooks.zapier.com/hooks/catch/123/abc' }
+      responses:
+        '200':
+          description: The saved URL, or null
+          content:
+            application/json:
+              schema: { type: object, properties: { url: { type: string, nullable: true } } }
+        '400': { description: Not an allowed webhook URL }
+  /api/notify/test:
+    post:
+      tags: [Agent]
+      operationId: testAlertWebhook
+      summary: Send a test alert to the saved webhook
+      responses:
+        '200': { description: Delivered }
+        '400': { description: No webhook saved }
+        '502': { description: The webhook did not accept the event }
   /api/mcp:
     post:
       tags: [Agent]

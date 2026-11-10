@@ -197,6 +197,12 @@
       </section>
 
       <section class="card">
+        <h2>Alerts</h2>
+        <p class="sub">Get a message when something needs you or autopilot acts. Paste a Zapier "Catch Hook" URL and a Zap can send it to email, Slack or WhatsApp.</p>
+        <div class="chat"><input id="hookUrl" placeholder="https://hooks.zapier.com/hooks/catch/..." aria-label="Zapier webhook URL"><button class="ghost" id="hookSave">Save</button><button class="ghost" id="hookTest">Test</button></div>
+      </section>
+
+      <section class="card">
         <h2>Connect your own agent</h2>
         <p class="sub">SellerShield is also an MCP server. Another AI agent can check your sales and act, but only inside the autopilot limits above. Everything else is refused and waits for you.</p>
         <div class="chat"><input id="mcpUrl" readonly aria-label="MCP server URL"><button class="ghost" id="mcpCopy">Copy</button></div>
@@ -468,6 +474,7 @@ async function loadStatus() {
   const s = await api('/api/status');
   $('#mode').innerHTML = `<span class="badge ${s.mockPaypal ? '' : 'live'}">PayPal ${s.mockPaypal ? 'mock' : 'sandbox'}</span><span class="badge ${s.mockAi || (s.ai.rules && !s.ai.claude) ? '' : 'live'}" title="${esc(s.ai.lastError ? 'Last Claude error: ' + s.ai.lastError : 'Plans written by Claude vs the rule-based fallback')}">${s.mockAi ? 'AI rules (no key)' : s.ai.rules && !s.ai.claude ? 'Claude failing, using rules' : `Claude live${s.ai.claude ? ` · ${s.ai.claude} plans` : ''}${s.ai.rules ? ` · ${s.ai.rules} fell back` : ''}`}</span>${s.persistence !== 'off' ? `<span class="badge live" title="Orders, proposals and the audit log survive a server restart">State saved (${esc(s.persistence)})</span>` : ''}<span class="badge ${s.channel3 ? 'live' : ''}" title="Product catalog facts for not-as-described disputes">Channel3 ${s.channel3 ? 'live' : 'demo'}</span>`;
   $('#seed').hidden = s.mockPaypal;
+  $('#hookUrl').value = s.notifyUrl || '';
   $('#mcpUrl').value = `${location.origin}/api/mcp?ws=${s.workspace}`;
   setAp(s.autopilot);
 }
@@ -475,6 +482,8 @@ function setAp(a) {
   $('#apOn').checked = a.enabled; $('#apMax').value = a.maxAmount; $('#apConf').value = a.minConfidence;
   $('#apMaxV').textContent = '$' + a.maxAmount; $('#apConfV').textContent = Math.round(a.minConfidence * 100) + '%';
 }
+$('#hookSave').onclick = async () => { try { const r = await api('/api/notify', { url: $('#hookUrl').value }); toast(r.url ? 'Alerts on' : 'Alerts off'); } catch (e) { toast(e.message); } };
+$('#hookTest').onclick = async () => { try { await api('/api/notify/test', {}); toast('Test alert delivered'); } catch (e) { toast(e.message); } };
 $('#mcpCopy').onclick = async () => { try { await navigator.clipboard.writeText($('#mcpUrl').value); toast('MCP URL copied'); } catch { $('#mcpUrl').select(); } };
 const saveAp = async () => setAp(await api('/api/autopilot', { enabled: $('#apOn').checked, maxAmount: $('#apMax').value, minConfidence: $('#apConf').value }));
 $('#apOn').onchange = saveAp; $('#apMax').oninput = $('#apConf').oninput = saveAp;

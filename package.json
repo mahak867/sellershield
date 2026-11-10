@@ -14,7 +14,8 @@
     "apimatic:validate": "apimatic api validate -i apimatic",
     "apimatic:sdk": "apimatic sdk generate -l typescript -i apimatic",
     "apimatic:portal": "apimatic portal generate -i apimatic",
-    "apimatic:plugin": "apimatic plugin generate -i apimatic"
+    "apimatic:plugin": "apimatic plugin generate -i apimatic",
+    "postman": "openapi2postmanv2 -s apimatic/src/spec/openapi.yaml -o postman/sellershield.postman_collection.json -p -O folderStrategy=Tags"
   },
   "engines": {
     "node": ">=18"

@@ -11,6 +11,7 @@ import { buildRecords, checkDraft, fingerprint, renderForPayPal } from './lib/ev
 import { disputePack } from './lib/pdf.js';
 import { catalogFacts, CHANNEL3_ON } from './lib/channel3.js';
 import { handleMcp } from './lib/mcp.js';
+import { allowedWebhook, notify } from './lib/notify.js';
 import { PERSIST, loadState, saveState, closeState } from './lib/persist.js';
 import { snapshot, restore } from './lib/workspace.js';
 import { sdk } from './lib/paypal-sdk.js';
@@ -167,7 +168,7 @@ const qualifies = (p, ap) => ap.enabled && p.amount <= ap.maxAmount && p.confide
   && !(p.issues || []).length && !(p.kind === 'invoice' && p.scheduledFor > today());
 
 app.get('/api/status', (_req, res) => {
-  res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, persistence: PERSIST, ai: aiStats, workspace: workspaceId(), channel3: CHANNEL3_ON, autopilot: store.autopilot });
+  res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, notifyUrl: store.notifyUrl || null, persistence: PERSIST, ai: aiStats, workspace: workspaceId(), channel3: CHANNEL3_ON, autopilot: store.autopilot });
 });
 
 // Collect an independent product record for every sale (Channel3), once, at the time it is first seen.
@@ -201,11 +202,38 @@ app.get('/api/events', (req, res) => {
 });
 app.get('/api/activity', (_req, res) => res.json(store.activity));
 
+// Alerts to the seller's webhook (Zapier): once per item that needs them, and for each autopilot action.
+function alertSeller(auto) {
+  const url = store.notifyUrl;
+  if (!url) return;
+  store.notified ??= {};
+  for (const p of store.proposals) {
+    if (store.notified[p.id]) continue;
+    store.notified[p.id] = true;
+    notify(url, { event: 'needs_your_review', summary: `${p.decision.replaceAll('_', ' ')} on ${p.kind} ${p.target} ($${p.amount.toFixed(2)}) is waiting for your approval.`, ...brief(p) });
+  }
+  for (const a of auto) notify(url, { event: 'autopilot_acted', summary: `Autopilot ran ${a.decision.replaceAll('_', ' ').toLowerCase()} on ${a.kind} ${a.target} ($${a.amount.toFixed(2)}).`, kind: a.kind, target: a.target, amount: a.amount, decision: a.decision, paypalApi: a.api, paypalCall: a.simulated ? 'simulated' : 'live' });
+}
+app.post('/api/notify', (req, res) => {
+  const raw = String(req.body?.url ?? '').trim();
+  if (!raw) { store.notifyUrl = null; return res.json({ url: null }); }
+  const url = allowedWebhook(raw);
+  if (!url) return res.status(400).json({ error: 'Use a Zapier "Catch Hook" URL (https://hooks.zapier.com/...).' });
+  store.notifyUrl = url; store.notified = {};
+  res.json({ url });
+});
+app.post('/api/notify/test', async (_req, res) => {
+  if (!store.notifyUrl) return res.status(400).json({ error: 'Save a webhook URL first.' });
+  const delivered = await notify(store.notifyUrl, { event: 'test', summary: 'SellerShield alerts are connected.' });
+  res.status(delivered ? 200 : 502).json(delivered ? { delivered } : { error: 'The webhook did not accept the test event.' });
+});
+
 // Scan, then let autopilot act on what qualifies. The rest waits for the seller.
 async function runAgent(trigger) {
   const proposals = await scan();
   const auto = [];
   for (const p of proposals.filter((x) => qualifies(x, store.autopilot))) auto.push(await execute(p.id, undefined, 'autopilot'));
+  alertSeller(auto);
   activity('agent', `Agent reviewed ${proposals.length} item${proposals.length === 1 ? '' : 's'} (${trigger})${auto.length ? `; autopilot handled ${auto.length} worth $${auto.reduce((s, a) => s + a.amount, 0).toFixed(2)}` : ''}; ${store.proposals.length} waiting for you.`);
   return { proposals: store.proposals, auto };
 }
@@ -513,6 +541,7 @@ app.post('/api/orders', async (req, res, next) => {
 // Restore demo data and clear the log (for clean demo retakes). Real sandbox invoices stay.
 app.post('/api/demo/reset', (_req, res) => {
   resetStore();
+  store.notified = {};
   paypal.resetDemo();
   res.json({ ok: true });
 });

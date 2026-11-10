@@ -70,6 +70,10 @@ One autopilot policy and one audit log cover all of it. A small seller doesn't w
   - Checkbox bulk approve, quick search, number filters, a pinned totals row and CSV export.
   - A full audit log shows every action, who triggered it, live or simulated, and exactly what was sent.
 - **Protection-ready check on every sale:** `assessReadiness` in `lib/protection.js` runs the Seller Protection proof requirements on each order before any dispute. Each sale is Ready, Agent can fix, Waiting on carrier or Needs you.
+- **Sale journeys on the calendar:** every sale has a row showing the time PayPal had no proof (red), transit, and protection-ready, linked by arrows. The dashboard reports the average days a sale spent without proof.
+- **State survives restarts:** orders, proposals, the autopilot policy and the audit log are kept in Render Key Value (or a JSON file), so a sleeping free web service doesn't come back empty.
+- **Alerts through Zapier:** paste a Zapier "Catch Hook" URL and SellerShield posts an event when something needs the seller or autopilot acts. Only Zapier hook URLs are accepted, so the public demo can't be made to call other addresses.
+- **Postman collection:** `postman/sellershield.postman_collection.json`, generated from the OpenAPI spec (`npm run postman`).
 - **Proof typed straight into AG Grid:** in the readiness grid, the seller types a missing carrier, tracking number or delivery date into the shaded cells. The server validates it, the sale's status updates, and tracking locks once it is on PayPal. Each row opens into a full-width checklist of every Seller Protection rule and who fixes it.
 - **Channel3 record collected at sale time:** "not as described" is never covered by Seller Protection, so SellerShield looks up an independent product record for every sale when it first sees it, shows it in the sale's checklist, and reuses it if a dispute arrives.
 - **Works with any store:** `POST /api/orders` and a small client library let any PayPal storefront register a sale (details below).
@@ -137,11 +141,13 @@ Data sources in sandbox mode:
 | **PayPal** (Disputes, Invoicing, Orders v2, Tracking, Webhooks, JS SDK) | The whole product: reads money at risk and acts on it in the sandbox | `lib/paypal.js`, `public/shop.html` |
 | **PayPal Agent Toolkit** | Claude's read-only PayPal tools (invoices, disputes, orders, transactions, tracking) | `lib/toolkit.js` |
 | **APIMatic** | 1. **Consumes** APIMatic's PayPal Server SDK for every Orders and Payments call (idempotent captures, PayPal's own `seller_protection` flag). 2. **Publishes** SellerShield's own OpenAPI spec in APIMatic's `src/spec` layout, so APIMatic can generate SDKs, a docs portal and an AI context plugin for other agents and storefronts to call SellerShield. The spec is lint-clean, served at `/api/openapi.yaml`, and a test keeps it in sync with the server. | `lib/paypal-sdk.js`, `apimatic/src/spec/openapi.yaml`, `test/openapi.test.js` |
-| **Bryntum Scheduler** | **The agent calendar.** Every PayPal deadline, overdue period and hold is on one timeline. Each action the agent proposes is a bar: **dragging it onto a day approves it for that day**, bound to its SHA-256 fingerprint. PayPal's response deadline is enforced, and a background scheduler runs it on that day. The calendar is the approval interface. When a dispute is missing proof of delivery, the calendar shows a **two-step evidence plan**: a seller task ("📦 proof") linked by a **dependency arrow** to the agent's action. Clicking the task records the carrier's delivery date; the agent re-runs, Seller Protection flips to covered, and the draft cites the new fact. | `public/index.html` (module script), `server.js` (`/api/schedule`, `runSchedule`) |
+| **Bryntum Scheduler** | **Sale journeys:** one row per sale with no-proof, transit and protection-ready bars linked by dependency arrows. **The agent calendar.** Every PayPal deadline, overdue period and hold is on one timeline. Each action the agent proposes is a bar: **dragging it onto a day approves it for that day**, bound to its SHA-256 fingerprint. PayPal's response deadline is enforced, and a background scheduler runs it on that day. The calendar is the approval interface. When a dispute is missing proof of delivery, the calendar shows a **two-step evidence plan**: a seller task ("📦 proof") linked by a **dependency arrow** to the agent's action. Clicking the task records the carrier's delivery date; the agent re-runs, Seller Protection flips to covered, and the draft cites the new fact. | `public/index.html` (module script), `server.js` (`/api/schedule`, `runSchedule`) |
 | **AG Grid** | **Sale readiness grid:** every sale against Seller Protection, expandable full-width proof checklists, missing proof typed into cells and validated by the server, one-click bulk tracking upload. **Money-at-risk command center:** urgency ranking, the agent's call per row, per-row and bulk approve, quick search, number filters, totals row, CSV export. Cells flash on live updates. **Drafts can be edited inside the grid**: each edit is re-fingerprinted and citation-checked on the server before Approve unlocks. Draft edits support undo and redo, and column layout is saved per browser. | `public/index.html` |
 | **AG Charts** | Where the money is stuck (at risk vs protected), a running total of money protected over time (hover shows who acted: seller, autopilot, calendar or chat), and dispute dollars by Seller Protection status | `public/index.html` (`renderCharts`) |
 | **Channel3** | **Collected for every sale on the day it is made**, shown in the sale's checklist, and reused in disputes. **Independent product facts for "not as described" disputes.** Seller Protection doesn't cover these, so the seller must show the item matched its listing. The agent looks the item up in Channel3's catalog with the official `@channel3/sdk`. Brand, materials, key features and attributes such as size and color become a numbered evidence record. Claude may cite it, and the citation checker verifies it. Without a key, clearly labelled demo facts are used. | `lib/channel3.js`, `lib/evidence.js`, `test/channel3.test.js` |
-| **Render** | One-click Blueprint deploy (`render.yaml`) with health check; webhooks point at the Render URL | `render.yaml` |
+| **Render** | One Blueprint (`render.yaml`) creates the web service **and a Key Value instance** wired in as `REDIS_URL`, so state survives the free service sleeping. Health check; webhooks point at the Render URL | `render.yaml`, `lib/persist.js` |
+| **Zapier** | Outbound alerts to a Zapier Catch Hook: `needs_your_review` and `autopilot_acted` events | `lib/notify.js` |
+| **Postman** | A collection generated from the OpenAPI spec, grouped by tag, with a `baseUrl` variable | `postman/` |
 
 ### Generate a SellerShield SDK, docs portal or AI context plugin with APIMatic
 
@@ -225,7 +231,7 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 50 tests: Seller Protection rules, sale readiness, proof entry, storefront client, MCP limits, plan reuse, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 54 tests: Seller Protection rules, sale readiness, proof entry, sale journeys, restart persistence (file and Redis), alerts, storefront client, MCP limits, plan reuse, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
 
@@ -294,6 +300,9 @@ lib/paypal-sdk.js  Orders + Payments via the APIMatic-generated PayPal Server SD
 lib/protection.js  PayPal Seller Protection eligibility check
 lib/evidence.js  Evidence records, citation checker, approval fingerprints
 lib/mcp.js       MCP endpoint: other agents act only inside the seller's limits
+lib/persist.js   State across restarts: Render Key Value (Redis) or a JSON file
+lib/notify.js    Outbound alerts to a Zapier Catch Hook
+postman/         Postman collection generated from the OpenAPI spec
 sdk/             Client library for storefronts (register a sale, check readiness, approve)
 lib/workspace.js Per-visitor isolated demo workspaces
 test/            npm test: unit + API tests (mock mode, no keys)
