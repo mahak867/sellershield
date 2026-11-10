@@ -11,6 +11,8 @@ import { buildRecords, checkDraft, fingerprint, renderForPayPal } from './lib/ev
 import { disputePack } from './lib/pdf.js';
 import { catalogFacts, CHANNEL3_ON } from './lib/channel3.js';
 import { handleMcp } from './lib/mcp.js';
+import { PERSIST, loadState, saveState, closeState } from './lib/persist.js';
+import { snapshot, restore } from './lib/workspace.js';
 import { sdk } from './lib/paypal-sdk.js';
 
 const app = express();
@@ -165,7 +167,7 @@ const qualifies = (p, ap) => ap.enabled && p.amount <= ap.maxAmount && p.confide
   && !(p.issues || []).length && !(p.kind === 'invoice' && p.scheduledFor > today());
 
 app.get('/api/status', (_req, res) => {
-  res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, ai: aiStats, workspace: workspaceId(), channel3: CHANNEL3_ON, autopilot: store.autopilot });
+  res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, persistence: PERSIST, ai: aiStats, workspace: workspaceId(), channel3: CHANNEL3_ON, autopilot: store.autopilot });
 });
 
 // Collect an independent product record for every sale (Channel3), once, at the time it is first seen.
@@ -519,6 +521,22 @@ app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(err.status || 500).json({ error: err.message });
 });
+
+// ---------- State that survives restarts (off unless REDIS_URL or DATA_FILE is set) ----------
+if (PERSIST !== 'off') {
+  const n = restore(await loadState());
+  console.log(`state store: ${PERSIST}, restored ${n} workspace${n === 1 ? '' : 's'}`);
+  let last = snapshot(), saving = false;
+  const flush = async () => {
+    const now = snapshot();
+    if (now === last || saving) return;
+    saving = true;
+    try { await saveState(now); last = now; } catch (e) { console.warn('could not save state:', e.message); }
+    saving = false;
+  };
+  setInterval(flush, 2000).unref();
+  for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, async () => { await flush(); await closeState(); process.exit(0); });
+}
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`SellerShield on :${port} (paypal ${MOCK_PAYPAL ? 'MOCK' : 'SANDBOX'}, ai ${MOCK_AI ? 'MOCK' : 'LIVE'})`));

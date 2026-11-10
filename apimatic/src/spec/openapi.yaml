@@ -482,6 +482,8 @@ components:
       properties:
         mockPaypal: { type: boolean }
         mockAi: { type: boolean }
+        persistence: { type: string, enum: [off, file, redis] }
+        workspace: { type: string, format: uuid }
         ai:
           type: object
           description: How many plans came from Claude and how many fell back to rules since the server started
