@@ -353,7 +353,6 @@ bench/           Policy test suite: 30 labelled disputes, runner, results
 lib/store.js     In-memory order book, proposals, autopilot policy, audit log
 public/          index.html, app.js (AG Grid, AG Charts, proposals, chat), timeline.js (Bryntum Scheduler), app.css; shop.html (store), buyer.html (buyer agent), store.css
 scripts/         smoke.cjs (browser smoke test), screenshots.cjs, record-demo.cjs
-sdk/             Client library for storefronts (register a sale, check readiness, approve)
 ```
 
 ## License
