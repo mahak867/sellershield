@@ -104,7 +104,7 @@ const readyGrid = agGrid.createGrid($('#readyGrid'), {
         b.title = 'Show the Seller Protection checklist for this sale'; b.setAttribute('aria-label', b.title);
         b.onclick = () => { const id = p.data.transactionId; openProof.has(id) ? openProof.delete(id) : openProof.add(id); drawReady(); };
         return b; } },
-    { field: 'item', headerName: 'Sale', flex: 1, minWidth: 250, cellRenderer: typeCell },
+    { field: 'item', headerName: 'Sale', flex: 1, minWidth: 250, cellRenderer: (p) => typeCell(p) + (p.data.byAgent ? ' <span class="tag" title="Bought by the buyer\'s AI agent, under a mandate">buyer agent</span>' : '') },
     { field: 'amount', valueFormatter: (p) => money(p.value), width: 110, type: 'rightAligned' },
     { field: 'status', headerName: 'Seller Protection', width: 170, enableCellChangeFlash: true,
       cellRenderer: (p) => `<span class="tag ${READY[p.value]?.[1] ?? ''}">${esc(READY[p.value]?.[0] ?? p.value)}</span>` },

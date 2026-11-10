@@ -76,6 +76,7 @@ One autopilot policy and one audit log cover all of it. A small seller doesn't w
 - **Postman collection:** `postman/sellershield.postman_collection.json`, generated from the OpenAPI spec (`npm run postman`).
 - **Proof typed straight into AG Grid:** in the readiness grid, the seller types a missing carrier, tracking number or delivery date into the shaded cells. The server validates it, the sale's status updates, and tracking locks once it is on PayPal. Each row opens into a full-width checklist of every Seller Protection rule and who fixes it.
 - **Channel3 record collected at sale time:** "not as described" is never covered by Seller Protection, so SellerShield looks up an independent product record for every sale when it first sees it, shows it in the sale's checklist, and reuses it if a dispute arrives.
+- **Buyer agent:** an AI agent shops the store for a buyer inside a spending limit, and the buyer's instructions become evidence on the seller's side (details below).
 - **Works with any store:** `POST /api/orders` and a small client library let any PayPal storefront register a sale (details below).
 - **Audit log names the PayPal API** each action used, such as `Disputes: provide-evidence` or `Orders v2: track`.
 - **One click to make sales ready:** the readiness grid has a button that sends tracking to PayPal for every sale the agent can fix. Each upload is an agent proposal approved by its fingerprint.
@@ -173,6 +174,23 @@ npm run apimatic:portal
 npm run apimatic:plugin
 ```
 
+## Both sides of the sale, handled by agents
+
+Open **Buyer agent** (`/buyer.html`). A buyer says what they want and the most they will pay. An AI agent shops the store for them, and SellerShield protects the same sale on the seller's side.
+
+![Buyer agent](docs/screenshots/8-buyer-agent.png)
+
+1. **The buyer writes a mandate:** what they want, and a price limit.
+2. **The agent picks one item.** Claude proposes it (a rule shopper without a key). Code then checks the pick: it must be in the catalog and within the limit. A pick that breaks the mandate is discarded, and if the item the buyer asked for costs too much, the agent buys nothing, never a substitute.
+3. **A PayPal order is created only for a pick that passes**, with the mandate id as the order's `custom_id`.
+4. **The buyer approves the payment in PayPal.** Before capture, the order is read back from PayPal and checked against the mandate again. Each mandate can be used for one purchase.
+5. **The mandate travels with the sale.** The seller's dashboard tags the sale "buyer agent" and shows the mandate in its checklist.
+6. **If the buyer disputes it** ("my agent bought the wrong thing"), the mandate is a numbered evidence record: what the buyer asked for, their limit, what was bought, and that the buyer approved the payment. The response cites it and still has to pass the citation check.
+
+Agent purchases create a new kind of dispute. This shows one way to make them defensible: the buyer's instructions are recorded before any money moves.
+
+Without PayPal keys the payment step is simulated and labelled as such. The agent does not pay on its own: the buyer approves each payment in PayPal.
+
 ## For developers: protect any store's sales in one call
 
 SellerShield is not tied to its demo shop. Any storefront that takes PayPal can register a sale after checkout, and SellerShield starts watching it: the sale is checked against Seller Protection at once and the agent proposes sending the tracking to PayPal.
@@ -231,7 +249,7 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 54 tests: Seller Protection rules, sale readiness, proof entry, sale journeys, restart persistence (file and Redis), alerts, storefront client, MCP limits, plan reuse, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 56 tests: buyer agent mandates, Seller Protection rules, sale readiness, proof entry, sale journeys, restart persistence (file and Redis), alerts, storefront client, MCP limits, plan reuse, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
 
@@ -301,6 +319,7 @@ lib/toolkit.js   PayPal Agent Toolkit tools exposed to the Claude agent
 lib/paypal-sdk.js  Orders + Payments via the APIMatic-generated PayPal Server SDK
 lib/protection.js  PayPal Seller Protection eligibility check
 lib/evidence.js  Evidence records, citation checker, approval fingerprints
+lib/buyer.js     Buyer agent: mandates, the checks every purchase must pass, rule shopper
 lib/mcp.js       MCP endpoint: other agents act only inside the seller's limits
 lib/persist.js   State across restarts: Render Key Value (Redis) or a JSON file
 lib/notify.js    Outbound alerts to a Zapier Catch Hook

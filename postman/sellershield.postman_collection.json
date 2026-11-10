@@ -5,7 +5,7 @@
             "description": "What money is at risk, and the live activity stream.",
             "item": [
                 {
-                    "id": "91fc8395-6f43-42d7-8cb8-459abbdf6801",
+                    "id": "0d4b1a8e-96c4-47ff-a291-d68691902dc2",
                     "name": "Which integrations are live, and the autopilot policy",
                     "request": {
                         "name": "Which integrations are live, and the autopilot policy",
@@ -33,7 +33,7 @@
                     },
                     "response": [
                         {
-                            "id": "71168e99-52e9-4a03-b77c-85549872e79e",
+                            "id": "69eaa086-5afe-49d2-a904-a5726a9d800b",
                             "name": "Status",
                             "originalRequest": {
                                 "url": {
@@ -83,7 +83,7 @@
                     }
                 },
                 {
-                    "id": "283c7f9a-8193-4e34-892f-dc1ba49fa741",
+                    "id": "e59e1037-890d-4667-a6fd-530398339c6a",
                     "name": "Everything at risk, plus proposals, the audit log and scheduled actions",
                     "request": {
                         "name": "Everything at risk, plus proposals, the audit log and scheduled actions",
@@ -111,7 +111,7 @@
                     },
                     "response": [
                         {
-                            "id": "6c95e4e0-4936-4ea5-9256-b0ee726fdbec",
+                            "id": "09dbcd89-c3c7-46d2-82b4-17339f5976b3",
                             "name": "Money at risk",
                             "originalRequest": {
                                 "url": {
@@ -150,7 +150,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"disputes\": [\n    {\n      \"key_0\": true,\n      \"key_1\": 458,\n      \"key_2\": true\n    },\n    {\n      \"key_0\": 5512\n    }\n  ],\n  \"invoices\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": true\n    },\n    {\n      \"key_0\": 3814.0181129766693\n    }\n  ],\n  \"holds\": [\n    {\n      \"key_0\": 1159\n    },\n    {\n      \"key_0\": \"string\"\n    }\n  ],\n  \"readiness\": {\n    \"total\": \"<integer>\",\n    \"ready\": \"<integer>\",\n    \"fixable\": \"<integer>\",\n    \"avgDaysExposed\": \"<number>\",\n    \"amountTotal\": \"<number>\",\n    \"amountReady\": \"<number>\",\n    \"rows\": [\n      {\n        \"transactionId\": \"<string>\",\n        \"item\": \"<string>\",\n        \"amount\": \"<number>\",\n        \"demo\": \"<boolean>\",\n        \"status\": \"WAITING\",\n        \"checks\": [\n          {\n            \"key_0\": 8185.949381537834\n          },\n          {\n            \"key_0\": \"string\"\n          }\n        ]\n      },\n      {\n        \"transactionId\": \"<string>\",\n        \"item\": \"<string>\",\n        \"amount\": \"<number>\",\n        \"demo\": \"<boolean>\",\n        \"status\": \"AGENT_CAN_FIX\",\n        \"checks\": [\n          {\n            \"key_0\": 7224.8605929454925\n          },\n          {\n            \"key_0\": 3394.3079363219276\n          }\n        ]\n      }\n    ]\n  },\n  \"proposals\": [\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"invoice\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"REMIND\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"claude\",\n      \"protection\": {\n        \"status\": \"LIKELY_COVERED\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    },\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"hold\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"ADD_TRACKING\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"rules\",\n      \"protection\": {\n        \"status\": \"NOT_COVERED\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\",\n            \"key_2\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    }\n  ],\n  \"actions\": [\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    },\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    }\n  ],\n  \"reminders\": {\n    \"key_0\": \"<date>\",\n    \"key_1\": \"<date>\"\n  },\n  \"schedule\": {\n    \"key_0\": \"<date>\",\n    \"key_1\": \"<date>\"\n  }\n}",
+                            "body": "{\n  \"disputes\": [\n    {\n      \"key_0\": 504.86988474050645\n    },\n    {\n      \"key_0\": \"string\",\n      \"key_1\": true,\n      \"key_2\": 3675\n    }\n  ],\n  \"invoices\": [\n    {\n      \"key_0\": 4632.965874129953\n    },\n    {\n      \"key_0\": false\n    }\n  ],\n  \"holds\": [\n    {\n      \"key_0\": \"string\"\n    },\n    {\n      \"key_0\": \"string\",\n      \"key_1\": 8310.006786642463\n    }\n  ],\n  \"readiness\": {\n    \"total\": \"<integer>\",\n    \"ready\": \"<integer>\",\n    \"fixable\": \"<integer>\",\n    \"avgDaysExposed\": \"<number>\",\n    \"amountTotal\": \"<number>\",\n    \"amountReady\": \"<number>\",\n    \"rows\": [\n      {\n        \"transactionId\": \"<string>\",\n        \"item\": \"<string>\",\n        \"amount\": \"<number>\",\n        \"demo\": \"<boolean>\",\n        \"status\": \"AGENT_CAN_FIX\",\n        \"checks\": [\n          {\n            \"key_0\": 5194,\n            \"key_1\": 1069,\n            \"key_2\": 2107\n          },\n          {\n            \"key_0\": 532,\n            \"key_1\": \"string\"\n          }\n        ]\n      },\n      {\n        \"transactionId\": \"<string>\",\n        \"item\": \"<string>\",\n        \"amount\": \"<number>\",\n        \"demo\": \"<boolean>\",\n        \"status\": \"AT_RISK\",\n        \"checks\": [\n          {\n            \"key_0\": 2897.581990548748,\n            \"key_1\": false,\n            \"key_2\": false\n          },\n          {\n            \"key_0\": \"string\",\n            \"key_1\": 8169.070737015305\n          }\n        ]\n      }\n    ]\n  },\n  \"proposals\": [\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"invoice\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"ADD_TRACKING\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"rules\",\n      \"protection\": {\n        \"status\": \"NOT_COVERED\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    },\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"dispute\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"FIGHT\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"claude\",\n      \"protection\": {\n        \"status\": \"NEEDS_EVIDENCE\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\",\n            \"key_2\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    }\n  ],\n  \"actions\": [\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    },\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    }\n  ],\n  \"reminders\": {\n    \"key_0\": \"<date>\",\n    \"key_1\": \"<date>\"\n  },\n  \"schedule\": {\n    \"key_0\": \"<date>\"\n  }\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -161,7 +161,7 @@
                     }
                 },
                 {
-                    "id": "bb2524e2-bd16-4e09-a29f-fbffeb6ff725",
+                    "id": "d21c9098-d2a9-4df1-9cc7-b672e09142f8",
                     "name": "Live activity stream (Server-Sent Events)",
                     "request": {
                         "name": "Live activity stream (Server-Sent Events)",
@@ -189,7 +189,7 @@
                     },
                     "response": [
                         {
-                            "id": "076e2a27-d919-4c21-a23d-4a60bd3ff3e0",
+                            "id": "28f21fc8-03ce-406e-a70a-0b4394099c41",
                             "name": "text/event-stream of ActivityEvent JSON objects",
                             "originalRequest": {
                                 "url": {
@@ -245,7 +245,7 @@
             "description": "Proposals, guarded approvals, evidence packs, chat and autopilot.",
             "item": [
                 {
-                    "id": "e9f844ed-76c4-4f7f-898f-9ff421c8e3ff",
+                    "id": "b1a0754e-b8b5-41b6-b997-0a9833e8f932",
                     "name": "Set (or clear) the webhook that receives alerts",
                     "request": {
                         "name": "Set (or clear) the webhook that receives alerts",
@@ -289,7 +289,7 @@
                     },
                     "response": [
                         {
-                            "id": "42391b2f-818d-4542-a950-0388ebf400f9",
+                            "id": "baded40f-b9c0-4b1d-b578-2dcdd11afadf",
                             "name": "The saved URL, or null",
                             "originalRequest": {
                                 "url": {
@@ -346,7 +346,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "8d0fd489-6b83-46c8-a584-41f45b4a34d0",
+                            "id": "593ec7e3-91e1-4cd7-9d4f-174540e877ff",
                             "name": "Not an allowed webhook URL",
                             "originalRequest": {
                                 "url": {
@@ -399,7 +399,7 @@
                     }
                 },
                 {
-                    "id": "087e08c4-55cb-4a33-b6df-e64ff3022d70",
+                    "id": "ee20b007-264a-45ef-86eb-3a185172874f",
                     "name": "Send a test alert to the saved webhook",
                     "request": {
                         "name": "Send a test alert to the saved webhook",
@@ -422,7 +422,7 @@
                     },
                     "response": [
                         {
-                            "id": "0a984ca3-902a-4d9d-a87d-82079c8bbfbc",
+                            "id": "5c89bfb3-db82-4a50-b893-37cf195c0e0d",
                             "name": "Delivered",
                             "originalRequest": {
                                 "url": {
@@ -457,7 +457,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "fd214000-4429-405b-8dbd-b56ddae93932",
+                            "id": "72e778d0-9d28-48f2-81d1-dcd11c292958",
                             "name": "No webhook saved",
                             "originalRequest": {
                                 "url": {
@@ -492,7 +492,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "9321d837-7f5b-4f97-ace0-71ef3d9e9a7c",
+                            "id": "c83b4a8a-a7c5-439b-9eea-aeef8b529827",
                             "name": "The webhook did not accept the event",
                             "originalRequest": {
                                 "url": {
@@ -533,7 +533,7 @@
                     }
                 },
                 {
-                    "id": "44247d32-5605-4b44-89a2-f8b319a771b3",
+                    "id": "96162317-50fe-4c2d-a8cd-97bd00534ef7",
                     "name": "Model Context Protocol endpoint for other AI agents",
                     "request": {
                         "name": "Model Context Protocol endpoint for other AI agents",
@@ -584,7 +584,7 @@
                         "method": "POST",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": 9407.116984896613,\n    \"key_1\": \"string\"\n  }\n}",
+                            "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": 2221.778422820562\n  }\n}",
                             "options": {
                                 "raw": {
                                     "headerFamily": "json",
@@ -596,7 +596,7 @@
                     },
                     "response": [
                         {
-                            "id": "f718d2a1-303c-4a23-aa89-e0b9b6db87b8",
+                            "id": "237102fb-09b1-4292-8d13-df6d7ab60d6b",
                             "name": "JSON-RPC response",
                             "originalRequest": {
                                 "url": {
@@ -650,7 +650,7 @@
                                 "method": "POST",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": 9407.116984896613,\n    \"key_1\": \"string\"\n  }\n}",
+                                    "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": 2221.778422820562\n  }\n}",
                                     "options": {
                                         "raw": {
                                             "headerFamily": "json",
@@ -667,12 +667,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"key_0\": 2217\n}",
+                            "body": "{\n  \"key_0\": 4045.2178038524767\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "35f5fc6b-24f0-4d14-a199-770053773dbc",
+                            "id": "3c5bc2e2-9e9e-4642-8678-dc61a9201c72",
                             "name": "Notification accepted",
                             "originalRequest": {
                                 "url": {
@@ -722,7 +722,7 @@
                                 "method": "POST",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": 9407.116984896613,\n    \"key_1\": \"string\"\n  }\n}",
+                                    "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": 2221.778422820562\n  }\n}",
                                     "options": {
                                         "raw": {
                                             "headerFamily": "json",
@@ -744,7 +744,7 @@
                     }
                 },
                 {
-                    "id": "60dafc60-7d50-4e25-ae2c-d174ad3585e6",
+                    "id": "0ab51796-5b7c-4240-9335-2cf73247e084",
                     "name": "Run the agent; autopilot acts on what qualifies, the rest is proposed",
                     "request": {
                         "name": "Run the agent; autopilot acts on what qualifies, the rest is proposed",
@@ -773,7 +773,7 @@
                     },
                     "response": [
                         {
-                            "id": "101b6103-0b2b-496a-b898-97f1a5f0cc2a",
+                            "id": "79853826-314e-442a-8b7d-3d278593d05e",
                             "name": "Proposals and autopilot actions",
                             "originalRequest": {
                                 "url": {
@@ -813,12 +813,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"proposals\": [\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"invoice\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"ADD_TRACKING\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"claude\",\n      \"protection\": {\n        \"status\": \"LIKELY_COVERED\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    },\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"dispute\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"ACCEPT\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"claude\",\n      \"protection\": {\n        \"status\": \"NEEDS_EVIDENCE\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    }\n  ],\n  \"auto\": [\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    },\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"proposals\": [\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"dispute\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"FIGHT\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"claude\",\n      \"protection\": {\n        \"status\": \"NEEDS_EVIDENCE\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    },\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"hold\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"FIGHT\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"claude\",\n      \"protection\": {\n        \"status\": \"NOT_COVERED\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    }\n  ],\n  \"auto\": [\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    },\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "29c074e3-0b81-4488-a949-5d64a94cd973",
+                            "id": "5a231fb2-5abb-4661-92d3-4b9193e5ad59",
                             "name": "Too many requests",
                             "originalRequest": {
                                 "url": {
@@ -869,7 +869,7 @@
                     }
                 },
                 {
-                    "id": "cd8bac54-8591-41e1-b6c3-50cecd8b5b93",
+                    "id": "3efb3ae1-388c-44e5-906a-12f9c52bcf65",
                     "name": "Fingerprint and citation check for a (possibly edited) draft",
                     "request": {
                         "name": "Fingerprint and citation check for a (possibly edited) draft",
@@ -911,7 +911,7 @@
                     },
                     "response": [
                         {
-                            "id": "9d10ba62-e62b-4087-8e56-6a6221c9eb49",
+                            "id": "f951f556-d1c3-4969-abbe-cd0991bfd7af",
                             "name": "Check result",
                             "originalRequest": {
                                 "url": {
@@ -964,12 +964,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"fingerprint\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"fingerprint\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "79707cf8-8b8b-40aa-8aa2-5250c16c4e74",
+                            "id": "a1831fd4-b58b-4a5b-b3bf-9f1a287982cc",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1033,7 +1033,7 @@
                     }
                 },
                 {
-                    "id": "66e23162-9980-4877-a8db-5ae786cd1117",
+                    "id": "e1765d56-10c5-4ee9-965f-d42b2277b604",
                     "name": "Execute a proposal on PayPal",
                     "request": {
                         "name": "Execute a proposal on PayPal",
@@ -1078,7 +1078,7 @@
                     },
                     "response": [
                         {
-                            "id": "acc9f7db-59e8-4782-8fb8-499fc3498038",
+                            "id": "330833bd-f7c8-41a2-b06f-f6ff26943cf3",
                             "name": "Executed and logged",
                             "originalRequest": {
                                 "url": {
@@ -1136,7 +1136,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "f1594512-3fd9-4def-b38d-0c88cc741634",
+                            "id": "14ed4d8d-d0e5-4318-ab66-4cedfdaff08e",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1194,7 +1194,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "f4b3dab9-c005-4c10-a550-dff070bc7034",
+                            "id": "c2154bde-e4b1-4371-8bd5-d7beba766154",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1252,7 +1252,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "05cf05d7-2c1b-466c-b846-866c95b2fd58",
+                            "id": "1206fabc-59e5-4ce8-b8c0-4923dfe3e998",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1316,7 +1316,7 @@
                     }
                 },
                 {
-                    "id": "d20c6c9e-0966-4a94-985e-7fd7d9f79c16",
+                    "id": "b4df0d24-9a49-4b21-8cef-fd88dabb78fc",
                     "name": "Evidence pack (PDF) for a dispute proposal",
                     "request": {
                         "name": "Evidence pack (PDF) for a dispute proposal",
@@ -1358,7 +1358,7 @@
                     },
                     "response": [
                         {
-                            "id": "0dbea829-3b8a-4df1-9f7c-95f39c4ac17c",
+                            "id": "8bc8d7b5-3929-4b65-91d0-a80237ab0993",
                             "name": "PDF",
                             "originalRequest": {
                                 "url": {
@@ -1416,7 +1416,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "b37f29e2-ddf9-484a-a31d-552d30a9e47c",
+                            "id": "0c733630-6fbc-4e18-9677-e936f0725d95",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1480,7 +1480,7 @@
                     }
                 },
                 {
-                    "id": "a88ce768-b8be-49bc-bbc0-17131123595e",
+                    "id": "9e7361c0-d976-4cb8-a2eb-f0b1d101bd3f",
                     "name": "Ask the tool-using agent a question, or ask it to act",
                     "request": {
                         "name": "Ask the tool-using agent a question, or ask it to act",
@@ -1522,7 +1522,7 @@
                     },
                     "response": [
                         {
-                            "id": "771511e5-3f13-4723-b328-bbd2738e1f69",
+                            "id": "75ed16c5-3f18-4966-a941-1e1310470041",
                             "name": "Reply and the tools the agent used",
                             "originalRequest": {
                                 "url": {
@@ -1575,7 +1575,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"reply\": \"<string>\",\n  \"steps\": [\n    {\n      \"tool\": \"<string>\",\n      \"input\": {\n        \"key_0\": 4820.528787137894,\n        \"key_1\": false,\n        \"key_2\": 7410\n      }\n    },\n    {\n      \"tool\": \"<string>\",\n      \"input\": {\n        \"key_0\": 8409,\n        \"key_1\": \"string\"\n      }\n    }\n  ]\n}",
+                            "body": "{\n  \"reply\": \"<string>\",\n  \"steps\": [\n    {\n      \"tool\": \"<string>\",\n      \"input\": {\n        \"key_0\": 9901.734614735517,\n        \"key_1\": \"string\"\n      }\n    },\n    {\n      \"tool\": \"<string>\",\n      \"input\": {\n        \"key_0\": 4614\n      }\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -1586,7 +1586,7 @@
                     }
                 },
                 {
-                    "id": "f0577324-dafb-494c-b556-4071e2a9d644",
+                    "id": "6a0093d3-0178-4e9f-a8c1-9d802f0b7cd5",
                     "name": "Set the autopilot policy",
                     "request": {
                         "name": "Set the autopilot policy",
@@ -1627,7 +1627,7 @@
                     },
                     "response": [
                         {
-                            "id": "a1474646-7078-4c09-9c0e-3952a6df7f80",
+                            "id": "32161a65-32f2-4e0f-895d-d1ecba761330",
                             "name": "Current policy",
                             "originalRequest": {
                                 "url": {
@@ -1690,7 +1690,7 @@
                     }
                 },
                 {
-                    "id": "44d4ad07-1cc1-4740-93b0-58491e1e3b54",
+                    "id": "0c6b5281-1049-498c-8ef6-34fb3d5300e5",
                     "name": "Record the carrier's delivery confirmation for an order; the agent re-checks Seller Protection",
                     "request": {
                         "name": "Record the carrier's delivery confirmation for an order; the agent re-checks Seller Protection",
@@ -1744,7 +1744,7 @@
                     },
                     "response": [
                         {
-                            "id": "f00a3864-9fe1-4867-ad99-1aad7c073c77",
+                            "id": "3d294ca1-80cd-40a7-99cd-8090f8dbef32",
                             "name": "Agent re-run result",
                             "originalRequest": {
                                 "url": {
@@ -1804,7 +1804,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "46e3e850-6677-4f25-9f8d-0e964c79f878",
+                            "id": "aa57e320-0a4b-495e-8c4c-6ee70f65e5ac",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1874,7 +1874,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "6ae73bbf-a51a-447c-85fe-7768c05f8cfa",
+                            "id": "acab6dd8-a8c1-4dc1-983b-280cb6b940f5",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1950,7 +1950,7 @@
                     }
                 },
                 {
-                    "id": "55a307cb-2dda-468e-a614-0fa1c327327d",
+                    "id": "b2ff8908-2d88-4135-99c7-6f5e913774a8",
                     "name": "Sandbox only - ask PayPal to decide a real sandbox dispute",
                     "request": {
                         "name": "Sandbox only - ask PayPal to decide a real sandbox dispute",
@@ -1991,7 +1991,7 @@
                     },
                     "response": [
                         {
-                            "id": "f8249041-d074-4f2b-8d16-5cc4b88b503b",
+                            "id": "d1bb1e19-f024-4bbf-92f2-5aa955b09171",
                             "name": "PayPal outcome",
                             "originalRequest": {
                                 "url": {
@@ -2038,7 +2038,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "d68db345-95c3-497b-aff3-747b855dbcc1",
+                            "id": "a8b406d6-8510-4e51-bbf6-405f0865607e",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -2107,7 +2107,7 @@
             "description": "The agent calendar. Scheduling an action approves it for that day.",
             "item": [
                 {
-                    "id": "76ec1ef2-ca9f-47b8-828d-eb29219c1a49",
+                    "id": "01941130-6719-4f3c-8884-3a70c5275d88",
                     "name": "Approve a proposal to run on a given day (the agent calendar)",
                     "request": {
                         "name": "Approve a proposal to run on a given day (the agent calendar)",
@@ -2151,7 +2151,7 @@
                     },
                     "response": [
                         {
-                            "id": "3ca72c8b-9386-41a7-bbbe-23d424406ce6",
+                            "id": "250a7faf-aadd-4877-a955-5f9bb69b8091",
                             "name": "Scheduled",
                             "originalRequest": {
                                 "url": {
@@ -2198,7 +2198,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "daf53cc8-58e0-428f-af96-28e3ea284c89",
+                            "id": "88eba085-955b-4dcd-a91c-5f0b49e9d16a",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -2255,7 +2255,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "740773f9-fe50-4a26-91a6-fd6fb2be2f17",
+                            "id": "eccbb158-12fe-4195-9227-a3cf6e7cd998",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -2312,7 +2312,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "b6b72248-b113-437b-bf19-293a16efb53b",
+                            "id": "78e5b09a-f22c-4c8e-8ef0-0ebb1b125fc8",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -2375,7 +2375,7 @@
                     }
                 },
                 {
-                    "id": "52335984-43a7-43f9-9b69-d04be2abbb2e",
+                    "id": "d9bd35a1-bea1-42b7-a6bd-45c61235e29e",
                     "name": "Cancel a scheduled action",
                     "request": {
                         "name": "Cancel a scheduled action",
@@ -2407,7 +2407,7 @@
                     },
                     "response": [
                         {
-                            "id": "cc997552-a140-4d6e-9019-dbdb075dd607",
+                            "id": "898577b4-bfd4-4757-a888-26ebf0ccd3f9",
                             "name": "Cancelled",
                             "originalRequest": {
                                 "url": {
@@ -2457,7 +2457,7 @@
                     }
                 },
                 {
-                    "id": "3884ba00-f6d3-4902-8c95-5f68fa24e73e",
+                    "id": "755cb25a-1a45-439d-9361-310d4a7f3942",
                     "name": "Set the day the agent may next remind about an invoice",
                     "request": {
                         "name": "Set the day the agent may next remind about an invoice",
@@ -2498,7 +2498,7 @@
                     },
                     "response": [
                         {
-                            "id": "057304ec-0970-4f89-a0e4-586c31d06533",
+                            "id": "f3323e5c-ff90-4b49-b8cf-be48bcd27139",
                             "name": "Saved",
                             "originalRequest": {
                                 "url": {
@@ -2545,7 +2545,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "9af20473-dd2b-454a-ab9c-8fd52dea784e",
+                            "id": "3af9c9eb-9f8c-4641-9af3-ce3690e78cf2",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -2614,7 +2614,622 @@
             "description": "Demo store checkout through PayPal Orders v2.",
             "item": [
                 {
-                    "id": "3abed197-d36b-494a-8a93-a4d5b0282f41",
+                    "id": "3f62421b-aa36-4e9e-9134-88f75adfa566",
+                    "name": "A buyer's AI agent picks one item inside a mandate",
+                    "request": {
+                        "name": "A buyer's AI agent picks one item inside a mandate",
+                        "description": {
+                            "content": "The agent proposes an item for what the buyer wants. Code then checks the pick against\nthe mandate (in catalog, within the price limit). A pick that fails is discarded.\n",
+                            "type": "text/plain"
+                        },
+                        "url": {
+                            "path": [
+                                "api",
+                                "buyer",
+                                "shop"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"want\": \"<string>\",\n  \"maxPrice\": \"<number>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "auth": null
+                    },
+                    "response": [
+                        {
+                            "id": "aa8daa71-7dc4-43ec-a558-1fc580d16f6c",
+                            "name": "The mandate, the pick and the mandate checks",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "buyer",
+                                        "shop"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "ss_ws",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "POST",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"want\": \"<string>\",\n  \"maxPrice\": \"<number>\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "headerFamily": "json",
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"key_0\": 4045.2178038524767\n}",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        },
+                        {
+                            "id": "d6a783e6-c055-4b02-8b69-c4442aa1f353",
+                            "name": "Invalid mandate",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "buyer",
+                                        "shop"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "ss_ws",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "POST",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"want\": \"<string>\",\n  \"maxPrice\": \"<number>\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "headerFamily": "json",
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "Bad Request",
+                            "code": 400,
+                            "header": [],
+                            "cookie": [],
+                            "_postman_previewlanguage": "text"
+                        }
+                    ],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                },
+                {
+                    "id": "53e708a1-1645-4828-b146-4e198dc783f6",
+                    "name": "Create the PayPal order for a mandate's pick",
+                    "request": {
+                        "name": "Create the PayPal order for a mandate's pick",
+                        "description": {
+                            "content": "Refused unless the pick passes the mandate checks. The mandate id is set as the order's `custom_id`.",
+                            "type": "text/plain"
+                        },
+                        "url": {
+                            "path": [
+                                "api",
+                                "buyer",
+                                "order"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"mandateId\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "auth": null
+                    },
+                    "response": [
+                        {
+                            "id": "bbace984-9a46-4fe6-9d59-23db02c720ef",
+                            "name": "The order id",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "buyer",
+                                        "order"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "ss_ws",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "POST",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"mandateId\": \"<string>\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "headerFamily": "json",
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"orderId\": \"<string>\",\n  \"simulated\": \"<boolean>\"\n}",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        },
+                        {
+                            "id": "7e4adeab-16ed-4253-a46f-1a8530f6ce9b",
+                            "name": "Mandate not found",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "buyer",
+                                        "order"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "ss_ws",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "POST",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"mandateId\": \"<string>\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "headerFamily": "json",
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "Not Found",
+                            "code": 404,
+                            "header": [],
+                            "cookie": [],
+                            "_postman_previewlanguage": "text"
+                        },
+                        {
+                            "id": "521c9475-759b-4f15-b7f7-3aae8d23178f",
+                            "name": "Mandate does not allow the purchase",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "buyer",
+                                        "order"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "ss_ws",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "POST",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"mandateId\": \"<string>\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "headerFamily": "json",
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "Conflict",
+                            "code": 409,
+                            "header": [],
+                            "cookie": [],
+                            "_postman_previewlanguage": "text"
+                        }
+                    ],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                },
+                {
+                    "id": "274b7d82-ae5e-49d3-be42-870f75489dd1",
+                    "name": "Capture an agent-made purchase after the buyer approved it in PayPal",
+                    "request": {
+                        "name": "Capture an agent-made purchase after the buyer approved it in PayPal",
+                        "description": {
+                            "content": "The order is read back from PayPal and re-checked against the mandate before capture. The mandate is stored with the sale as evidence.",
+                            "type": "text/plain"
+                        },
+                        "url": {
+                            "path": [
+                                "api",
+                                "buyer",
+                                "capture"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"mandateId\": \"<string>\",\n  \"orderId\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "auth": null
+                    },
+                    "response": [
+                        {
+                            "id": "173e9963-5370-474c-ace7-41913713629f",
+                            "name": "The capture",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "buyer",
+                                        "capture"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "ss_ws",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "POST",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"mandateId\": \"<string>\",\n  \"orderId\": \"<string>\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "headerFamily": "json",
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"key_0\": 4045.2178038524767\n}",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        },
+                        {
+                            "id": "aab2ad5d-2e4b-4055-97a7-d9ff610092cc",
+                            "name": "Order was not created for this mandate",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "buyer",
+                                        "capture"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "ss_ws",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "POST",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"mandateId\": \"<string>\",\n  \"orderId\": \"<string>\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "headerFamily": "json",
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "Bad Request",
+                            "code": 400,
+                            "header": [],
+                            "cookie": [],
+                            "_postman_previewlanguage": "text"
+                        },
+                        {
+                            "id": "0605d397-d23e-47ed-a62d-d801714ddf5d",
+                            "name": "Mandate not found",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "buyer",
+                                        "capture"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "ss_ws",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "POST",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"mandateId\": \"<string>\",\n  \"orderId\": \"<string>\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "headerFamily": "json",
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "Not Found",
+                            "code": 404,
+                            "header": [],
+                            "cookie": [],
+                            "_postman_previewlanguage": "text"
+                        },
+                        {
+                            "id": "727f4651-c4c9-4705-b590-6dc31c7f0232",
+                            "name": "Order does not match the mandate",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "api",
+                                        "buyer",
+                                        "capture"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "ss_ws",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "POST",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"mandateId\": \"<string>\",\n  \"orderId\": \"<string>\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "headerFamily": "json",
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "Conflict",
+                            "code": 409,
+                            "header": [],
+                            "cookie": [],
+                            "_postman_previewlanguage": "text"
+                        }
+                    ],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                },
+                {
+                    "id": "4bc2d501-8a12-4811-a7d1-a615e1fc30b1",
                     "name": "Register a paid PayPal sale from any storefront",
                     "request": {
                         "name": "Register a paid PayPal sale from any storefront",
@@ -2658,7 +3273,7 @@
                     },
                     "response": [
                         {
-                            "id": "c5d8f096-f0ea-466e-9e71-a9d36209ad37",
+                            "id": "266b2c9f-c4a7-4219-a1ea-cda5c9c1fdcd",
                             "name": "Sale registered, with its readiness",
                             "originalRequest": {
                                 "url": {
@@ -2710,12 +3325,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"transactionId\": \"<string>\",\n  \"item\": \"<string>\",\n  \"amount\": \"<number>\",\n  \"readiness\": {\n    \"key_0\": false,\n    \"key_1\": true\n  }\n}",
+                            "body": "{\n  \"transactionId\": \"<string>\",\n  \"item\": \"<string>\",\n  \"amount\": \"<number>\",\n  \"readiness\": {\n    \"key_0\": 4452\n  }\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "f1d0deaf-9891-4d5a-8972-aacb9d529252",
+                            "id": "9082093d-39e2-4fdd-b83a-ca9d6bcd6368",
                             "name": "Invalid field",
                             "originalRequest": {
                                 "url": {
@@ -2762,7 +3377,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "b70b5be3-8646-40dd-8440-5b28f38f66d8",
+                            "id": "3a72ed52-a75d-4354-a66a-8b865b60f52a",
                             "name": "PayPal has no such capture on this account",
                             "originalRequest": {
                                 "url": {
@@ -2809,7 +3424,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "a185c834-3fc0-4452-abd5-ade38daba050",
+                            "id": "7de9dab8-3707-45b9-aa71-8a32808f0ef2",
                             "name": "Sale already registered",
                             "originalRequest": {
                                 "url": {
@@ -2862,7 +3477,7 @@
                     }
                 },
                 {
-                    "id": "e9bcbc71-c184-4134-b328-5d793907fea1",
+                    "id": "d6cdc111-591a-4ac6-a491-583d083d906e",
                     "name": "Fill in missing Seller Protection proof for a sale",
                     "request": {
                         "name": "Fill in missing Seller Protection proof for a sale",
@@ -2919,7 +3534,7 @@
                     },
                     "response": [
                         {
-                            "id": "cda0482d-39ba-4bf6-acda-89a70913112d",
+                            "id": "d7c69fcd-7739-48d6-b27b-268b3471a9a7",
                             "name": "Updated readiness",
                             "originalRequest": {
                                 "url": {
@@ -2984,12 +3599,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"key_0\": 2217\n}",
+                            "body": "{\n  \"key_0\": 4045.2178038524767\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "a7258b5a-8643-4b97-a17d-fd98d2ead02e",
+                            "id": "89b86b61-dea5-4499-bda3-40ff4519ed50",
                             "name": "Invalid field",
                             "originalRequest": {
                                 "url": {
@@ -3049,7 +3664,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "b4d05600-8814-499b-8fae-9a08f67ec2fd",
+                            "id": "9add264d-eb39-414e-81c3-b4a8727a43c9",
                             "name": "Sale not found",
                             "originalRequest": {
                                 "url": {
@@ -3109,7 +3724,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "2f8980e4-a91e-42cd-89d5-2fdc68153ef4",
+                            "id": "38896775-0045-4c25-b20d-3c2da0e1ac5d",
                             "name": "Tracking already on PayPal",
                             "originalRequest": {
                                 "url": {
@@ -3175,7 +3790,7 @@
                     }
                 },
                 {
-                    "id": "c9525eb3-fda0-4297-b38f-3fc05f0cdd8a",
+                    "id": "725ce4b7-8b33-4441-b7db-377ab4383846",
                     "name": "Create a PayPal order for a store product",
                     "request": {
                         "name": "Create a PayPal order for a store product",
@@ -3205,7 +3820,7 @@
                         "method": "POST",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"sku\": \"wallet\"\n}",
+                            "raw": "{\n  \"sku\": \"mugs\"\n}",
                             "options": {
                                 "raw": {
                                     "headerFamily": "json",
@@ -3217,7 +3832,7 @@
                     },
                     "response": [
                         {
-                            "id": "de24614b-36ac-49a3-a2e6-067c096c1484",
+                            "id": "7c012950-e526-45b0-92fc-e81bf179bd18",
                             "name": "PayPal order ID",
                             "originalRequest": {
                                 "url": {
@@ -3253,7 +3868,7 @@
                                 "method": "POST",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n  \"sku\": \"wallet\"\n}",
+                                    "raw": "{\n  \"sku\": \"mugs\"\n}",
                                     "options": {
                                         "raw": {
                                             "headerFamily": "json",
@@ -3281,7 +3896,7 @@
                     }
                 },
                 {
-                    "id": "ed4b723c-35dd-4058-8eee-20c543c09fbc",
+                    "id": "488d0ad4-0d41-420f-9c63-62a86af2c07b",
                     "name": "Capture an approved PayPal order (idempotent per order)",
                     "request": {
                         "name": "Capture an approved PayPal order (idempotent per order)",
@@ -3319,7 +3934,7 @@
                     },
                     "response": [
                         {
-                            "id": "158e7207-2bab-42e7-8ee0-f7f21ee84604",
+                            "id": "d9ff738d-c237-403a-a71f-540838ed5c8d",
                             "name": "Capture result",
                             "originalRequest": {
                                 "url": {
@@ -3379,7 +3994,7 @@
             "description": "PayPal webhook receiver.",
             "item": [
                 {
-                    "id": "a185da81-3157-486c-a49c-2d0a3185d410",
+                    "id": "48e930de-6b2f-48a6-ae07-7b3cec3f64d8",
                     "name": "PayPal webhook receiver (signature verified, deduplicated)",
                     "request": {
                         "name": "PayPal webhook receiver (signature verified, deduplicated)",
@@ -3409,7 +4024,7 @@
                         "method": "POST",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"key_0\": 2217\n}",
+                            "raw": "{\n  \"key_0\": 4045.2178038524767\n}",
                             "options": {
                                 "raw": {
                                     "headerFamily": "json",
@@ -3421,7 +4036,7 @@
                     },
                     "response": [
                         {
-                            "id": "249e5f39-7c1b-4599-8729-c27efef58362",
+                            "id": "d02701be-d3fd-4516-9cd8-419334cd02f4",
                             "name": "Accepted",
                             "originalRequest": {
                                 "url": {
@@ -3453,7 +4068,7 @@
                                 "method": "POST",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n  \"key_0\": 2217\n}",
+                                    "raw": "{\n  \"key_0\": 4045.2178038524767\n}",
                                     "options": {
                                         "raw": {
                                             "headerFamily": "json",
@@ -3469,7 +4084,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "cba673db-d8cd-414e-ab67-1a6c1de48511",
+                            "id": "fe37f661-739e-48b4-8120-10c7292778da",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -3505,7 +4120,7 @@
                                 "method": "POST",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n  \"key_0\": 2217\n}",
+                                    "raw": "{\n  \"key_0\": 4045.2178038524767\n}",
                                     "options": {
                                         "raw": {
                                             "headerFamily": "json",
@@ -3539,7 +4154,7 @@
             "description": "Demo data helpers for judges.",
             "item": [
                 {
-                    "id": "c2ac9893-04ce-447b-a9a8-56df900cf971",
+                    "id": "e57ed487-836f-4db8-9b7a-4dcb5b220af5",
                     "name": "Restore this workspace's demo data",
                     "request": {
                         "name": "Restore this workspace's demo data",
@@ -3562,7 +4177,7 @@
                     },
                     "response": [
                         {
-                            "id": "01c8f6e8-7d83-4f39-9797-340c5f6fc021",
+                            "id": "ec9fd786-e233-4829-a235-bda56e48314b",
                             "name": "Reset",
                             "originalRequest": {
                                 "url": {
@@ -3603,7 +4218,7 @@
                     }
                 },
                 {
-                    "id": "deee3b64-9594-4be8-9505-ef3009357e5b",
+                    "id": "de6e29ae-8d96-46a8-9b4c-d03aaace9c8a",
                     "name": "Create real overdue invoices in the PayPal sandbox",
                     "request": {
                         "name": "Create real overdue invoices in the PayPal sandbox",
@@ -3632,7 +4247,7 @@
                     },
                     "response": [
                         {
-                            "id": "81addcfa-225c-4064-bbd5-fb428a9b1c73",
+                            "id": "87e2dacd-f6b9-4dac-8b1a-080ab4865b33",
                             "name": "Created",
                             "originalRequest": {
                                 "url": {
@@ -3667,7 +4282,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "5442ff5e-fbbd-4def-9199-a1debe295a3c",
+                            "id": "7240c0db-f8d9-4af2-8a38-7557c5cdadcc",
                             "name": "Too many requests",
                             "originalRequest": {
                                 "url": {
@@ -3718,7 +4333,7 @@
                     }
                 },
                 {
-                    "id": "344768c8-bc49-4dc1-b497-85a70ed7a2b4",
+                    "id": "e8852e81-87ce-4541-bfa6-8612d4f0efc9",
                     "name": "Add a demo dispute and run the agent",
                     "request": {
                         "name": "Add a demo dispute and run the agent",
@@ -3741,7 +4356,7 @@
                     },
                     "response": [
                         {
-                            "id": "2e181de3-ad13-4576-8586-64f144a07f41",
+                            "id": "fc299991-45a8-40df-bc2d-7f39e6662589",
                             "name": "Agent result",
                             "originalRequest": {
                                 "url": {
@@ -3812,7 +4427,7 @@
         }
     ],
     "info": {
-        "_postman_id": "ecfdecf6-3a25-4a3f-9cb8-237c163493d2",
+        "_postman_id": "fb81bcde-2d9f-43b6-b994-4102e930b37f",
         "name": "SellerShield API",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         "description": {

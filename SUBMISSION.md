@@ -54,7 +54,7 @@ How it works:
   Code checks that every amount, date and ID matches its cited record, and refuses to send anything that doesn't.
 - **One evidence PDF:** the response, the Seller Protection checklist and the cited records go to PayPal as one document. The seller can download it too.
 - **Approvals bound to the exact text:** every approval carries a SHA-256 fingerprint of what will be sent. Change a word and it needs a new approval. The audit log keeps the fingerprint.
-- **Measured:** 54 automated tests (`npm test`) plus a 30-case policy suite (`npm run bench`). These caught two real bugs, both fixed:
+- **Measured:** 56 automated tests (`npm test`) plus a 30-case policy suite (`npm run bench`). These caught two real bugs, both fixed:
   - the planner fought a dispute with no evidence,
   - an Approve button was wired to the wrong element.
 
@@ -71,6 +71,7 @@ The seller stays in control:
 - **Approve mode:** every action is a drafted proposal the seller can edit and approve with one click.
 - **Autopilot:** the seller sets two rules, a max amount and a minimum confidence. The agent acts alone inside those limits and queues everything else.
 - **Chat agent built on PayPal's Agent Toolkit:** ask "what's my biggest risk?" or say "handle it". Claude reads the account through `@paypal/agent-toolkit` tools and acts through SellerShield's guarded actions.
+- **Both sides of the sale, handled by agents:** on the buyer page, an AI agent shops the store inside a spending limit the buyer sets, and the buyer approves the payment in PayPal. The agent can never create an order outside the limit. The buyer's instructions travel with the sale, so if they later claim the agent bought the wrong thing, the seller's response cites exactly what was asked for and approved.
 - **Works with any store:** one call after checkout (`POST /api/orders`, or the small client in `sdk/`) registers a sale from any PayPal storefront, and SellerShield starts protecting it.
 - **Open to other agents (MCP):** SellerShield is an MCP server. A seller's own assistant can check which sales are protected and act, but only inside the autopilot limits the seller set. Anything else is refused and waits for the seller, and every action is logged as `mcp agent`.
 - **Live activity feed:** webhooks and sales appear as they happen, followed by what the agent did about them.
@@ -98,7 +99,7 @@ The dashboard shows money at risk, money protected, hours saved and actions take
   - `lib/evidence.js` builds the citable records, checks every value in a draft against its cited record, and fingerprints the exact payload.
   - The server refuses stale fingerprints (409) and uncited facts (422).
   - Autopilot skips anything that fails these checks.
-- **Testing:** 54 automated tests (Node's test runner, mock mode, no keys), plus 30 labelled dispute cases with a runner that reports agreement for Claude or the rules fallback.
+- **Testing:** 56 automated tests (Node's test runner, mock mode, no keys), plus 30 labelled dispute cases with a runner that reports agreement for Claude or the rules fallback.
 - **Hosting:** **Render** via a `render.yaml` blueprint.
 
 ## How each sponsor tool is used

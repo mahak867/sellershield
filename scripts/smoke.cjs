@@ -47,6 +47,17 @@ const out = []; const ok = (name, cond, extra = '') => out.push(`${cond ? 'PASS'
   ok('check endpoint flags wrong amount', res === 'VALUE_NOT_IN_CITED_RECORD', res);
   ok('audit rows', (await p.locator('#logGrid .ag-center-cols-container .ag-row').count()) >= 4);
   ok('charts drawn', (await p.locator('#chartRisk canvas').count()) === 1);
+  // buyer agent: shop inside a mandate, pay (simulated), sale reaches the seller with the mandate
+  const by = await ctx.newPage(); await by.goto(BASE + '/buyer.html');
+  await by.click('[data-max="40"]'); await by.click('#go'); await by.waitForSelector('#result .bad-box');
+  ok('buyer agent refuses to go over the limit', /Nothing was ordered/.test(await by.textContent('#result')));
+  await by.click('[data-max="70"]'); await by.click('#go'); await by.waitForSelector('#simpay'); await by.click('#simpay'); await by.waitForSelector('#dispute');
+  ok('buyer agent purchase paid', /Paid \$64\.00/.test(await by.textContent('#done')));
+  await by.click('#dispute'); await by.waitForFunction(() => document.querySelector('#dmsg').textContent.length > 0);
+  await p.waitForTimeout(1500);
+  ok('seller sees the agent sale', /buyer agent/.test(await txt('#readyGrid')));
+  ok('dispute response cites the mandate', (await p.locator('.prop').filter({ hasText: 'mandate M-' }).count()) === 1);
+  await by.close();
   // reset
   await p.click('#reset'); await p.waitForTimeout(1200);
   ok('reset restores', (await txt('#kReady')) === '3 of 6' && (await txt('#kActs')) === '0');

@@ -12,6 +12,8 @@ import { disputePack } from './lib/pdf.js';
 import { catalogFacts, CHANNEL3_ON } from './lib/channel3.js';
 import { handleMcp } from './lib/mcp.js';
 import { allowedWebhook, notify } from './lib/notify.js';
+import { newMandate, checkMandate, mandateFingerprint, rulePick } from './lib/buyer.js';
+import { randomBytes } from 'node:crypto';
 import { PERSIST, loadState, saveState, closeState } from './lib/persist.js';
 import { snapshot, restore } from './lib/workspace.js';
 import { sdk } from './lib/paypal-sdk.js';
@@ -21,7 +23,7 @@ app.use(express.json({ limit: '100kb' }));
 app.set('trust proxy', 1); // Render sits behind a proxy; use the real client IP for limits
 app.use(workspaceMiddleware);
 
-const AI_ROUTES = /^\/(agent\/(scan|chat)|mcp|demo\/simulate-dispute|orders\/[^/]+\/(delivered|proof))$/;
+const AI_ROUTES = /^\/(agent\/(scan|chat)|mcp|demo\/simulate-dispute|buyer\/shop|orders\/[^/]+\/(delivered|proof))$/;
 const PAYPAL_ID = /^[A-Za-z0-9-]{5,40}$/; // dispute, order and capture ids; keeps path characters out of PayPal URLs
 // Simple fixed-window rate limits so a public demo can't be used to spam PayPal's sandbox.
 const hits = new Map();
@@ -279,10 +281,13 @@ app.post('/api/disputes/:id/sandbox-settle', async (req, res, next) => {
 });
 
 // Demo: simulate a buyer opening a dispute, to show the real-time loop without a buyer account.
-app.post('/api/demo/simulate-dispute', async (_req, res, next) => {
+app.post('/api/demo/simulate-dispute', async (req, res, next) => {
   try {
-    const d = paypal.addDemoDispute();
-    activity('webhook', `Simulated: new dispute ${d.dispute_id} for $${d.amount.toFixed(2)} (item not received)`);
+    // With a transactionId of an agent-made purchase: the buyer claims their agent bought the wrong thing.
+    const sale = req.body?.transactionId ? store.orders.find((o) => o.transactionId === req.body.transactionId && o.mandate) : null;
+    if (req.body?.transactionId && !sale) return res.status(404).json({ error: 'no agent-made sale with that id' });
+    const d = paypal.addDemoDispute(sale ? { transactionId: sale.transactionId, amount: sale.amount, reason: 'MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED', message: 'My AI agent bought this. It is not what I wanted.' } : undefined);
+    activity('webhook', `Simulated: new dispute ${d.dispute_id} for $${d.amount.toFixed(2)} (${sale ? 'buyer says their agent bought the wrong thing' : 'item not received'})`);
     res.json(await runAgent('new dispute'));
   } catch (e) { next(e); }
 });
@@ -467,9 +472,9 @@ app.post('/api/demo/seed', async (req, res, next) => {
 
 // ---------- Storefront: real PayPal Checkout ----------
 const PRODUCTS = [
-  { sku: 'wallet', name: 'Leather wallet', price: 85, carrier: 'FEDEX' },
-  { sku: 'candle', name: 'Scented candle bundle', price: 42.5, carrier: 'USPS' },
-  { sku: 'mugs', name: 'Handmade ceramic mug set', price: 64, carrier: 'USPS' },
+  { sku: 'wallet', name: 'Leather wallet', price: 85, carrier: 'FEDEX', tags: ['leather', 'accessory', 'men', 'card holder'] },
+  { sku: 'candle', name: 'Scented candle bundle', price: 42.5, carrier: 'USPS', tags: ['candle', 'scent', 'home', 'relax', 'housewarming'] },
+  { sku: 'mugs', name: 'Handmade ceramic mug set', price: 64, carrier: 'USPS', tags: ['mug', 'ceramic', 'coffee', 'tea', 'kitchen', 'handmade'] },
 ];
 app.get('/api/shop/config', (_req, res) => {
   res.json({ clientId: MOCK_PAYPAL ? null : process.env.PAYPAL_CLIENT_ID, products: PRODUCTS });
@@ -489,7 +494,7 @@ app.post('/api/shop/capture', async (req, res, next) => {
     const p = PRODUCTS.find((x) => x.sku === sku) || { name: 'Item', carrier: 'USPS' };
     if (!PAYPAL_ID.test(String(req.body.orderId))) return res.status(400).json({ error: 'not a PayPal order id' });
     const c = await paypal.captureOrder(String(req.body.orderId));
-    const tracking = p.carrier === 'FEDEX' ? String(Date.now()).slice(-12) : '9400' + String(Date.now()).padStart(18, '1').slice(-18);
+    const tracking = demoTracking(p.carrier);
     store.orders.unshift({
       demo: false, live: true, orderId: c.orderId, transactionId: c.captureId, item: p.name,
       buyer: c.buyer || 'sandbox buyer', amount: c.amount, carrier: p.carrier, trackingNumber: tracking,
@@ -497,6 +502,77 @@ app.post('/api/shop/capture', async (req, res, next) => {
     });
     res.json(c);
     activity('sale', `New PayPal Checkout sale: ${p.name} for $${c.amount.toFixed(2)} (capture ${c.captureId}). Protection check: not ready, PayPal has no tracking yet. The agent can fix that.`);
+    runAgent('new sale').catch((e) => activity('error', `Agent run failed: ${e.message}`));
+  } catch (e) { next(e); }
+});
+
+// ---------- Buyer agent: an AI agent shops for a buyer, inside a mandate ----------
+// 1. shop: the agent picks one item for what the buyer wants. Code checks the pick against the mandate.
+// 2. order: a PayPal order is created only for a pick that passes, carrying the mandate id as custom_id.
+// 3. capture: after the buyer approves in PayPal, the order is re-read from PayPal and re-checked
+//    against the mandate before any money is captured. The mandate then travels with the sale.
+const demoTracking = (carrier) => (carrier === 'FEDEX' ? String(Date.now()).slice(-12) : '9400' + String(Date.now()).padStart(18, '1').slice(-18));
+const mandateOf = (id) => store.mandates?.[String(id)] || null;
+app.post('/api/buyer/shop', async (req, res, next) => {
+  try {
+    const mandate = newMandate(req.body || {});
+    let pick = await ai.shop(mandate, PRODUCTS);
+    let product = PRODUCTS.find((p) => p.sku === pick.sku) || null;
+    let verdict = checkMandate(mandate, product);
+    let overruled = false;
+    if (pick.source === 'claude' && pick.sku && !verdict.allowed) { // the model broke the mandate: its pick is discarded
+      overruled = true;
+      pick = { ...rulePick(mandate, PRODUCTS), source: 'rules' };
+      product = PRODUCTS.find((p) => p.sku === pick.sku) || null;
+      verdict = checkMandate(mandate, product);
+    }
+    Object.assign(mandate, { sku: product?.sku ?? null, fingerprint: mandateFingerprint(mandate, product), reasoning: pick.reasoning, agent: pick.source });
+    store.mandates ??= {};
+    const ids = Object.keys(store.mandates);
+    if (ids.length >= 50) delete store.mandates[ids[0]];
+    store.mandates[mandate.id] = mandate;
+    res.json({ mandate: { id: mandate.id, want: mandate.want, maxPrice: mandate.maxPrice, fingerprint: mandate.fingerprint },
+      pick: product ? { sku: product.sku, name: product.name, price: product.price } : null, reasoning: pick.reasoning, source: pick.source, overruled,
+      ...verdict, payment: MOCK_PAYPAL ? 'simulated' : 'paypal', clientId: MOCK_PAYPAL ? null : process.env.PAYPAL_CLIENT_ID });
+  } catch (e) { next(e); }
+});
+app.post('/api/buyer/order', async (req, res, next) => {
+  try {
+    const m = mandateOf(req.body?.mandateId);
+    if (!m) return res.status(404).json({ error: 'mandate not found' });
+    if (m.captured) return res.status(409).json({ error: 'This mandate has already been used for a purchase.' });
+    const product = PRODUCTS.find((p) => p.sku === m.sku) || null;
+    if (!checkMandate(m, product).allowed) return res.status(409).json({ error: 'The mandate does not allow this purchase, so no PayPal order was created.' });
+    m.orderId = MOCK_PAYPAL ? 'MOCK' + randomBytes(7).toString('hex').toUpperCase() : await paypal.createOrder({ name: product.name, price: product.price, customId: m.id });
+    res.json({ orderId: m.orderId, simulated: MOCK_PAYPAL });
+  } catch (e) { next(e); }
+});
+app.post('/api/buyer/capture', async (req, res, next) => {
+  try {
+    const m = mandateOf(req.body?.mandateId);
+    if (!m) return res.status(404).json({ error: 'mandate not found' });
+    if (m.captured) return res.status(409).json({ error: 'This mandate has already been used for a purchase.' });
+    if (!m.orderId || String(req.body?.orderId) !== m.orderId) return res.status(400).json({ error: 'That order was not created for this mandate.' });
+    const product = PRODUCTS.find((p) => p.sku === m.sku) || null;
+    if (!checkMandate(m, product).allowed) return res.status(409).json({ error: 'The mandate does not allow this purchase; nothing was captured.' });
+    let c;
+    if (MOCK_PAYPAL) {
+      c = { orderId: m.orderId, captureId: 'CAP' + randomBytes(7).toString('hex').toUpperCase(), captureStatus: 'COMPLETED', amount: product.price, buyer: 'buyer (simulated payment)', simulated: true };
+    } else { // read the order back from PayPal: it must still be the item, price and mandate that were approved
+      const o = await sdk.getOrder(m.orderId);
+      const pu = o.purchaseUnits?.[0];
+      if (Number(pu?.amount?.value) !== product.price || pu?.customId !== m.id) return res.status(409).json({ error: 'The PayPal order does not match the mandate; nothing was captured.' });
+      c = await paypal.captureOrder(m.orderId);
+    }
+    m.captured = c.captureId;
+    store.orders.unshift({
+      demo: MOCK_PAYPAL, live: !MOCK_PAYPAL, orderId: MOCK_PAYPAL ? undefined : c.orderId, transactionId: c.captureId, item: product.name,
+      buyer: c.buyer || 'sandbox buyer', amount: c.amount, carrier: product.carrier, trackingNumber: demoTracking(product.carrier),
+      delivered: null, onHold: true, daysHeld: 0, soldAt: today(), trackingSentAt: null, captureStatus: c.captureStatus, paypalProtection: c.sellerProtection,
+      mandate: { id: m.id, want: m.want, maxPrice: m.maxPrice, fingerprint: m.fingerprint, reasoning: m.reasoning, agent: m.agent },
+    });
+    res.json({ ...c, mandateId: m.id });
+    activity('sale', `Sale made by a buyer's AI agent: ${product.name} for $${c.amount.toFixed(2)} (capture ${c.captureId}). Mandate ${m.id}: "${m.want}", limit $${m.maxPrice.toFixed(2)}. The mandate is kept as evidence.`);
     runAgent('new sale').catch((e) => activity('error', `Agent run failed: ${e.message}`));
   } catch (e) { next(e); }
 });
@@ -542,6 +618,7 @@ app.post('/api/orders', async (req, res, next) => {
 app.post('/api/demo/reset', (_req, res) => {
   resetStore();
   store.notified = {};
+  store.mandates = {};
   paypal.resetDemo();
   res.json({ ok: true });
 });

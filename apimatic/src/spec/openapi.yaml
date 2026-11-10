@@ -56,6 +56,70 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Risk' }
+  /api/buyer/shop:
+    post:
+      tags: [Storefront]
+      operationId: buyerAgentShop
+      summary: A buyer's AI agent picks one item inside a mandate
+      description: |
+        The agent proposes an item for what the buyer wants. Code then checks the pick against
+        the mandate (in catalog, within the price limit). A pick that fails is discarded.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [want, maxPrice]
+              properties:
+                want: { type: string, example: A handmade gift for a coffee lover }
+                maxPrice: { type: number, example: 70 }
+      responses:
+        '200':
+          description: The mandate, the pick and the mandate checks
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '400': { description: Invalid mandate }
+  /api/buyer/order:
+    post:
+      tags: [Storefront]
+      operationId: buyerAgentOrder
+      summary: Create the PayPal order for a mandate's pick
+      description: Refused unless the pick passes the mandate checks. The mandate id is set as the order's `custom_id`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [mandateId], properties: { mandateId: { type: string } } }
+      responses:
+        '200':
+          description: The order id
+          content:
+            application/json:
+              schema: { type: object, properties: { orderId: { type: string }, simulated: { type: boolean } } }
+        '404': { description: Mandate not found }
+        '409': { description: Mandate does not allow the purchase, or was already used }
+  /api/buyer/capture:
+    post:
+      tags: [Storefront]
+      operationId: buyerAgentCapture
+      summary: Capture an agent-made purchase after the buyer approved it in PayPal
+      description: The order is read back from PayPal and re-checked against the mandate before capture. The mandate is stored with the sale as evidence.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [mandateId, orderId], properties: { mandateId: { type: string }, orderId: { type: string } } }
+      responses:
+        '200':
+          description: The capture
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '400': { description: Order was not created for this mandate }
+        '404': { description: Mandate not found }
+        '409': { description: Order does not match the mandate, or mandate already used }
   /api/orders:
     post:
       tags: [Storefront]
