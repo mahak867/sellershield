@@ -1,6 +1,6 @@
 # Devpost submission kit
 
-Paste these sections into the Devpost form. Replace `<RENDER_URL>` and `<YOUTUBE_URL>` first.
+Paste these sections into the Devpost form. Replace `<YOUTUBE_URL>` first.
 
 ---
 
@@ -156,7 +156,7 @@ node.js, express, javascript, paypal-agent-toolkit, paypal-checkout, paypal-orde
 
 ## Try it
 
-- Live demo: `<RENDER_URL>`
+- Live demo: https://sellershield-7qfd.onrender.com
 - Code: https://github.com/mahak867/sellershield
 - Video: `<YOUTUBE_URL>`
 
@@ -215,7 +215,7 @@ Show the KPIs.
 # Final checklist
 
 - [ ] Render deployed, URL works, **Claude live** badge is green
-- [ ] Webhook added in PayPal app pointing to `<RENDER_URL>/api/webhooks/paypal`, `PAYPAL_WEBHOOK_ID` set on Render
+- [ ] Webhook added in PayPal app pointing to `https://sellershield-7qfd.onrender.com/api/webhooks/paypal`, `PAYPAL_WEBHOOK_ID` set on Render
 - [ ] Run `npm run bench` locally with your Anthropic key and commit `bench/RESULTS.md` (shows the Claude result)
 - [ ] Repo is public, and **MIT** shows in the About sidebar
 - [ ] Video under 3:00, public on YouTube
