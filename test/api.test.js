@@ -169,6 +169,28 @@ test('any storefront can register a sale with the client library', async () => {
   assert.equal((await shield.readiness()).rows.find((r) => r.transactionId === 'EXT0000000000002B').status, 'WAITING');
 });
 
+test('seller can type missing proof for a sale; tracking locks once it is on PayPal', async () => {
+  await post('/api/demo/reset');
+  const reg = await post('/api/orders', { transactionId: 'EXT0000000000009Z', item: 'Vintage denim jacket', amount: 50 });
+  assert.equal((await reg.json()).readiness.status, 'AT_RISK');
+  const proof = (b) => post('/api/orders/EXT0000000000009Z/proof', b);
+  assert.equal((await proof({ trackingNumber: '9400111899223197400009' })).status, 400); // carrier first
+  assert.equal((await proof({ carrier: 'usps' })).status, 200);
+  assert.equal((await proof({ trackingNumber: 'bad' })).status, 400);
+  assert.equal((await (await proof({ trackingNumber: '9400111899223197400009' })).json()).readiness.status, 'AGENT_CAN_FIX');
+  const { proposals } = await (await post('/api/agent/scan')).json();
+  const fix = proposals.find((p) => p.target === 'EXT0000000000009Z');
+  assert.equal((await post('/api/agent/approve', { id: fix.id, fingerprint: fix.fingerprint })).status, 200);
+  assert.equal((await proof({ trackingNumber: '9400111899223197400010' })).status, 409);
+  assert.equal((await (await proof({ delivered: new Date().toISOString().slice(0, 10) })).json()).readiness.status, 'READY');
+  // Channel3: an independent product record was collected for the sale, as extra evidence.
+  const risk = await (await fetch(URL + '/api/risk', { headers: { Cookie: cookie } })).json();
+  const row = risk.readiness.rows.find((r) => r.transactionId === 'EXT0000000000009Z');
+  const c3 = row.checks.find((c) => c.optional);
+  assert.ok(c3.pass); assert.match(c3.detail, /trucker jacket/);
+  await post('/api/demo/reset');
+});
+
 test('chat agent answers whether sales are protected', async () => {
   await post('/api/demo/reset');
   const r = await (await post('/api/agent/chat', { message: 'Are all my sales protected?' })).json();

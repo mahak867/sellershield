@@ -148,7 +148,7 @@
 
   <section class="card">
     <div class="gridhead">
-      <div><h2>Is every sale protected?</h2><p class="sub">Each sale is checked against PayPal's Seller Protection proof requirements <b>before</b> any dispute exists. The agent closes the gaps it can; the rest tells you who has to act.</p></div>
+      <div><h2>Is every sale protected?</h2><p class="sub">Each sale is checked against PayPal's Seller Protection proof requirements <b>before</b> any dispute exists. The agent closes the gaps it can; the rest tells you who has to act. Open a row for the full checklist, or type missing proof straight into the shaded cells.</p></div>
       <div class="tools"><button id="fixAll" disabled title="The agent sends the tracking it has on file to PayPal for every sale it can fix">Send tracking to PayPal</button></div>
     </div>
     <div id="readyGrid" class="grid ag-theme-quartz"></div>
@@ -329,21 +329,46 @@ const logGrid = agGrid.createGrid($('#logGrid'), {
   ],
   defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [], overlayNoRowsTemplate: 'No actions yet.', tooltipShowDelay: 300,
 });
+const openProof = new Set(); // sales whose proof checklist is expanded
+const canEditTracking = (p) => !!p.data && !p.data.detailFor && !p.data.sentToPayPal;
 const READY = { READY: ['Ready', 'FIGHT'], AGENT_CAN_FIX: ['Agent can fix', ''], WAITING: ['Waiting on carrier', 'demo'], AT_RISK: ['Needs you', 'ACCEPT'] };
 const readyGrid = agGrid.createGrid($('#readyGrid'), {
   columnDefs: [
+    { headerName: '', width: 76, sortable: false, filter: false, resizable: false, cellRenderer: (p) => {
+        const b = document.createElement('button'); b.className = 'cellbtn ghost'; b.textContent = openProof.has(p.data.transactionId) ? '▾' : '▸';
+        b.title = 'Show the Seller Protection checklist for this sale'; b.setAttribute('aria-label', b.title);
+        b.onclick = () => { const id = p.data.transactionId; openProof.has(id) ? openProof.delete(id) : openProof.add(id); drawReady(); };
+        return b; } },
     { field: 'item', headerName: 'Sale', flex: 1, minWidth: 250, cellRenderer: typeCell },
     { field: 'amount', valueFormatter: (p) => money(p.value), width: 110, type: 'rightAligned' },
     { field: 'status', headerName: 'Seller Protection', width: 170, enableCellChangeFlash: true,
       cellRenderer: (p) => `<span class="tag ${READY[p.value]?.[1] ?? ''}">${esc(READY[p.value]?.[0] ?? p.value)}</span>` },
-    { headerName: 'Proof', width: 120, valueGetter: (p) => `${p.data.checks.filter((c) => c.pass).length} of ${p.data.checks.length}` },
-    { headerName: 'What is missing', flex: 2, minWidth: 260, tooltipValueGetter: (p) => p.value,
-      valueGetter: (p) => p.data.checks.filter((c) => !c.pass).map((c) => `${c.rule} (${c.fix})`).join('; ') || 'Nothing' },
+    { headerName: 'Proof', width: 110, valueGetter: (p) => { const req = p.data.checks.filter((c) => !c.optional); return `${req.filter((c) => c.pass).length} of ${req.length}`; } },
+    { field: 'carrier', width: 120, editable: canEditTracking, cellEditor: 'agSelectCellEditor', cellEditorParams: { values: ['USPS', 'UPS', 'FEDEX', 'DHL'] }, cellClassRules: { 'cell-edited': canEditTracking } },
+    { field: 'trackingNumber', headerName: 'Tracking number', flex: 1, minWidth: 200, editable: canEditTracking, cellClassRules: { 'cell-edited': canEditTracking },
+      valueFormatter: (p) => p.value || (canEditTracking(p) ? 'double-click to add' : '') },
+    { field: 'delivered', headerName: 'Delivered on', width: 150, editable: (p) => !p.data.delivered && !!p.data.trackingNumber, cellClassRules: { 'cell-edited': (p) => !p.data.delivered && !!p.data.trackingNumber },
+      valueFormatter: (p) => p.value || (p.data.trackingNumber ? 'YYYY-MM-DD' : '') },
     { field: 'transactionId', headerName: 'PayPal ID', flex: 1, minWidth: 170 },
   ],
-  defaultColDef: { sortable: true, filter: true, resizable: true }, getRowId: (p) => p.data.transactionId,
+  defaultColDef: { sortable: false, filter: true, resizable: true }, getRowId: (p) => (p.data.detailFor ? 'd:' : '') + p.data.transactionId,
   rowData: [], overlayNoRowsTemplate: 'No sales yet. Open the store and buy something.', tooltipShowDelay: 300,
+  // Expandable proof checklist, built with full-width rows.
+  isFullWidthRow: (p) => !!p.rowNode.data?.detailFor,
+  getRowHeight: (p) => (p.data?.detailFor ? 26 + p.data.checks.length * 24 : undefined),
+  fullWidthCellRenderer: (p) => `<div class="prot" style="margin:6px 12px;border:0"><ul>${p.data.checks.map((c) =>
+    `<li class="${c.pass ? 'ok' : 'no'}" data-i="${c.pass ? '✓' : '✗'}">${esc(c.rule)} <span class="mute">(${esc(c.detail)}${c.pass || c.optional ? '' : ` · fixed by: ${esc(c.fix)}`}${c.optional ? ' · extra evidence, not a Seller Protection rule' : ''})</span></li>`).join('')}</ul></div>`,
+  // Typing proof into the grid saves it; the server validates and the agent re-checks the sale.
+  onCellValueChanged: async (e) => {
+    const f = e.colDef.field;
+    if (!['carrier', 'trackingNumber', 'delivered'].includes(f)) return;
+    try { const r = await api(`/api/orders/${encodeURIComponent(e.data.transactionId)}/proof`, { [f]: e.newValue }); toast(`Saved. This sale is now: ${READY[r.readiness.status][0].toLowerCase()}`); }
+    catch (err) { toast(err.message); }
+    await refresh();
+  },
 });
+let readyRows = [];
+function drawReady() { readyGrid.setGridOption('rowData', readyRows.flatMap((r) => (openProof.has(r.transactionId) ? [r, { ...r, detailFor: true }] : [r]))); }
 try { const st = JSON.parse(localStorage.getItem('ss.riskGrid') || 'null'); if (st) riskGrid.applyColumnState({ state: st, applyOrder: true }); } catch {}
 $('#qf').oninput = () => riskGrid.setGridOption('quickFilterText', $('#qf').value);
 $('#csv1').onclick = () => riskGrid.exportDataAsCsv({ fileName: 'sellershield-money-at-risk.csv', columnKeys: ['type', 'urgency', 'amount', 'detail', 'who', 'id'] });
@@ -381,7 +406,7 @@ async function refresh() {
   const rd = r.readiness;
   if (rd) {
     const order = { AT_RISK: 0, AGENT_CAN_FIX: 1, WAITING: 2, READY: 3 };
-    readyGrid.setGridOption('rowData', rd.rows.slice().sort((a, b) => order[a.status] - order[b.status]));
+    readyRows = rd.rows.slice().sort((a, b) => order[a.status] - order[b.status]); drawReady();
     $('#fixAll').disabled = !rd.fixable;
     $('#fixAll').textContent = rd.fixable ? `Send tracking to PayPal for ${rd.fixable} sale${rd.fixable === 1 ? '' : 's'}` : 'Nothing for the agent to fix';
     $('#kReady').textContent = `${rd.ready} of ${rd.total}`;

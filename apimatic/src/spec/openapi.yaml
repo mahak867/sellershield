@@ -98,6 +98,33 @@ paths:
         '400': { description: Invalid field }
         '404': { description: PayPal has no such capture on this account }
         '409': { description: Sale already registered }
+  /api/orders/{tx}/proof:
+    post:
+      tags: [Storefront]
+      operationId: updateSaleProof
+      summary: Fill in missing Seller Protection proof for a sale
+      description: Set the carrier, tracking number or delivery date. Tracking can change only until it has been sent to PayPal.
+      parameters:
+        - { name: tx, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                carrier: { type: string, example: USPS }
+                trackingNumber: { type: string }
+                delivered: { type: string, format: date }
+      responses:
+        '200':
+          description: Updated readiness
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '400': { description: Invalid field }
+        '404': { description: Sale not found }
+        '409': { description: Tracking already on PayPal }
   /api/mcp:
     post:
       tags: [Agent]

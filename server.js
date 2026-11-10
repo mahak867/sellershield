@@ -18,7 +18,7 @@ app.use(express.json({ limit: '100kb' }));
 app.set('trust proxy', 1); // Render sits behind a proxy; use the real client IP for limits
 app.use(workspaceMiddleware);
 
-const AI_ROUTES = /^\/(agent\/(scan|chat)|mcp|demo\/simulate-dispute|orders\/[^/]+\/delivered)$/;
+const AI_ROUTES = /^\/(agent\/(scan|chat)|mcp|demo\/simulate-dispute|orders\/[^/]+\/(delivered|proof))$/;
 const PAYPAL_ID = /^[A-Za-z0-9-]{5,40}$/; // dispute, order and capture ids; keeps path characters out of PayPal URLs
 // Simple fixed-window rate limits so a public demo can't be used to spam PayPal's sandbox.
 const hits = new Map();
@@ -61,7 +61,7 @@ async function scan() {
     const order = store.orders.find((o) => o.transactionId === d.transaction_id);
     const live = await paypal.liveRecords(d, order);
     // "Not as described" is outside Seller Protection: add independent catalog facts (Channel3).
-    if (d.reason === 'MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED' && order?.item) live.catalog = await catalogFacts(order.item);
+    if (d.reason === 'MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED' && order?.item) live.catalog = order.catalog ?? await catalogFacts(order.item);
     const flag = live.capture?.sellerProtection || order?.paypalProtection;
     const protection = assessProtection(detail || d, order, flag);
     const records = buildRecords({ ...d, ...(detail || {}) }, order, live);
@@ -168,8 +168,13 @@ app.get('/api/status', (_req, res) => {
   res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, ai: aiStats, workspace: workspaceId(), channel3: CHANNEL3_ON, autopilot: store.autopilot });
 });
 
+// Collect an independent product record for every sale (Channel3), once, at the time it is first seen.
+async function collectCatalog() {
+  await Promise.all(store.orders.filter((o) => o.catalog === undefined).map(async (o) => { o.catalog = (await catalogFacts(o.item)) || null; }));
+}
+
 app.get('/api/risk', async (_req, res, next) => {
-  try { res.json({ ...(await getRisk()), readiness: readinessSummary(store.orders), actions: store.actions, proposals: store.proposals, reminders: store.reminders, schedule: Object.fromEntries(Object.entries(store.schedule).map(([k, v]) => [k, v.at])) }); } catch (e) { next(e); }
+  try { await collectCatalog(); res.json({ ...(await getRisk()), readiness: readinessSummary(store.orders), actions: store.actions, proposals: store.proposals, reminders: store.reminders, schedule: Object.fromEntries(Object.entries(store.schedule).map(([k, v]) => [k, v.at])) }); } catch (e) { next(e); }
 });
 
 // Scan, then let autopilot act on what qualifies. The rest waits for the seller.
@@ -286,6 +291,30 @@ app.post('/api/orders/:tx/delivered', async (req, res, next) => {
     o.deliveredSource = 'carrier confirmation entered by seller';
     activity('agent', `Delivery confirmation recorded for ${o.item} (${o.carrier} ${o.trackingNumber}, delivered ${date}). Re-checking Seller Protection.`);
     res.json(await runAgent('delivery confirmed'));
+  } catch (e) { next(e); }
+});
+
+// Seller fills in missing proof for a sale (typed straight into the readiness grid).
+// Tracking can change only until it has been sent to PayPal.
+app.post('/api/orders/:tx/proof', async (req, res, next) => {
+  try {
+    const o = store.orders.find((x) => x.transactionId === req.params.tx);
+    if (!o) return res.status(404).json({ error: 'sale not found' });
+    const b = req.body || {};
+    const sent = !!o.trackingNumber && !o.onHold;
+    if ((b.trackingNumber !== undefined || b.carrier !== undefined) && sent) return res.status(409).json({ error: 'Tracking for this sale is already on PayPal.' });
+    const next_ = { carrier: o.carrier, trackingNumber: o.trackingNumber, delivered: o.delivered };
+    if (b.carrier !== undefined) { next_.carrier = String(b.carrier).toUpperCase(); if (!CARRIERS.test(next_.carrier)) return res.status(400).json({ error: 'Pick a carrier, e.g. USPS.' }); }
+    if (b.trackingNumber !== undefined) { next_.trackingNumber = String(b.trackingNumber).trim(); if (!/^[A-Za-z0-9-]{6,40}$/.test(next_.trackingNumber)) return res.status(400).json({ error: 'That does not look like a tracking number.' }); }
+    if (b.delivered !== undefined) { next_.delivered = String(b.delivered).trim(); if (!/^\d{4}-\d{2}-\d{2}$/.test(next_.delivered) || next_.delivered > today()) return res.status(400).json({ error: 'Enter the delivery date as YYYY-MM-DD, today or earlier.' }); }
+    if (next_.trackingNumber && !next_.carrier) return res.status(400).json({ error: 'Set the carrier first, then the tracking number.' });
+    if (next_.delivered && !next_.trackingNumber) return res.status(400).json({ error: 'Add the tracking number before the delivery date.' });
+    if (b.delivered !== undefined && next_.delivered !== o.delivered) o.deliveredSource = 'carrier confirmation entered by seller';
+    Object.assign(o, next_);
+    const readiness = assessReadiness(o);
+    res.json({ transactionId: o.transactionId, readiness });
+    activity('agent', `Proof updated for ${o.item}: now ${readiness.status.replaceAll('_', ' ').toLowerCase()}.`);
+    runAgent('proof updated').catch((e) => activity('error', `Agent run failed: ${e.message}`));
   } catch (e) { next(e); }
 });
 
