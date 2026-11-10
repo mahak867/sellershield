@@ -3,66 +3,89 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Demo Store</title>
-<style>
-  :root { --bg:#faf7f2; --card:#fff; --ink:#1f1a14; --mute:#6b6257; --line:#e8e1d6; --accent:#8a4b20; --good:#137333; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#14110e; --card:#1d1915; --ink:#f0ebe4; --mute:#a99f92; --line:#332c25; --accent:#e0a370; --good:#6fd08c; } }
-  * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.5 Georgia,"Times New Roman",serif; background:var(--bg); color:var(--ink); }
-  header { padding:22px 16px; text-align:center; border-bottom:1px solid var(--line); }
-  header h1 { margin:0; font-size:26px; letter-spacing:.02em; }
-  header p { margin:4px 0 0; color:var(--mute); font-family:system-ui,sans-serif; font-size:13px; }
-  main { max-width:980px; margin:0 auto; padding:24px 16px; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
-  .item { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; display:grid; gap:10px; }
-  .art { height:120px; border-radius:10px; display:grid; place-items:center; font-size:44px; background:linear-gradient(135deg,#efe3d3,#d9c3a5); }
-  @media (prefers-color-scheme: dark) { .art { background:linear-gradient(135deg,#3a2f24,#5a4632); } }
-  .item h2 { margin:0; font-size:18px; } .price { font-family:system-ui,sans-serif; font-weight:700; }
-  .note { max-width:980px; margin:0 auto; padding:0 16px 32px; color:var(--mute); font-family:system-ui,sans-serif; font-size:13px; }
-  .note a { color:var(--accent); }
-  .ok { color:var(--good); font-family:system-ui,sans-serif; font-size:14px; }
-  .err { color:#b3261e; font-family:system-ui,sans-serif; font-size:14px; }
-</style>
+<title>Clay &amp; Thread · handmade goods</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/store.css">
 </head>
 <body>
-<header>
-  <h1>Clay &amp; Thread</h1>
-  <p>A demo small-business store. Checkout runs on the real PayPal sandbox.</p>
+<div class="topbar">
+  <a class="mark" href="/shop.html">Clay &amp; Thread</a>
+  <nav aria-label="Store">
+    <a href="/shop.html" aria-current="page">Shop</a>
+    <a href="/buyer.html">Let an agent shop for you</a>
+    <a href="/">Seller dashboard</a>
+  </nav>
+</div>
+<header class="hero">
+  <div class="eyebrow">Small-batch · made by hand</div>
+  <h1>Things made slowly, to be used every day.</h1>
+  <p>A demo small-business store. Checkout runs on the real PayPal sandbox, so no real money moves.</p>
+  <div class="trust">
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 9.5 4-1.2 7-5 7-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/></svg>Secure checkout with PayPal</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/></svg>Tracked shipping on every order</span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Sandbox demo: pay with a test buyer account</span>
+  </div>
 </header>
-<main id="items"></main>
-<p class="note">Pay with your <b>sandbox buyer account</b> (developer.paypal.com, Testing Tools, Sandbox Accounts). After paying, open the <a href="/">SellerShield dashboard</a> and click <b>Run agent</b>: the paid order shows up needing tracking.</p>
+<main><div class="products" id="items"></div></main>
+<p class="note">Pay with your <b>sandbox buyer account</b> (developer.paypal.com, Testing Tools, Sandbox Accounts). The sale then appears in the <a href="/">SellerShield dashboard</a>, checked against Seller Protection.</p>
 <script>
-const art = { wallet: '👛', candle: '🕯️', mugs: '☕' };
+const S = 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+const info = {
+  wallet: { desc: 'Full-grain leather, hand-stitched. Six card slots and a note sleeve.', ship: 'Ships with FedEx',
+    art: `<svg viewBox="0 0 48 48" ${S}><path d="M7 15a4 4 0 0 1 4-4h24a3 3 0 0 1 3 3v2"/><rect x="7" y="16" width="34" height="22" rx="4"/><path d="M41 23h-8a4 4 0 0 0 0 8h8"/><circle cx="33.5" cy="27" r="1"/></svg>` },
+  candle: { desc: 'Three soy-wax candles: cedar, fig and sea salt. About 40 hours each.', ship: 'Ships with USPS',
+    art: `<svg viewBox="0 0 48 48" ${S}><path d="M24 6c3 3.5 4.5 6 4.5 8.5a4.5 4.5 0 0 1-9 0C19.500 12 21 9.500 24 6z"/><path d="M24 19v4"/><rect x="15" y="23" width="18" height="19" rx="3"/><path d="M15 30c3 2 6-2 9 0s6-2 9 0"/></svg>` },
+  mugs: { desc: 'Set of two stoneware mugs with a speckled glaze. Dishwasher safe.', ship: 'Ships with USPS',
+    art: `<svg viewBox="0 0 48 48" ${S}><path d="M10 17h22v14a8 8 0 0 1-8 8h-6a8 8 0 0 1-8-8z"/><path d="M32 20h3a5 5 0 0 1 0 10h-3"/><path d="M16 7c-1.500 2 1.500 3 0 5M22 7c-1.500 2 1.500 3 0 5M28 7c-1.500 2 1.500 3 0 5"/></svg>` },
+};
+const box = document.getElementById('items');
 (async () => {
   const cfg = await fetch('/api/shop/config').then((r) => r.json());
-  const box = document.getElementById('items');
-  if (!cfg.clientId) { box.innerHTML = '<p class="err">Add PayPal sandbox keys to enable checkout.</p>'; return; }
-  await new Promise((ok, bad) => {
-    const s = document.createElement('script');
-    s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(cfg.clientId)}&currency=USD&intent=capture&components=buttons`;
-    s.onload = ok; s.onerror = () => bad(new Error('PayPal SDK failed to load'));
-    document.head.appendChild(s);
-  }).catch((e) => { box.innerHTML = `<p class="err">${e.message}</p>`; throw e; });
-
-  for (const p of cfg.products) {
-    const el = document.createElement('div');
+  const cards = cfg.products.map((p) => {
+    const el = document.createElement('article');
     el.className = 'item';
-    el.innerHTML = `<div class="art" aria-hidden="true">${art[p.sku] || '📦'}</div><h2>${p.name}</h2><div class="price">$${p.price.toFixed(2)}</div><div class="btn"></div><div class="msg"></div>`;
+    const i = info[p.sku] || { desc: '', ship: '', art: '' };
+    el.innerHTML = `<div class="art">${i.art}</div>
+      <div class="body"><h2>${p.name}</h2><p class="desc">${i.desc}</p>
+      <div class="meta"><span class="price">$${p.price.toFixed(2)}</span><span class="ship">${i.ship}</span></div></div>
+      <div class="btn"></div><div class="msg" role="status" aria-live="polite"></div>`;
     box.appendChild(el);
-    const msg = el.querySelector('.msg');
+    return { p, el };
+  });
+  const say = (el, cls, text) => { const m = el.querySelector('.msg'); m.className = 'msg ' + cls; m.textContent = text; };
+  if (!cfg.clientId) { for (const { el } of cards) say(el, 'info', 'Checkout is off: add PayPal sandbox keys to enable it.'); return; }
+  try {
+    await new Promise((ok, bad) => {
+      const s = document.createElement('script');
+      s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(cfg.clientId)}&currency=USD&intent=capture&components=buttons`;
+      s.onload = ok; s.onerror = () => bad(new Error('PayPal could not be loaded. Check your connection and reload.'));
+      document.head.appendChild(s);
+    });
+  } catch (e) { for (const { el } of cards) say(el, 'err', e.message); return; }
+
+  for (const { p, el } of cards) {
     paypal.Buttons({
-      style: { layout: 'horizontal', tagline: false, height: 40 },
+      style: { layout: 'horizontal', tagline: false, height: 44, shape: 'rect' },
       createOrder: async () => {
+        say(el, 'info', '');
         const r = await fetch('/api/shop/order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sku: p.sku }) });
         const j = await r.json(); if (!r.ok) throw new Error(j.error); return j.id;
       },
       onApprove: async (data) => {
-        msg.textContent = 'Capturing payment...';
+        say(el, 'info', 'Confirming your payment...');
         const r = await fetch('/api/shop/capture', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.orderID, sku: p.sku }) });
         const j = await r.json();
-        if (!r.ok) { msg.className = 'err'; msg.textContent = j.error; return; }
-        msg.className = 'ok'; msg.textContent = `Paid $${j.amount.toFixed(2)}. Capture ${j.captureId} (${j.captureStatus}). Thank you!`;
+        if (!r.ok) return say(el, 'err', j.error);
+        say(el, 'ok', `Paid $${j.amount.toFixed(2)}. Thank you! Order reference ${j.captureId}.`);
       },
-      onError: (e) => { msg.className = 'err'; msg.textContent = String(e.message || e); },
+      // Closing the PayPal window is not an error: nothing was charged.
+      onCancel: () => say(el, 'info', 'Payment cancelled. Nothing was charged.'),
+      onError: (e) => {
+        const t = String(e?.message || e);
+        say(el, /popup close|window closed/i.test(t) ? 'info' : 'err', /popup close|window closed/i.test(t) ? 'The PayPal window was closed before paying. Nothing was charged.' : `Payment could not be completed. ${t}`);
+      },
     }).render(el.querySelector('.btn'));
   }
 })();

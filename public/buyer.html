@@ -4,43 +4,28 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Buyer agent · Clay &amp; Thread</title>
-<style>
-  :root { --bg:#faf7f2; --card:#fff; --ink:#1f1a14; --mute:#6b6257; --line:#e8e1d6; --accent:#8a4b20; --accent-soft:#f3e6da; --good:#137333; --good-soft:#e6f4ea; --bad:#b3261e; --bad-soft:#fdecea; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#14110e; --card:#1d1915; --ink:#f0ebe4; --mute:#a99f92; --line:#332c25; --accent:#e0a370; --accent-soft:#33261b; --good:#6fd08c; --good-soft:#15291c; --bad:#ff8a80; --bad-soft:#331a19; } }
-  * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); }
-  header { padding:22px 16px; text-align:center; border-bottom:1px solid var(--line); }
-  header h1 { margin:0; font:700 26px/1.2 Georgia,"Times New Roman",serif; letter-spacing:.02em; }
-  header p { margin:6px auto 0; color:var(--mute); font-size:14px; max-width:640px; }
-  main { max-width:720px; margin:0 auto; padding:24px 16px 48px; display:grid; gap:16px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; display:grid; gap:12px; }
-  .card h2 { margin:0; font-size:17px; } .mute { color:var(--mute); font-size:13px; margin:0; }
-  label { display:grid; gap:4px; font-size:14px; font-weight:600; }
-  input { font:inherit; padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); width:100%; }
-  .row { display:grid; grid-template-columns:1fr 150px; gap:12px; } @media (max-width:520px) { .row { grid-template-columns:1fr; } }
-  button { font:inherit; font-weight:600; border:0; border-radius:9px; padding:10px 16px; background:var(--accent); color:#fff; cursor:pointer; }
-  @media (prefers-color-scheme: dark) { button { color:#14110e; } }
-  button.ghost { background:var(--accent-soft); color:var(--accent); } button:disabled { opacity:.5; cursor:progress; }
-  .chips { display:flex; gap:6px; flex-wrap:wrap; } .chips button { font-size:12px; padding:5px 10px; }
-  .pick { display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap; font-size:18px; font-weight:700; }
-  ul.checks { margin:0; padding:0; list-style:none; display:grid; gap:3px; font-size:14px; }
-  ul.checks li::before { content:attr(data-i); display:inline-block; width:20px; font-weight:700; }
-  ul.checks li.ok::before { color:var(--good); } ul.checks li.no::before { color:var(--bad); }
-  .tag { font-size:12px; font-weight:700; padding:2px 8px; border-radius:6px; background:var(--accent-soft); color:var(--accent); }
-  .ok-box { background:var(--good-soft); color:var(--good); border-radius:10px; padding:10px 12px; font-size:14px; }
-  .bad-box { background:var(--bad-soft); color:var(--bad); border-radius:10px; padding:10px 12px; font-size:14px; }
-  code { font-size:12px; word-break:break-all; } a { color:var(--accent); }
-  .actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/store.css">
 </head>
 <body>
-<header>
-  <h1>Clay &amp; Thread · buyer agent</h1>
-  <p>Tell an AI agent what you want and the most you will pay. It shops the store for you and can never spend more than your limit. You approve the payment in PayPal.</p>
+<div class="topbar">
+  <a class="mark" href="/shop.html">Clay &amp; Thread</a>
+  <nav aria-label="Store">
+    <a href="/shop.html">Shop</a>
+    <a href="/buyer.html" aria-current="page">Let an agent shop for you</a>
+    <a href="/">Seller dashboard</a>
+  </nav>
+</div>
+<header class="hero">
+  <div class="eyebrow">Buyer agent</div>
+  <h1>Tell it what you want. Set your limit.</h1>
+  <p>An AI agent shops the store for you and can never spend more than your limit. You approve the payment in PayPal.</p>
 </header>
-<main>
+<main class="narrow">
   <section class="card">
-    <h2>1. Your mandate</h2>
+    <h2><span class="n">1</span>Your mandate</h2>
     <div class="row">
       <label>What do you want?<input id="want" maxlength="200" value="A handmade gift for a coffee lover"></label>
       <label>Most you will pay ($)<input id="max" type="number" min="1" step="1" value="70"></label>
@@ -53,8 +38,8 @@
     <div class="actions"><button id="go">Let the agent shop</button><span class="mute" id="status"></span></div>
   </section>
   <section class="card" id="result" hidden></section>
-  <p class="mute">The seller sees this sale in the <a href="/">SellerShield dashboard</a>, with your mandate attached as a record.</p>
-</main>
+  </main>
+<p class="note">The seller sees this sale in the <a href="/">SellerShield dashboard</a>, with your mandate attached as a record.</p>
 <script>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -76,13 +61,13 @@ $('#go').onclick = async () => {
   try {
     const r = await api('/api/buyer/shop', { want: $('#want').value, maxPrice: $('#max').value });
     box.hidden = false;
-    box.innerHTML = `<h2>2. What the agent picked <span class="tag">by ${r.source === 'claude' ? 'Claude' : 'rules'}</span></h2>
+    box.innerHTML = `<h2><span class="n">2</span>What the agent picked <span class="tag">by ${r.source === 'claude' ? 'Claude' : 'rules'}</span></h2>
       ${r.pick ? `<div class="pick"><span>${esc(r.pick.name)}</span><span>$${r.pick.price.toFixed(2)}</span></div>` : ''}
       <p class="mute">${esc(r.reasoning)}</p>
       ${r.overruled ? '<div class="bad-box">The AI first picked something outside your mandate. Its pick was discarded.</div>' : ''}
       <ul class="checks">${r.checks.map((c) => `<li class="${c.pass ? 'ok' : 'no'}" data-i="${c.pass ? '✓' : '✗'}">${esc(c.rule)} <span class="mute">(${esc(c.detail)})</span></li>`).join('')}</ul>
       <p class="mute">Mandate <code>${esc(r.mandate.id)}</code> · fingerprint <code>${esc(r.mandate.fingerprint.slice(0, 16))}</code></p>
-      ${r.allowed ? '<h2>3. Approve the payment</h2><div id="pay" class="actions"></div>' : '<div class="bad-box">Nothing was ordered. No PayPal order can be created outside your mandate.</div>'}
+      ${r.allowed ? '<h2><span class="n">3</span>Approve the payment</h2><div id="pay" class="actions"></div>' : '<div class="bad-box">Nothing was ordered. No PayPal order can be created outside your mandate.</div>'}
       <div id="done"></div>`;
     if (!r.allowed) return;
     const done = (c) => {
@@ -108,7 +93,8 @@ $('#go').onclick = async () => {
         style: { layout: 'horizontal', tagline: false, height: 40 },
         createOrder: async () => (await api('/api/buyer/order', { mandateId: r.mandate.id })).orderId,
         onApprove: (data) => capture(data.orderID).catch((e) => { $('#done').innerHTML = `<div class="bad-box">${esc(e.message)}</div>`; }),
-        onError: (e) => { $('#done').innerHTML = `<div class="bad-box">${esc(String(e.message || e))}</div>`; },
+        onCancel: () => { $('#done').innerHTML = '<p class="mute">Payment cancelled. Nothing was charged.</p>'; },
+        onError: (e) => { const t = String(e?.message || e); $('#done').innerHTML = /popup close|window closed/i.test(t) ? '<p class="mute">The PayPal window was closed before paying. Nothing was charged.</p>' : `<div class="bad-box">Payment could not be completed. ${esc(t)}</div>`; },
       }).render('#pay');
     }
   } catch (e) { box.hidden = false; box.innerHTML = `<div class="bad-box">${esc(e.message)}</div>`; }

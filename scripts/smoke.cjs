@@ -67,7 +67,7 @@ const out = []; const ok = (name, cond, extra = '') => out.push(`${cond ? 'PASS'
   ok('mobile no sideways scroll', over <= 1, `overflow ${over}px`);
   // store page in mock mode
   const s = await ctx.newPage(); await s.goto(BASE + '/shop.html'); await s.waitForTimeout(800);
-  ok('store shows clear message without keys', /Add PayPal sandbox keys/.test(await s.textContent('#items')));
+  ok('store shows clear message without keys', /add PayPal sandbox keys/.test(await s.textContent('#items')));
   ok('no console errors', errs.length === 0, JSON.stringify(errs).slice(0, 400));
   console.log(out.join('\n')); await b.close(); if (out.some((l) => l.startsWith('FAIL'))) process.exit(1);
 })().catch((e) => { console.log(out.join('\n')); console.log('CRASH', e.message.slice(0, 300)); process.exit(1); });
