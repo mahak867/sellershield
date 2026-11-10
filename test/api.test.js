@@ -87,6 +87,25 @@ test('each visitor gets an isolated workspace', async () => {
   assert.equal((await r.json()).actions.length, 0);
 });
 
+test('readiness: sending tracking makes one more sale protection-ready', async () => {
+  await post('/api/demo/reset');
+  const risk = async () => (await fetch(URL + '/api/risk', { headers: { Cookie: cookie } })).json();
+  const before = (await risk()).readiness;
+  const { proposals } = await (await post('/api/agent/scan')).json();
+  const hold = proposals.find((x) => x.kind === 'hold' && x.target === '1AB23456CD789012E');
+  assert.equal((await post('/api/agent/approve', { id: hold.id, fingerprint: hold.fingerprint })).status, 200);
+  const after = (await risk()).readiness;
+  assert.equal(after.ready, before.ready + 1);
+  assert.equal(after.fixable, before.fixable - 1);
+});
+
+test('chat agent answers whether sales are protected', async () => {
+  await post('/api/demo/reset');
+  const r = await (await post('/api/agent/chat', { message: 'Are all my sales protected?' })).json();
+  assert.equal(r.steps[0].tool, 'get_protection_readiness');
+  assert.match(r.reply, /3 of 6 sales/);
+});
+
 test('autopilot waits for a reminder the seller rescheduled', async () => {
   await post('/api/demo/reset');
   const { proposals } = await (await post('/api/agent/scan')).json();

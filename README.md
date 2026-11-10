@@ -174,7 +174,7 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 42 tests: Seller Protection rules, sale readiness, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 44 tests: Seller Protection rules, sale readiness, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
 

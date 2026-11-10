@@ -346,6 +346,7 @@ app.post('/api/agent/chat', async (req, res, next) => {
   try {
     const out = await ai.agent(String(req.body.message ?? '').slice(0, 2000), {
       get_money_at_risk: getRisk,
+      get_protection_readiness: async () => readinessSummary(store.orders),
       scan: async () => ({ proposals: await scan() }),
       execute_proposal: async ({ id }) => execute(id, undefined, 'chat agent'),
     });
