@@ -99,7 +99,7 @@ paths:
             application/json:
               schema: { type: object, properties: { orderId: { type: string }, simulated: { type: boolean } } }
         '404': { description: Mandate not found }
-        '409': { description: Mandate does not allow the purchase, or was already used }
+        '409': { description: 'Mandate does not allow the purchase, or was already used' }
   /api/buyer/capture:
     post:
       tags: [Storefront]
@@ -119,7 +119,7 @@ paths:
               schema: { type: object, additionalProperties: true }
         '400': { description: Order was not created for this mandate }
         '404': { description: Mandate not found }
-        '409': { description: Order does not match the mandate, or mandate already used }
+        '409': { description: 'Order does not match the mandate, or mandate already used' }
   /api/orders:
     post:
       tags: [Storefront]

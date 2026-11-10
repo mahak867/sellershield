@@ -5,7 +5,7 @@
             "description": "What money is at risk, and the live activity stream.",
             "item": [
                 {
-                    "id": "0d4b1a8e-96c4-47ff-a291-d68691902dc2",
+                    "id": "807eb4ec-3368-4092-ab79-3233d65ef5df",
                     "name": "Which integrations are live, and the autopilot policy",
                     "request": {
                         "name": "Which integrations are live, and the autopilot policy",
@@ -33,7 +33,7 @@
                     },
                     "response": [
                         {
-                            "id": "69eaa086-5afe-49d2-a904-a5726a9d800b",
+                            "id": "56b6cfdd-06a3-4f55-b828-5971f2500808",
                             "name": "Status",
                             "originalRequest": {
                                 "url": {
@@ -72,7 +72,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"mockPaypal\": \"<boolean>\",\n  \"mockAi\": \"<boolean>\",\n  \"persistence\": \"redis\",\n  \"workspace\": \"<uuid>\",\n  \"ai\": {\n    \"claude\": \"<integer>\",\n    \"rules\": \"<integer>\",\n    \"lastError\": \"<string>\"\n  },\n  \"channel3\": \"<boolean>\",\n  \"autopilot\": {\n    \"enabled\": \"<boolean>\",\n    \"maxAmount\": \"<number>\",\n    \"minConfidence\": \"<number>\"\n  }\n}",
+                            "body": "{\n  \"mockPaypal\": \"<boolean>\",\n  \"mockAi\": \"<boolean>\",\n  \"persistence\": \"file\",\n  \"workspace\": \"<uuid>\",\n  \"ai\": {\n    \"claude\": \"<integer>\",\n    \"rules\": \"<integer>\",\n    \"lastError\": \"<string>\"\n  },\n  \"channel3\": \"<boolean>\",\n  \"autopilot\": {\n    \"enabled\": \"<boolean>\",\n    \"maxAmount\": \"<number>\",\n    \"minConfidence\": \"<number>\"\n  }\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -83,7 +83,7 @@
                     }
                 },
                 {
-                    "id": "e59e1037-890d-4667-a6fd-530398339c6a",
+                    "id": "0fce7d21-7cd8-4633-ad79-d60040a4d402",
                     "name": "Everything at risk, plus proposals, the audit log and scheduled actions",
                     "request": {
                         "name": "Everything at risk, plus proposals, the audit log and scheduled actions",
@@ -111,7 +111,7 @@
                     },
                     "response": [
                         {
-                            "id": "09dbcd89-c3c7-46d2-82b4-17339f5976b3",
+                            "id": "a34735ea-6de9-43ce-8d97-b6a8520eea34",
                             "name": "Money at risk",
                             "originalRequest": {
                                 "url": {
@@ -150,7 +150,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"disputes\": [\n    {\n      \"key_0\": 504.86988474050645\n    },\n    {\n      \"key_0\": \"string\",\n      \"key_1\": true,\n      \"key_2\": 3675\n    }\n  ],\n  \"invoices\": [\n    {\n      \"key_0\": 4632.965874129953\n    },\n    {\n      \"key_0\": false\n    }\n  ],\n  \"holds\": [\n    {\n      \"key_0\": \"string\"\n    },\n    {\n      \"key_0\": \"string\",\n      \"key_1\": 8310.006786642463\n    }\n  ],\n  \"readiness\": {\n    \"total\": \"<integer>\",\n    \"ready\": \"<integer>\",\n    \"fixable\": \"<integer>\",\n    \"avgDaysExposed\": \"<number>\",\n    \"amountTotal\": \"<number>\",\n    \"amountReady\": \"<number>\",\n    \"rows\": [\n      {\n        \"transactionId\": \"<string>\",\n        \"item\": \"<string>\",\n        \"amount\": \"<number>\",\n        \"demo\": \"<boolean>\",\n        \"status\": \"AGENT_CAN_FIX\",\n        \"checks\": [\n          {\n            \"key_0\": 5194,\n            \"key_1\": 1069,\n            \"key_2\": 2107\n          },\n          {\n            \"key_0\": 532,\n            \"key_1\": \"string\"\n          }\n        ]\n      },\n      {\n        \"transactionId\": \"<string>\",\n        \"item\": \"<string>\",\n        \"amount\": \"<number>\",\n        \"demo\": \"<boolean>\",\n        \"status\": \"AT_RISK\",\n        \"checks\": [\n          {\n            \"key_0\": 2897.581990548748,\n            \"key_1\": false,\n            \"key_2\": false\n          },\n          {\n            \"key_0\": \"string\",\n            \"key_1\": 8169.070737015305\n          }\n        ]\n      }\n    ]\n  },\n  \"proposals\": [\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"invoice\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"ADD_TRACKING\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"rules\",\n      \"protection\": {\n        \"status\": \"NOT_COVERED\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    },\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"dispute\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"FIGHT\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"claude\",\n      \"protection\": {\n        \"status\": \"NEEDS_EVIDENCE\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\",\n            \"key_2\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    }\n  ],\n  \"actions\": [\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    },\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    }\n  ],\n  \"reminders\": {\n    \"key_0\": \"<date>\",\n    \"key_1\": \"<date>\"\n  },\n  \"schedule\": {\n    \"key_0\": \"<date>\"\n  }\n}",
+                            "body": "{\n  \"disputes\": [\n    {\n      \"key_0\": \"string\"\n    },\n    {\n      \"key_0\": 2937.1503318479795,\n      \"key_1\": \"string\"\n    }\n  ],\n  \"invoices\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\",\n      \"key_2\": true,\n      \"key_3\": true\n    },\n    {\n      \"key_0\": 8632.977281759986\n    }\n  ],\n  \"holds\": [\n    {\n      \"key_0\": 1647.5967022588954\n    },\n    {\n      \"key_0\": \"string\",\n      \"key_1\": 4191.603593317377,\n      \"key_2\": \"string\",\n      \"key_3\": 6765.650290712808\n    }\n  ],\n  \"readiness\": {\n    \"total\": \"<integer>\",\n    \"ready\": \"<integer>\",\n    \"fixable\": \"<integer>\",\n    \"avgDaysExposed\": \"<number>\",\n    \"amountTotal\": \"<number>\",\n    \"amountReady\": \"<number>\",\n    \"rows\": [\n      {\n        \"transactionId\": \"<string>\",\n        \"item\": \"<string>\",\n        \"amount\": \"<number>\",\n        \"demo\": \"<boolean>\",\n        \"status\": \"AT_RISK\",\n        \"checks\": [\n          {\n            \"key_0\": true,\n            \"key_1\": false\n          },\n          {\n            \"key_0\": 344,\n            \"key_1\": 1963.3296001629285\n          }\n        ]\n      },\n      {\n        \"transactionId\": \"<string>\",\n        \"item\": \"<string>\",\n        \"amount\": \"<number>\",\n        \"demo\": \"<boolean>\",\n        \"status\": \"AGENT_CAN_FIX\",\n        \"checks\": [\n          {\n            \"key_0\": 6753.761758637335\n          },\n          {\n            \"key_0\": \"string\",\n            \"key_1\": \"string\",\n            \"key_2\": 8270,\n            \"key_3\": \"string\",\n            \"key_4\": 675\n          }\n        ]\n      }\n    ]\n  },\n  \"proposals\": [\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"dispute\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"ADD_TRACKING\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"rules\",\n      \"protection\": {\n        \"status\": \"NOT_COVERED\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    },\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"invoice\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"REMIND\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"rules\",\n      \"protection\": {\n        \"status\": \"NEEDS_EVIDENCE\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    }\n  ],\n  \"actions\": [\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    },\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    }\n  ],\n  \"reminders\": {\n    \"key_0\": \"<date>\"\n  },\n  \"schedule\": {\n    \"key_0\": \"<date>\",\n    \"key_1\": \"<date>\"\n  }\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -161,7 +161,7 @@
                     }
                 },
                 {
-                    "id": "d21c9098-d2a9-4df1-9cc7-b672e09142f8",
+                    "id": "e266795e-56d4-4606-b1de-21fdb4cc70c9",
                     "name": "Live activity stream (Server-Sent Events)",
                     "request": {
                         "name": "Live activity stream (Server-Sent Events)",
@@ -189,7 +189,7 @@
                     },
                     "response": [
                         {
-                            "id": "28f21fc8-03ce-406e-a70a-0b4394099c41",
+                            "id": "984bec7e-495d-4d25-b05b-bfc96ce24e4c",
                             "name": "text/event-stream of ActivityEvent JSON objects",
                             "originalRequest": {
                                 "url": {
@@ -245,7 +245,7 @@
             "description": "Proposals, guarded approvals, evidence packs, chat and autopilot.",
             "item": [
                 {
-                    "id": "b1a0754e-b8b5-41b6-b997-0a9833e8f932",
+                    "id": "c7510004-9257-4207-b4fd-1cb5a1dea121",
                     "name": "Set (or clear) the webhook that receives alerts",
                     "request": {
                         "name": "Set (or clear) the webhook that receives alerts",
@@ -289,7 +289,7 @@
                     },
                     "response": [
                         {
-                            "id": "baded40f-b9c0-4b1d-b578-2dcdd11afadf",
+                            "id": "d72d3b25-7920-465a-93c1-18d25a6b1dba",
                             "name": "The saved URL, or null",
                             "originalRequest": {
                                 "url": {
@@ -346,7 +346,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "593ec7e3-91e1-4cd7-9d4f-174540e877ff",
+                            "id": "9d4cbe7d-4af8-4e9d-83f8-15415d54df26",
                             "name": "Not an allowed webhook URL",
                             "originalRequest": {
                                 "url": {
@@ -399,7 +399,7 @@
                     }
                 },
                 {
-                    "id": "ee20b007-264a-45ef-86eb-3a185172874f",
+                    "id": "8019e141-18f1-48c4-8ffe-6bf3cca13736",
                     "name": "Send a test alert to the saved webhook",
                     "request": {
                         "name": "Send a test alert to the saved webhook",
@@ -422,7 +422,7 @@
                     },
                     "response": [
                         {
-                            "id": "5c89bfb3-db82-4a50-b893-37cf195c0e0d",
+                            "id": "336844e2-9adc-4c8f-8120-d1d20a5bf5f3",
                             "name": "Delivered",
                             "originalRequest": {
                                 "url": {
@@ -457,7 +457,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "72e778d0-9d28-48f2-81d1-dcd11c292958",
+                            "id": "f1b54214-67ef-4f8d-bea4-8f0422dba332",
                             "name": "No webhook saved",
                             "originalRequest": {
                                 "url": {
@@ -492,7 +492,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "c83b4a8a-a7c5-439b-9eea-aeef8b529827",
+                            "id": "6795b129-1d0c-41f9-b41f-267f2cf0a0e1",
                             "name": "The webhook did not accept the event",
                             "originalRequest": {
                                 "url": {
@@ -533,7 +533,7 @@
                     }
                 },
                 {
-                    "id": "96162317-50fe-4c2d-a8cd-97bd00534ef7",
+                    "id": "26c1cf5f-b3d4-460a-87f0-8ca7ed7626cd",
                     "name": "Model Context Protocol endpoint for other AI agents",
                     "request": {
                         "name": "Model Context Protocol endpoint for other AI agents",
@@ -584,7 +584,7 @@
                         "method": "POST",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": 2221.778422820562\n  }\n}",
+                            "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": \"string\",\n    \"key_1\": 71\n  }\n}",
                             "options": {
                                 "raw": {
                                     "headerFamily": "json",
@@ -596,7 +596,7 @@
                     },
                     "response": [
                         {
-                            "id": "237102fb-09b1-4292-8d13-df6d7ab60d6b",
+                            "id": "dc69aba0-6c2e-4354-8e70-400e85241b1b",
                             "name": "JSON-RPC response",
                             "originalRequest": {
                                 "url": {
@@ -650,7 +650,7 @@
                                 "method": "POST",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": 2221.778422820562\n  }\n}",
+                                    "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": \"string\",\n    \"key_1\": 71\n  }\n}",
                                     "options": {
                                         "raw": {
                                             "headerFamily": "json",
@@ -667,12 +667,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"key_0\": 4045.2178038524767\n}",
+                            "body": "{\n  \"key_0\": 9464.513826889533,\n  \"key_1\": 9042,\n  \"key_2\": \"string\"\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "3c5bc2e2-9e9e-4642-8678-dc61a9201c72",
+                            "id": "b833b99b-6805-4fb4-947b-10c12d910718",
                             "name": "Notification accepted",
                             "originalRequest": {
                                 "url": {
@@ -722,7 +722,7 @@
                                 "method": "POST",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": 2221.778422820562\n  }\n}",
+                                    "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"<string>\",\n  \"id\": \"<string>\",\n  \"params\": {\n    \"key_0\": \"string\",\n    \"key_1\": 71\n  }\n}",
                                     "options": {
                                         "raw": {
                                             "headerFamily": "json",
@@ -744,7 +744,7 @@
                     }
                 },
                 {
-                    "id": "0ab51796-5b7c-4240-9335-2cf73247e084",
+                    "id": "27b96deb-4b40-4100-921b-cf3eccc5463a",
                     "name": "Run the agent; autopilot acts on what qualifies, the rest is proposed",
                     "request": {
                         "name": "Run the agent; autopilot acts on what qualifies, the rest is proposed",
@@ -773,7 +773,7 @@
                     },
                     "response": [
                         {
-                            "id": "79853826-314e-442a-8b7d-3d278593d05e",
+                            "id": "fa8cfde4-caab-4327-8982-33c3acfa0b45",
                             "name": "Proposals and autopilot actions",
                             "originalRequest": {
                                 "url": {
@@ -813,12 +813,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"proposals\": [\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"dispute\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"FIGHT\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"claude\",\n      \"protection\": {\n        \"status\": \"NEEDS_EVIDENCE\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    },\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"hold\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"FIGHT\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"claude\",\n      \"protection\": {\n        \"status\": \"NOT_COVERED\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    }\n  ],\n  \"auto\": [\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    },\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"proposals\": [\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"hold\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"FIGHT\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"rules\",\n      \"protection\": {\n        \"status\": \"NEEDS_EVIDENCE\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\",\n            \"key_1\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"UNKNOWN_RECORD\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    },\n    {\n      \"id\": \"<string>\",\n      \"kind\": \"invoice\",\n      \"target\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"decision\": \"REMIND\",\n      \"confidence\": \"<number>\",\n      \"draft\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"demo\": \"<boolean>\",\n      \"reasoning\": \"<string>\",\n      \"source\": \"rules\",\n      \"protection\": {\n        \"status\": \"NOT_COVERED\",\n        \"summary\": \"<string>\",\n        \"note\": \"<string>\",\n        \"checks\": [\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          },\n          {\n            \"rule\": \"<string>\",\n            \"pass\": \"<boolean>\",\n            \"detail\": \"<string>\"\n          }\n        ]\n      },\n      \"records\": [\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        },\n        {\n          \"ref\": \"<string>\",\n          \"source\": \"<string>\",\n          \"id\": \"<string>\",\n          \"fields\": {\n            \"key_0\": \"<string>\"\n          }\n        }\n      ],\n      \"issues\": [\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        },\n        {\n          \"code\": \"NO_CITATION\",\n          \"sentence\": \"<string>\",\n          \"detail\": \"<string>\"\n        }\n      ]\n    }\n  ],\n  \"auto\": [\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    },\n    {\n      \"at\": \"<dateTime>\",\n      \"kind\": \"<string>\",\n      \"target\": \"<string>\",\n      \"decision\": \"<string>\",\n      \"amount\": \"<number>\",\n      \"by\": \"<string>\",\n      \"fingerprint\": \"<string>\",\n      \"simulated\": \"<boolean>\",\n      \"text\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "5a231fb2-5abb-4661-92d3-4b9193e5ad59",
+                            "id": "b5f881a0-94f1-4c6f-b231-2af862404b65",
                             "name": "Too many requests",
                             "originalRequest": {
                                 "url": {
@@ -858,7 +858,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -869,7 +869,7 @@
                     }
                 },
                 {
-                    "id": "3efb3ae1-388c-44e5-906a-12f9c52bcf65",
+                    "id": "230f9b0c-347a-4c1d-a016-a26e036a623f",
                     "name": "Fingerprint and citation check for a (possibly edited) draft",
                     "request": {
                         "name": "Fingerprint and citation check for a (possibly edited) draft",
@@ -911,7 +911,7 @@
                     },
                     "response": [
                         {
-                            "id": "f951f556-d1c3-4969-abbe-cd0991bfd7af",
+                            "id": "6ad4b0af-df90-47b7-ba49-e3c0f82eaac5",
                             "name": "Check result",
                             "originalRequest": {
                                 "url": {
@@ -969,7 +969,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "a1831fd4-b58b-4a5b-b3bf-9f1a287982cc",
+                            "id": "83dcd027-1f01-49da-b15c-240583bbd64d",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1022,7 +1022,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -1033,7 +1033,7 @@
                     }
                 },
                 {
-                    "id": "e1765d56-10c5-4ee9-965f-d42b2277b604",
+                    "id": "dfdbd009-46e5-4602-aa7c-5772836c797c",
                     "name": "Execute a proposal on PayPal",
                     "request": {
                         "name": "Execute a proposal on PayPal",
@@ -1078,7 +1078,7 @@
                     },
                     "response": [
                         {
-                            "id": "330833bd-f7c8-41a2-b06f-f6ff26943cf3",
+                            "id": "14ffaefc-879b-463f-86a1-4b077f0d31ff",
                             "name": "Executed and logged",
                             "originalRequest": {
                                 "url": {
@@ -1136,7 +1136,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "14ed4d8d-d0e5-4318-ab66-4cedfdaff08e",
+                            "id": "1ca90032-aca3-447c-8ac8-c51ec8c48f09",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1189,12 +1189,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "c2154bde-e4b1-4371-8bd5-d7beba766154",
+                            "id": "cd69c0f8-383a-40e6-bf55-c2898363be25",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1247,12 +1247,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "1206fabc-59e5-4ce8-b8c0-4923dfe3e998",
+                            "id": "e0f45c05-49ae-4e33-92fe-bd5b2efecf2e",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1305,7 +1305,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -1316,7 +1316,7 @@
                     }
                 },
                 {
-                    "id": "b4df0d24-9a49-4b21-8cef-fd88dabb78fc",
+                    "id": "029704bb-211e-4696-b5b2-0336db0ec6d3",
                     "name": "Evidence pack (PDF) for a dispute proposal",
                     "request": {
                         "name": "Evidence pack (PDF) for a dispute proposal",
@@ -1358,7 +1358,7 @@
                     },
                     "response": [
                         {
-                            "id": "8bc8d7b5-3929-4b65-91d0-a80237ab0993",
+                            "id": "dde957a0-7ecb-48bf-9ba9-3a82089d2b7c",
                             "name": "PDF",
                             "originalRequest": {
                                 "url": {
@@ -1416,7 +1416,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "0c733630-6fbc-4e18-9677-e936f0725d95",
+                            "id": "cebe3e75-0525-44e2-96c1-5a197de00fe5",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1469,7 +1469,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -1480,7 +1480,7 @@
                     }
                 },
                 {
-                    "id": "9e7361c0-d976-4cb8-a2eb-f0b1d101bd3f",
+                    "id": "4bf9153a-97c1-4f4c-9419-652350876c68",
                     "name": "Ask the tool-using agent a question, or ask it to act",
                     "request": {
                         "name": "Ask the tool-using agent a question, or ask it to act",
@@ -1522,7 +1522,7 @@
                     },
                     "response": [
                         {
-                            "id": "75ed16c5-3f18-4966-a941-1e1310470041",
+                            "id": "3bdb3b90-b387-4119-8fe6-9ba2a75b0b58",
                             "name": "Reply and the tools the agent used",
                             "originalRequest": {
                                 "url": {
@@ -1575,7 +1575,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"reply\": \"<string>\",\n  \"steps\": [\n    {\n      \"tool\": \"<string>\",\n      \"input\": {\n        \"key_0\": 9901.734614735517,\n        \"key_1\": \"string\"\n      }\n    },\n    {\n      \"tool\": \"<string>\",\n      \"input\": {\n        \"key_0\": 4614\n      }\n    }\n  ]\n}",
+                            "body": "{\n  \"reply\": \"<string>\",\n  \"steps\": [\n    {\n      \"tool\": \"<string>\",\n      \"input\": {\n        \"key_0\": 2131.2341794640874,\n        \"key_1\": \"string\"\n      }\n    },\n    {\n      \"tool\": \"<string>\",\n      \"input\": {\n        \"key_0\": 60.64262764764017\n      }\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -1586,7 +1586,7 @@
                     }
                 },
                 {
-                    "id": "6a0093d3-0178-4e9f-a8c1-9d802f0b7cd5",
+                    "id": "ab3e5c76-8148-474a-8c36-6a32ec2983cd",
                     "name": "Set the autopilot policy",
                     "request": {
                         "name": "Set the autopilot policy",
@@ -1627,7 +1627,7 @@
                     },
                     "response": [
                         {
-                            "id": "32161a65-32f2-4e0f-895d-d1ecba761330",
+                            "id": "e42df33e-b4ec-4aa9-85b5-7b994b05aabf",
                             "name": "Current policy",
                             "originalRequest": {
                                 "url": {
@@ -1690,7 +1690,7 @@
                     }
                 },
                 {
-                    "id": "0c6b5281-1049-498c-8ef6-34fb3d5300e5",
+                    "id": "61968876-5ca1-47d1-a71e-278d63b5fea3",
                     "name": "Record the carrier's delivery confirmation for an order; the agent re-checks Seller Protection",
                     "request": {
                         "name": "Record the carrier's delivery confirmation for an order; the agent re-checks Seller Protection",
@@ -1744,7 +1744,7 @@
                     },
                     "response": [
                         {
-                            "id": "3d294ca1-80cd-40a7-99cd-8090f8dbef32",
+                            "id": "bb00f8ad-49f2-4167-a908-bccd2eb4094f",
                             "name": "Agent re-run result",
                             "originalRequest": {
                                 "url": {
@@ -1804,7 +1804,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "aa57e320-0a4b-495e-8c4c-6ee70f65e5ac",
+                            "id": "da0d9646-1dc2-4a19-8c86-397ac9b284c6",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1869,12 +1869,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "acab6dd8-a8c1-4dc1-983b-280cb6b940f5",
+                            "id": "5f31dd31-820f-4c0e-b20e-22f16fe2df97",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -1939,7 +1939,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -1950,7 +1950,7 @@
                     }
                 },
                 {
-                    "id": "b2ff8908-2d88-4135-99c7-6f5e913774a8",
+                    "id": "5a5a00c0-5403-4648-8ad7-f7402f5a96f0",
                     "name": "Sandbox only - ask PayPal to decide a real sandbox dispute",
                     "request": {
                         "name": "Sandbox only - ask PayPal to decide a real sandbox dispute",
@@ -1991,7 +1991,7 @@
                     },
                     "response": [
                         {
-                            "id": "d1bb1e19-f024-4bbf-92f2-5aa955b09171",
+                            "id": "26ebc772-d2cb-42f2-924c-5b31167d9a43",
                             "name": "PayPal outcome",
                             "originalRequest": {
                                 "url": {
@@ -2038,7 +2038,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "a8b406d6-8510-4e51-bbf6-405f0865607e",
+                            "id": "a85cd1c8-7691-4015-9ae0-5a397bde2e7f",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -2090,7 +2090,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -2107,7 +2107,7 @@
             "description": "The agent calendar. Scheduling an action approves it for that day.",
             "item": [
                 {
-                    "id": "01941130-6719-4f3c-8884-3a70c5275d88",
+                    "id": "fea89f6d-c132-4b4c-851c-ac4669c3c022",
                     "name": "Approve a proposal to run on a given day (the agent calendar)",
                     "request": {
                         "name": "Approve a proposal to run on a given day (the agent calendar)",
@@ -2151,7 +2151,7 @@
                     },
                     "response": [
                         {
-                            "id": "250a7faf-aadd-4877-a955-5f9bb69b8091",
+                            "id": "41e7e7fd-81de-4d90-aa08-a25a251f6e53",
                             "name": "Scheduled",
                             "originalRequest": {
                                 "url": {
@@ -2198,7 +2198,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "88eba085-955b-4dcd-a91c-5f0b49e9d16a",
+                            "id": "d5c5885d-1cd2-47bb-a57d-d062c33d1ec3",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -2250,12 +2250,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "eccbb158-12fe-4195-9227-a3cf6e7cd998",
+                            "id": "caea8502-c7ce-4719-81af-c3bf28187e6d",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -2307,12 +2307,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "78e5b09a-f22c-4c8e-8ef0-0ebb1b125fc8",
+                            "id": "fef5b046-07f6-401c-8ec6-bfaf15984e83",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -2364,7 +2364,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -2375,7 +2375,7 @@
                     }
                 },
                 {
-                    "id": "d9bd35a1-bea1-42b7-a6bd-45c61235e29e",
+                    "id": "7c9899e2-5162-49f8-8b69-fa0b2f7604ed",
                     "name": "Cancel a scheduled action",
                     "request": {
                         "name": "Cancel a scheduled action",
@@ -2407,7 +2407,7 @@
                     },
                     "response": [
                         {
-                            "id": "898577b4-bfd4-4757-a888-26ebf0ccd3f9",
+                            "id": "e59925a3-9f68-446f-9cf8-89d7eec540d7",
                             "name": "Cancelled",
                             "originalRequest": {
                                 "url": {
@@ -2457,7 +2457,7 @@
                     }
                 },
                 {
-                    "id": "755cb25a-1a45-439d-9361-310d4a7f3942",
+                    "id": "8542232d-7ad9-489e-b169-35e6242707df",
                     "name": "Set the day the agent may next remind about an invoice",
                     "request": {
                         "name": "Set the day the agent may next remind about an invoice",
@@ -2498,7 +2498,7 @@
                     },
                     "response": [
                         {
-                            "id": "f3323e5c-ff90-4b49-b8cf-be48bcd27139",
+                            "id": "217a417c-2391-4476-8dd6-9362f568570f",
                             "name": "Saved",
                             "originalRequest": {
                                 "url": {
@@ -2545,7 +2545,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "3af9c9eb-9f8c-4641-9af3-ce3690e78cf2",
+                            "id": "34eeab49-7eaa-4e35-be65-cf2a900c481d",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -2597,7 +2597,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -2614,7 +2614,7 @@
             "description": "Demo store checkout through PayPal Orders v2.",
             "item": [
                 {
-                    "id": "3f62421b-aa36-4e9e-9134-88f75adfa566",
+                    "id": "15b37c08-cf85-4595-b0b9-c3bc445e732d",
                     "name": "A buyer's AI agent picks one item inside a mandate",
                     "request": {
                         "name": "A buyer's AI agent picks one item inside a mandate",
@@ -2659,7 +2659,7 @@
                     },
                     "response": [
                         {
-                            "id": "aa8daa71-7dc4-43ec-a558-1fc580d16f6c",
+                            "id": "617a328a-bdfd-40fe-b11f-8ae1261bcab5",
                             "name": "The mandate, the pick and the mandate checks",
                             "originalRequest": {
                                 "url": {
@@ -2712,12 +2712,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"key_0\": 4045.2178038524767\n}",
+                            "body": "{\n  \"key_0\": 9464.513826889533,\n  \"key_1\": 9042,\n  \"key_2\": \"string\"\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "d6a783e6-c055-4b02-8b69-c4442aa1f353",
+                            "id": "676839b5-e07b-4b6e-a737-4ca2dcd10f77",
                             "name": "Invalid mandate",
                             "originalRequest": {
                                 "url": {
@@ -2771,7 +2771,7 @@
                     }
                 },
                 {
-                    "id": "53e708a1-1645-4828-b146-4e198dc783f6",
+                    "id": "4ba2a963-b31e-4649-afe2-a56025fe505c",
                     "name": "Create the PayPal order for a mandate's pick",
                     "request": {
                         "name": "Create the PayPal order for a mandate's pick",
@@ -2816,7 +2816,7 @@
                     },
                     "response": [
                         {
-                            "id": "bbace984-9a46-4fe6-9d59-23db02c720ef",
+                            "id": "b4133309-91d6-43be-93dc-d309b72a697e",
                             "name": "The order id",
                             "originalRequest": {
                                 "url": {
@@ -2874,7 +2874,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "7e4adeab-16ed-4253-a46f-1a8530f6ce9b",
+                            "id": "982e9795-c26b-4515-8021-02b5b6cb3ae4",
                             "name": "Mandate not found",
                             "originalRequest": {
                                 "url": {
@@ -2922,8 +2922,8 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "521c9475-759b-4f15-b7f7-3aae8d23178f",
-                            "name": "Mandate does not allow the purchase",
+                            "id": "e1aff8a1-41b5-41f2-ba56-f2b30cd9fc56",
+                            "name": "Mandate does not allow the purchase, or was already used",
                             "originalRequest": {
                                 "url": {
                                     "path": [
@@ -2976,7 +2976,7 @@
                     }
                 },
                 {
-                    "id": "274b7d82-ae5e-49d3-be42-870f75489dd1",
+                    "id": "932f93ec-2cf7-4f6d-ae11-10d0361f45a2",
                     "name": "Capture an agent-made purchase after the buyer approved it in PayPal",
                     "request": {
                         "name": "Capture an agent-made purchase after the buyer approved it in PayPal",
@@ -3021,7 +3021,7 @@
                     },
                     "response": [
                         {
-                            "id": "173e9963-5370-474c-ace7-41913713629f",
+                            "id": "3b5b990f-7b7f-44e7-ac7e-aa581313830b",
                             "name": "The capture",
                             "originalRequest": {
                                 "url": {
@@ -3074,12 +3074,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"key_0\": 4045.2178038524767\n}",
+                            "body": "{\n  \"key_0\": 9464.513826889533,\n  \"key_1\": 9042,\n  \"key_2\": \"string\"\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "aab2ad5d-2e4b-4055-97a7-d9ff610092cc",
+                            "id": "38c005cb-a9a7-4276-82c5-23e161769cc7",
                             "name": "Order was not created for this mandate",
                             "originalRequest": {
                                 "url": {
@@ -3127,7 +3127,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "0605d397-d23e-47ed-a62d-d801714ddf5d",
+                            "id": "803a2dae-ea90-40fd-8821-a98bea726989",
                             "name": "Mandate not found",
                             "originalRequest": {
                                 "url": {
@@ -3175,8 +3175,8 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "727f4651-c4c9-4705-b590-6dc31c7f0232",
-                            "name": "Order does not match the mandate",
+                            "id": "9f815a84-98ab-4ef9-88f1-8eda2cbfd2d0",
+                            "name": "Order does not match the mandate, or mandate already used",
                             "originalRequest": {
                                 "url": {
                                     "path": [
@@ -3229,7 +3229,7 @@
                     }
                 },
                 {
-                    "id": "4bc2d501-8a12-4811-a7d1-a615e1fc30b1",
+                    "id": "568f3cf9-9d7d-4685-8e59-115c1b7f82d2",
                     "name": "Register a paid PayPal sale from any storefront",
                     "request": {
                         "name": "Register a paid PayPal sale from any storefront",
@@ -3273,7 +3273,7 @@
                     },
                     "response": [
                         {
-                            "id": "266b2c9f-c4a7-4219-a1ea-cda5c9c1fdcd",
+                            "id": "7230b23e-812e-4e7e-adce-1fb5f1617b4c",
                             "name": "Sale registered, with its readiness",
                             "originalRequest": {
                                 "url": {
@@ -3325,12 +3325,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"transactionId\": \"<string>\",\n  \"item\": \"<string>\",\n  \"amount\": \"<number>\",\n  \"readiness\": {\n    \"key_0\": 4452\n  }\n}",
+                            "body": "{\n  \"transactionId\": \"<string>\",\n  \"item\": \"<string>\",\n  \"amount\": \"<number>\",\n  \"readiness\": {\n    \"key_0\": 2355,\n    \"key_1\": true,\n    \"key_2\": true\n  }\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "9082093d-39e2-4fdd-b83a-ca9d6bcd6368",
+                            "id": "7d4e7508-4c4b-4051-baf5-1d9aaf43e787",
                             "name": "Invalid field",
                             "originalRequest": {
                                 "url": {
@@ -3377,7 +3377,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "3a72ed52-a75d-4354-a66a-8b865b60f52a",
+                            "id": "1092ee51-01fd-4b88-a602-dccf144fe5d5",
                             "name": "PayPal has no such capture on this account",
                             "originalRequest": {
                                 "url": {
@@ -3424,7 +3424,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "7de9dab8-3707-45b9-aa71-8a32808f0ef2",
+                            "id": "3546e60c-fd8c-4073-a486-af8a93262d42",
                             "name": "Sale already registered",
                             "originalRequest": {
                                 "url": {
@@ -3477,7 +3477,7 @@
                     }
                 },
                 {
-                    "id": "d6cdc111-591a-4ac6-a491-583d083d906e",
+                    "id": "1740f63a-c8be-41ad-8213-1d29606e9058",
                     "name": "Fill in missing Seller Protection proof for a sale",
                     "request": {
                         "name": "Fill in missing Seller Protection proof for a sale",
@@ -3534,7 +3534,7 @@
                     },
                     "response": [
                         {
-                            "id": "d7c69fcd-7739-48d6-b27b-268b3471a9a7",
+                            "id": "9833888a-5a8b-4c43-aa5d-2d0b7353a45d",
                             "name": "Updated readiness",
                             "originalRequest": {
                                 "url": {
@@ -3599,12 +3599,12 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"key_0\": 4045.2178038524767\n}",
+                            "body": "{\n  \"key_0\": 9464.513826889533,\n  \"key_1\": 9042,\n  \"key_2\": \"string\"\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "89b86b61-dea5-4499-bda3-40ff4519ed50",
+                            "id": "7f8cbc3f-133a-472f-adf8-9657dbbb8694",
                             "name": "Invalid field",
                             "originalRequest": {
                                 "url": {
@@ -3664,7 +3664,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "9add264d-eb39-414e-81c3-b4a8727a43c9",
+                            "id": "79d1ac65-ae1e-4967-8851-5c1a3088f772",
                             "name": "Sale not found",
                             "originalRequest": {
                                 "url": {
@@ -3724,7 +3724,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "38896775-0045-4c25-b20d-3c2da0e1ac5d",
+                            "id": "5fb106c2-664a-4aa8-b5ef-0c60c5939d6e",
                             "name": "Tracking already on PayPal",
                             "originalRequest": {
                                 "url": {
@@ -3790,7 +3790,7 @@
                     }
                 },
                 {
-                    "id": "725ce4b7-8b33-4441-b7db-377ab4383846",
+                    "id": "60de0229-4ea6-4793-b706-cb7382a12cfb",
                     "name": "Create a PayPal order for a store product",
                     "request": {
                         "name": "Create a PayPal order for a store product",
@@ -3820,7 +3820,7 @@
                         "method": "POST",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"sku\": \"mugs\"\n}",
+                            "raw": "{\n  \"sku\": \"candle\"\n}",
                             "options": {
                                 "raw": {
                                     "headerFamily": "json",
@@ -3832,7 +3832,7 @@
                     },
                     "response": [
                         {
-                            "id": "7c012950-e526-45b0-92fc-e81bf179bd18",
+                            "id": "f6bfb720-2d93-4685-a1a6-d7d6f1819994",
                             "name": "PayPal order ID",
                             "originalRequest": {
                                 "url": {
@@ -3868,7 +3868,7 @@
                                 "method": "POST",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n  \"sku\": \"mugs\"\n}",
+                                    "raw": "{\n  \"sku\": \"candle\"\n}",
                                     "options": {
                                         "raw": {
                                             "headerFamily": "json",
@@ -3896,7 +3896,7 @@
                     }
                 },
                 {
-                    "id": "488d0ad4-0d41-420f-9c63-62a86af2c07b",
+                    "id": "a029ef5d-1a86-4469-a418-713a31968f2d",
                     "name": "Capture an approved PayPal order (idempotent per order)",
                     "request": {
                         "name": "Capture an approved PayPal order (idempotent per order)",
@@ -3934,7 +3934,7 @@
                     },
                     "response": [
                         {
-                            "id": "d9ff738d-c237-403a-a71f-540838ed5c8d",
+                            "id": "a07ede65-9722-4473-8e66-808661841a0a",
                             "name": "Capture result",
                             "originalRequest": {
                                 "url": {
@@ -3994,7 +3994,7 @@
             "description": "PayPal webhook receiver.",
             "item": [
                 {
-                    "id": "48e930de-6b2f-48a6-ae07-7b3cec3f64d8",
+                    "id": "2e471e8d-86fd-497e-a21a-bc548aceab9d",
                     "name": "PayPal webhook receiver (signature verified, deduplicated)",
                     "request": {
                         "name": "PayPal webhook receiver (signature verified, deduplicated)",
@@ -4024,7 +4024,7 @@
                         "method": "POST",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"key_0\": 4045.2178038524767\n}",
+                            "raw": "{\n  \"key_0\": 9464.513826889533,\n  \"key_1\": 9042,\n  \"key_2\": \"string\"\n}",
                             "options": {
                                 "raw": {
                                     "headerFamily": "json",
@@ -4036,7 +4036,7 @@
                     },
                     "response": [
                         {
-                            "id": "d02701be-d3fd-4516-9cd8-419334cd02f4",
+                            "id": "e3b9bf24-4e33-4daa-9076-f92fe2e7a203",
                             "name": "Accepted",
                             "originalRequest": {
                                 "url": {
@@ -4068,7 +4068,7 @@
                                 "method": "POST",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n  \"key_0\": 4045.2178038524767\n}",
+                                    "raw": "{\n  \"key_0\": 9464.513826889533,\n  \"key_1\": 9042,\n  \"key_2\": \"string\"\n}",
                                     "options": {
                                         "raw": {
                                             "headerFamily": "json",
@@ -4084,7 +4084,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "fe37f661-739e-48b4-8120-10c7292778da",
+                            "id": "9f7170a9-78b1-4a75-b44c-44a3e842ff1e",
                             "name": "Error",
                             "originalRequest": {
                                 "url": {
@@ -4120,7 +4120,7 @@
                                 "method": "POST",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n  \"key_0\": 4045.2178038524767\n}",
+                                    "raw": "{\n  \"key_0\": 9464.513826889533,\n  \"key_1\": 9042,\n  \"key_2\": \"string\"\n}",
                                     "options": {
                                         "raw": {
                                             "headerFamily": "json",
@@ -4137,7 +4137,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -4154,7 +4154,7 @@
             "description": "Demo data helpers for judges.",
             "item": [
                 {
-                    "id": "e57ed487-836f-4db8-9b7a-4dcb5b220af5",
+                    "id": "36aad5ff-1585-4139-9a6e-dc296aa17c89",
                     "name": "Restore this workspace's demo data",
                     "request": {
                         "name": "Restore this workspace's demo data",
@@ -4177,7 +4177,7 @@
                     },
                     "response": [
                         {
-                            "id": "ec9fd786-e233-4829-a235-bda56e48314b",
+                            "id": "b025d3c5-78a9-4083-8b2b-fc0951791a58",
                             "name": "Reset",
                             "originalRequest": {
                                 "url": {
@@ -4218,7 +4218,7 @@
                     }
                 },
                 {
-                    "id": "de6e29ae-8d96-46a8-9b4c-d03aaace9c8a",
+                    "id": "bfcec856-8898-4247-a38b-211f5e4945c3",
                     "name": "Create real overdue invoices in the PayPal sandbox",
                     "request": {
                         "name": "Create real overdue invoices in the PayPal sandbox",
@@ -4247,7 +4247,7 @@
                     },
                     "response": [
                         {
-                            "id": "87e2dacd-f6b9-4dac-8b1a-080ab4865b33",
+                            "id": "6c0a0d34-9e0a-4abb-a87e-ff994d386def",
                             "name": "Created",
                             "originalRequest": {
                                 "url": {
@@ -4282,7 +4282,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "7240c0db-f8d9-4af2-8a38-7557c5cdadcc",
+                            "id": "4f3cd8c9-8095-4e6b-8f1c-8c62d5955a7b",
                             "name": "Too many requests",
                             "originalRequest": {
                                 "url": {
@@ -4322,7 +4322,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"UNKNOWN_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"VALUE_NOT_IN_CITED_RECORD\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
+                            "body": "{\n  \"error\": \"<string>\",\n  \"issues\": [\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    },\n    {\n      \"code\": \"NO_CITATION\",\n      \"sentence\": \"<string>\",\n      \"detail\": \"<string>\"\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -4333,7 +4333,7 @@
                     }
                 },
                 {
-                    "id": "e8852e81-87ce-4541-bfa6-8612d4f0efc9",
+                    "id": "f2b13196-624a-4d4f-ba98-cb0c71b8a50d",
                     "name": "Add a demo dispute and run the agent",
                     "request": {
                         "name": "Add a demo dispute and run the agent",
@@ -4356,7 +4356,7 @@
                     },
                     "response": [
                         {
-                            "id": "fc299991-45a8-40df-bc2d-7f39e6662589",
+                            "id": "e00289e4-452d-44bc-ad69-a9a0de0646fa",
                             "name": "Agent result",
                             "originalRequest": {
                                 "url": {
@@ -4427,7 +4427,7 @@
         }
     ],
     "info": {
-        "_postman_id": "fb81bcde-2d9f-43b6-b994-4102e930b37f",
+        "_postman_id": "63d01966-1220-489e-9bad-2d7eb9a5b0cd",
         "name": "SellerShield API",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         "description": {
