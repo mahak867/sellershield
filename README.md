@@ -70,6 +70,8 @@ One autopilot policy and one audit log cover all of it. A small seller doesn't w
   - Checkbox bulk approve, quick search, number filters, a pinned totals row and CSV export.
   - A full audit log shows every action, who triggered it, live or simulated, and exactly what was sent.
 - **Protection-ready check on every sale:** `assessReadiness` in `lib/protection.js` runs the Seller Protection proof requirements on each order before any dispute. Each sale is Ready, Agent can fix, Waiting on carrier or Needs you.
+- **One click to make sales ready:** the readiness grid has a button that sends tracking to PayPal for every sale the agent can fix. Each upload is an agent proposal approved by its fingerprint.
+- **MCP server for other agents:** `POST /api/mcp` lets another AI agent check readiness, review the account and act, only inside the seller's autopilot limits (details below).
 - **Visible AI source:** every plan is labelled Claude or rules, and the header badge counts how many plans Claude wrote and how many fell back, with the last error on hover.
 - **KPIs:** sales protection-ready, money stuck or at risk, money protected, hours saved (an estimate: 45 minutes per dispute, 15 per tracking fix, 10 per reminder), actions taken.
 - **AG Charts:** a "where your money is stuck" chart (at risk vs protected by category) and a donut of dispute dollars by Seller Protection status.
@@ -161,6 +163,30 @@ npm run apimatic:portal
 npm run apimatic:plugin
 ```
 
+## Use SellerShield from another agent (MCP)
+
+SellerShield is also a Model Context Protocol server, so a seller's own assistant or a storefront agent can use it. It is one route, `POST /api/mcp` (Streamable HTTP, JSON-RPC 2.0), with no extra dependency (`lib/mcp.js`).
+
+| Tool | What it does |
+|---|---|
+| `get_protection_readiness` | Every sale checked against Seller Protection proof requirements, before any dispute |
+| `get_money_at_risk` | Open disputes, overdue invoices and orders whose tracking never reached PayPal |
+| `review_account` | Runs the agent: one proposal per item, each with a fingerprint and `withinPolicy` |
+| `approve_action` | Executes one proposal on PayPal, if the seller allows it |
+
+The outside agent gets no more power than the seller delegated:
+- It can only send the exact draft SellerShield proposed, named by its SHA-256 fingerprint.
+- `approve_action` is refused unless the seller has turned autopilot on **and** the proposal is inside the seller's limits and passes the citation check. A refused action stays queued for the seller.
+- Every action it takes is in the audit log as `mcp agent`.
+
+Copy the URL from **Connect your own agent** in the dashboard (it carries your demo workspace), then add it to an MCP client. For Claude Code:
+
+```bash
+claude mcp add --transport http sellershield "https://<your-app>/api/mcp?ws=<workspace-id>"
+```
+
+Then ask "Are my PayPal sales protected?". With autopilot off, the agent can report but not act.
+
 ## Real dispute, end to end (sandbox)
 
 PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open one:
@@ -174,7 +200,7 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 44 tests: Seller Protection rules, sale readiness, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 45 tests: Seller Protection rules, sale readiness, MCP limits, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
 
@@ -232,6 +258,7 @@ lib/toolkit.js   PayPal Agent Toolkit tools exposed to the Claude agent
 lib/paypal-sdk.js  Orders + Payments via the APIMatic-generated PayPal Server SDK
 lib/protection.js  PayPal Seller Protection eligibility check
 lib/evidence.js  Evidence records, citation checker, approval fingerprints
+lib/mcp.js       MCP endpoint: other agents act only inside the seller's limits
 lib/workspace.js Per-visitor isolated demo workspaces
 test/            npm test: unit + API tests (mock mode, no keys)
 bench/           Policy test suite: 30 labelled disputes, runner, results

@@ -99,6 +99,43 @@ test('readiness: sending tracking makes one more sale protection-ready', async (
   assert.equal(after.fixable, before.fixable - 1);
 });
 
+test('MCP: another agent can read, but may act only inside the seller\'s autopilot limits', async () => {
+  let sid = '';
+  const rpc = async (method, params, id = 1) => {
+    const r = await fetch(URL + '/api/mcp', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(sid ? { 'Mcp-Session-Id': sid } : {}) }, body: JSON.stringify({ jsonrpc: '2.0', id, method, params }) });
+    sid ||= r.headers.get('mcp-session-id') || '';
+    return r.json();
+  };
+  const call = async (name, args = {}) => (await rpc('tools/call', { name, arguments: args })).result;
+  const init = await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'test', version: '0' } });
+  assert.equal(init.result.serverInfo.name, 'sellershield');
+  assert.match(sid, /^[0-9a-f-]{36}$/);
+  const note = await fetch(URL + '/api/mcp', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Mcp-Session-Id': sid }, body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) });
+  assert.equal(note.status, 202);
+  assert.deepEqual((await rpc('tools/list')).result.tools.map((t) => t.name), ['get_protection_readiness', 'get_money_at_risk', 'review_account', 'approve_action']);
+  assert.equal((await call('get_protection_readiness')).structuredContent.ready, 3);
+
+  const { proposals } = (await call('review_account')).structuredContent;
+  const small = proposals.find((p) => p.id === 'hold:1AB23456CD789012E');
+  const big = proposals.find((p) => p.kind === 'invoice' && p.amount > 100);
+  assert.equal(small.withinPolicy, false); // autopilot is off by default
+  const off = await call('approve_action', { id: small.id, fingerprint: small.fingerprint });
+  assert.ok(off.isError); assert.match(off.content[0].text, /has not turned autopilot on/);
+
+  // The seller turns autopilot on in the same workspace (max $100, 80%).
+  await fetch(URL + '/api/autopilot', { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: `ss_ws=${sid}` }, body: JSON.stringify({ enabled: true, maxAmount: 100, minConfidence: 0.8 }) });
+  const over = await call('approve_action', { id: big.id, fingerprint: big.fingerprint });
+  assert.ok(over.isError); assert.match(over.content[0].text, /outside the seller's limits/);
+  const stale = await call('approve_action', { id: small.id, fingerprint: 'x'.repeat(64) });
+  assert.ok(stale.isError);
+  const done = await call('approve_action', { id: small.id, fingerprint: small.fingerprint });
+  assert.equal(done.structuredContent.done, true);
+  assert.equal((await call('get_protection_readiness')).structuredContent.ready, 4);
+  const risk = await (await fetch(URL + '/api/risk', { headers: { Cookie: `ss_ws=${sid}` } })).json();
+  assert.equal(risk.actions[0].by, 'mcp agent');
+  assert.equal((await rpc('nope')).error.code, -32601);
+});
+
 test('chat agent answers whether sales are protected', async () => {
   await post('/api/demo/reset');
   const r = await (await post('/api/agent/chat', { message: 'Are all my sales protected?' })).json();

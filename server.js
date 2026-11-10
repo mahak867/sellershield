@@ -10,6 +10,7 @@ import { workspaceMiddleware, workspaceId, SHARED, forEachWorkspace } from './li
 import { buildRecords, checkDraft, fingerprint, renderForPayPal } from './lib/evidence.js';
 import { disputePack } from './lib/pdf.js';
 import { catalogFacts, CHANNEL3_ON } from './lib/channel3.js';
+import { handleMcp } from './lib/mcp.js';
 
 const app = express();
 app.use(express.json({ limit: '100kb' }));
@@ -155,7 +156,7 @@ const qualifies = (p, ap) => ap.enabled && p.amount <= ap.maxAmount && p.confide
   && !(p.issues || []).length && !(p.kind === 'invoice' && p.scheduledFor > today());
 
 app.get('/api/status', (_req, res) => {
-  res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, ai: aiStats, channel3: CHANNEL3_ON, autopilot: store.autopilot });
+  res.json({ mockPaypal: MOCK_PAYPAL, mockAi: MOCK_AI, ai: aiStats, workspace: workspaceId(), channel3: CHANNEL3_ON, autopilot: store.autopilot });
 });
 
 app.get('/api/risk', async (_req, res, next) => {
@@ -351,6 +352,30 @@ app.post('/api/agent/chat', async (req, res, next) => {
       execute_proposal: async ({ id }) => execute(id, undefined, 'chat agent'),
     });
     res.json(out);
+  } catch (e) { next(e); }
+});
+
+// ---------- MCP: other agents can use SellerShield, inside the seller's limits ----------
+const brief = (p) => ({ id: p.id, kind: p.kind, target: p.target, amount: p.amount, decision: p.decision, confidence: p.confidence,
+  reasoning: p.reasoning, draft: p.draft, fingerprint: p.fingerprint, sellerProtection: p.protection?.status,
+  citationIssues: (p.issues || []).length, withinPolicy: qualifies(p, store.autopilot) });
+app.post('/api/mcp', async (req, res, next) => {
+  try {
+    await handleMcp(req, res, {
+      get_protection_readiness: async () => readinessSummary(store.orders),
+      get_money_at_risk: getRisk,
+      review_account: async () => ({ autopilot: store.autopilot, proposals: (await scan()).map(brief) }),
+      approve_action: async ({ id, fingerprint: fp }) => {
+        const p = store.proposals.find((x) => x.id === id);
+        if (!p) throw new Error(`Proposal ${id} not found. Call review_account first.`);
+        if (fp !== p.fingerprint) throw new Error('Fingerprint does not match the current draft. Call review_account again.');
+        if (!store.autopilot.enabled) throw new Error('Refused: the seller has not turned autopilot on, so no agent may act alone. It stays queued for the seller.');
+        if (!qualifies(p, store.autopilot)) throw new Error(`Refused: outside the seller's limits (max $${store.autopilot.maxAmount}, min confidence ${store.autopilot.minConfidence}) or fails the citation check. It stays queued for the seller.`);
+        const e = await execute(id, undefined, 'mcp agent');
+        activity('agent', `An outside agent (MCP) ran ${e.decision.replaceAll('_', ' ').toLowerCase()} on ${e.target} ($${e.amount.toFixed(2)}), inside your autopilot limits.`);
+        return { done: true, decision: e.decision, target: e.target, amount: e.amount, paypalCall: e.simulated ? 'simulated' : 'live', fingerprint: e.fingerprint };
+      },
+    }, workspaceId());
   } catch (e) { next(e); }
 });
 

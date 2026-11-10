@@ -149,6 +149,7 @@
   <section class="card">
     <div class="gridhead">
       <div><h2>Is every sale protected?</h2><p class="sub">Each sale is checked against PayPal's Seller Protection proof requirements <b>before</b> any dispute exists. The agent closes the gaps it can; the rest tells you who has to act.</p></div>
+      <div class="tools"><button id="fixAll" disabled title="The agent sends the tracking it has on file to PayPal for every sale it can fix">Send tracking to PayPal</button></div>
     </div>
     <div id="readyGrid" class="grid ag-theme-quartz"></div>
   </section>
@@ -193,6 +194,12 @@
         </div>
         <div class="chatlog" id="chatlog"></div>
         <div class="chat"><input id="q" placeholder="Ask about your money..."><button id="ask">Send</button></div>
+      </section>
+
+      <section class="card">
+        <h2>Connect your own agent</h2>
+        <p class="sub">SellerShield is also an MCP server. Another AI agent can check your sales and act, but only inside the autopilot limits above. Everything else is refused and waits for you.</p>
+        <div class="chat"><input id="mcpUrl" readonly aria-label="MCP server URL"><button class="ghost" id="mcpCopy">Copy</button></div>
       </section>
     </div>
   </div>
@@ -374,6 +381,8 @@ async function refresh() {
   if (rd) {
     const order = { AT_RISK: 0, AGENT_CAN_FIX: 1, WAITING: 2, READY: 3 };
     readyGrid.setGridOption('rowData', rd.rows.slice().sort((a, b) => order[a.status] - order[b.status]));
+    $('#fixAll').disabled = !rd.fixable;
+    $('#fixAll').textContent = rd.fixable ? `Send tracking to PayPal for ${rd.fixable} sale${rd.fixable === 1 ? '' : 's'}` : 'Nothing for the agent to fix';
     $('#kReady').textContent = `${rd.ready} of ${rd.total}`;
     $('#kReadySub').textContent = rd.fixable ? `agent can fix ${rd.fixable} more` : `${money(rd.amountReady)} of ${money(rd.amountTotal)}`;
   }
@@ -433,12 +442,14 @@ async function loadStatus() {
   const s = await api('/api/status');
   $('#mode').innerHTML = `<span class="badge ${s.mockPaypal ? '' : 'live'}">PayPal ${s.mockPaypal ? 'mock' : 'sandbox'}</span><span class="badge ${s.mockAi || (s.ai.rules && !s.ai.claude) ? '' : 'live'}" title="${esc(s.ai.lastError ? 'Last Claude error: ' + s.ai.lastError : 'Plans written by Claude vs the rule-based fallback')}">${s.mockAi ? 'AI rules (no key)' : s.ai.rules && !s.ai.claude ? 'Claude failing, using rules' : `Claude live${s.ai.claude ? ` · ${s.ai.claude} plans` : ''}${s.ai.rules ? ` · ${s.ai.rules} fell back` : ''}`}</span><span class="badge ${s.channel3 ? 'live' : ''}" title="Product catalog facts for not-as-described disputes">Channel3 ${s.channel3 ? 'live' : 'demo'}</span>`;
   $('#seed').hidden = s.mockPaypal;
+  $('#mcpUrl').value = `${location.origin}/api/mcp?ws=${s.workspace}`;
   setAp(s.autopilot);
 }
 function setAp(a) {
   $('#apOn').checked = a.enabled; $('#apMax').value = a.maxAmount; $('#apConf').value = a.minConfidence;
   $('#apMaxV').textContent = '$' + a.maxAmount; $('#apConfV').textContent = Math.round(a.minConfidence * 100) + '%';
 }
+$('#mcpCopy').onclick = async () => { try { await navigator.clipboard.writeText($('#mcpUrl').value); toast('MCP URL copied'); } catch { $('#mcpUrl').select(); } };
 const saveAp = async () => setAp(await api('/api/autopilot', { enabled: $('#apOn').checked, maxAmount: $('#apMax').value, minConfidence: $('#apConf').value }));
 $('#apOn').onchange = saveAp; $('#apMax').oninput = $('#apConf').oninput = saveAp;
 
@@ -451,6 +462,19 @@ $('#run').onclick = async () => {
     await refresh(); loadStatus();
   } catch (e) { $('#props').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
   $('#run').disabled = false; $('#run').textContent = 'Run agent';
+};
+
+// One click: the agent proposes a tracking upload for each fixable sale, and this approves those
+// exact proposals (each bound to its fingerprint, like any other approval).
+$('#fixAll').onclick = async () => {
+  $('#fixAll').disabled = true; $('#fixAll').textContent = 'Sending tracking...';
+  let done = 0;
+  try {
+    const r = await api('/api/agent/scan', {});
+    for (const p of r.proposals.filter((x) => x.kind === 'hold')) { try { await api('/api/agent/approve', { id: p.id, fingerprint: p.fingerprint }); done++; } catch (e) { toast(e.message); } }
+    toast(done ? `Tracking sent to PayPal for ${done} sale${done === 1 ? '' : 's'}` : 'Nothing to send');
+  } catch (e) { toast(e.message); }
+  await refresh();
 };
 
 $('#reset').onclick = async () => { await api('/api/demo/reset', {}); $('#chatlog').innerHTML = ''; $('#feed').innerHTML = '<div class="mute">Waiting for events...</div>'; toast('Demo reset'); await refresh(); };
