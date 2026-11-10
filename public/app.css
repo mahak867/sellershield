@@ -160,3 +160,18 @@ code { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
 /* Tags inside grid cells: keep them pill-height, not row-height. */
 .ag-theme-quartz .ag-cell .tag { line-height:1.5; padding:2px 8px; vertical-align:middle; }
 .kpi small:first-child { font-size:11.5px; }
+
+/* Charts: hero figures, the segmented-bar strip and its HTML legend. Text uses text tokens only. */
+.chart.mid { height:196px; } .chart.strip { height:44px; margin-top:8px; }
+.hero-num { display:flex; align-items:baseline; gap:8px; margin:-4px 0 6px; }
+.hero-num b { font-size:26px; font-weight:750; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.hero-num span { color:var(--mute); font-size:13px; }
+.viz-legend { list-style:none; margin:12px 0 0; padding:0; display:grid; gap:2px; font-size:13.5px; }
+.viz-legend li { display:grid; grid-template-columns:12px 1fr auto 44px; gap:10px; align-items:center; padding:7px 0; border-top:1px solid var(--line); }
+.viz-legend li:first-child { border-top:0; }
+.viz-legend i { width:10px; height:10px; border-radius:3px; }
+.viz-legend span { color:var(--ink); } .viz-legend b { font-variant-numeric:tabular-nums; font-weight:600; }
+.viz-legend em { font-style:normal; color:var(--mute); text-align:right; font-variant-numeric:tabular-nums; }
+.ag-chart-tooltip { border-radius:10px !important; font-family:Inter, system-ui, sans-serif !important; font-size:12.5px !important; }
+/* AG Charts adds hidden helper buttons for keyboard users; keep the page's button styling off them. */
+.chart button, .chart button:hover:not(:disabled) { background:none; box-shadow:none; border:0; min-height:0; padding:0; transform:none; }

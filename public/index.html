@@ -58,9 +58,11 @@
   </section>
 
   <section class="card charts">
-    <div><h2>Where your money is stuck</h2><p class="sub">At risk vs protected by the agent, per category (AG Charts).</p><div id="chartRisk" class="chart"></div></div>
-    <div><h2>Protected over time</h2><p class="sub">Running total of money the agent protected; hover a point to see who acted (seller, autopilot, calendar, chat).</p><div id="chartTime" class="chart"></div></div>
-    <div><h2>Disputes by Seller Protection</h2><p class="sub">Dollars in dispute, by PayPal coverage. Run the agent to classify.</p><div id="chartCover" class="chart"></div></div>
+    <div><h2>Where your money is stuck</h2><p class="sub">By category: what is still at risk, and what the agent has already protected.</p><div id="chartRisk" class="chart"></div></div>
+    <div><h2>Protected by the agent</h2><p class="sub">Running total. Hover a point to see the action and who triggered it.</p>
+      <div class="hero-num"><b id="timeHero">$0.00</b><span id="timeHeroSub">no actions yet</span></div><div id="chartTime" class="chart mid"></div></div>
+    <div><h2>Disputes by Seller Protection</h2><p class="sub">Dollars in open disputes, by whether PayPal's Seller Protection covers them.</p>
+      <div class="hero-num"><b id="coverHero">$0.00</b><span>in open disputes</span></div><div id="chartCover" class="chart strip"></div><ul id="coverLegend" class="viz-legend"></ul></div>
   </section>
 
   <div class="cols">

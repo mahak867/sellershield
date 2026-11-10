@@ -73,7 +73,7 @@ Disputes tagged **demo** are sample data, and actions on them are simulated. A r
 - **Autopilot:** the seller sets a max amount and minimum confidence. The agent acts alone inside those limits and queues everything else.
 - **Record-cited evidence:** a dispute response may only state facts from numbered records (the PayPal dispute, the PayPal capture and order, the seller's order book, a Channel3 product record, a buyer agent mandate). Any sentence with an amount, date or ID must cite a record, like `[R2]`, and every value must match that record in full. Otherwise Approve is disabled and the API refuses with `422`.
 - **Approval fingerprints:** each proposal carries a SHA-256 fingerprint of exactly what will be sent. Edit one character and it needs a new approval (`409` if stale). Autopilot, the chat agent and outside agents can only send the exact draft that was proposed.
-- **Evidence PDF pack:** the response, the Seller Protection checklist and every cited record in one document, attached to the `provide-evidence` call and downloadable from the dispute card.
+- **Evidence PDF pack:** a designed two-page document with a case summary, the Seller Protection verdict, the response, a pass/fail checklist and a table for every cited record, with the approval fingerprint in the footer. It is attached to the `provide-evidence` call and downloadable from the dispute card. Written by a small dependency-free PDF writer (`lib/pdf.js`).
 - **Audit log:** every action, who triggered it, which PayPal API it used (such as `Disputes: provide-evidence` or `Orders v2: track`), live or simulated, and the approved fingerprint.
 - **Visible AI source:** every plan is labelled Claude or rules, and the header badge counts how many plans Claude wrote and how many fell back, with the last error on hover.
 
@@ -93,7 +93,7 @@ Disputes tagged **demo** are sample data, and actions on them are simulated. A r
 ### Dashboard
 
 - **AG Grid:** three grids. Sale readiness (expandable checklists, proof entry, bulk tracking upload), money at risk (urgency ranking, the agent's call per row, drafts edited in the grid, bulk approve, search, totals, CSV export) and the audit log.
-- **AG Charts:** where the money is stuck, money protected over time, and dispute dollars by Seller Protection status.
+- **AG Charts:** where the money is stuck (at risk vs protected, per category), money protected over time, and open disputes split by Seller Protection status as one segmented bar. Series colours were checked for colour-blind separation and contrast in both themes; status is always shown with a label and an amount, never colour alone.
 - **Bryntum Scheduler:** deadlines, overdue periods, holds and sale journeys on one timeline. Drag a proposed action onto a day to approve it for that day; drag a reminder to reschedule it.
 - **KPIs:** sales protection-ready, money stuck or at risk, money protected, hours saved (an estimate: 45 minutes per dispute, 15 per tracking fix, 10 per reminder), actions taken.
 - **State survives restarts:** orders, proposals, the autopilot policy and the audit log are kept in Render Key Value (or a JSON file).
@@ -284,6 +284,8 @@ It needs Playwright (`npm i -D playwright && npx playwright install chromium`).
 ![Every sale checked against Seller Protection](docs/screenshots/7-sale-readiness.png)
 
 ![Buyer agent](docs/screenshots/8-buyer-agent.png)
+
+![Evidence PDF pack](docs/screenshots/9-evidence-pdf-1.png)
 
 | | |
 |---|---|

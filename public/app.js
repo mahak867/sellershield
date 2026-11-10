@@ -309,56 +309,95 @@ function protBox(pr) {
 }
 
 // ---------- AG Charts ----------
+// Colour is assigned by job. Series identity uses two categorical hues (blue, orange) that were
+// checked for colour-blind separation and contrast on both card surfaces. Seller Protection
+// status uses the reserved status colours and always ships with a text label and a value.
+// Text, axes and grid use the page's text tokens, never a series colour.
 const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-const chartTheme = { baseTheme: dark ? 'ag-default-dark' : 'ag-default', overrides: { common: { background: { fill: 'transparent' } } } };
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const VIZ = {
+  protected: dark ? '#3987e5' : '#2a78d6', atRisk: dark ? '#d95926' : '#eb6834',
+  good: '#0ca30c', warning: '#fab219', critical: '#d03b3b', neutral: dark ? '#5d6679' : '#aab2c0',
+  surface: css('--card'), ink: css('--ink'), mute: css('--mute'), grid: css('--line'),
+};
+const usd = (v) => '$' + Math.round(v).toLocaleString();
+const usd2 = (v) => '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const axisText = { color: VIZ.mute, fontSize: 12, fontFamily: 'Inter, system-ui, sans-serif' };
+const quietAxis = { line: { enabled: false }, tick: { enabled: false }, label: axisText };
+const moneyAxis = (position) => ({ type: 'number', position, nice: true, ...quietAxis, label: { ...axisText, formatter: ({ value }) => usd(value) },
+  gridLine: { style: [{ stroke: VIZ.grid, lineDash: [3, 4] }] } });
+const chartTheme = {
+  baseTheme: dark ? 'ag-default-dark' : 'ag-default',
+  overrides: { common: {
+    background: { fill: 'transparent' }, padding: { top: 6, right: 28, bottom: 4, left: 4 },
+    legend: { position: 'bottom', spacing: 14, item: { paddingX: 18, marker: { size: 9, shape: 'square' }, label: { color: VIZ.mute, fontSize: 12.5, fontFamily: 'Inter, system-ui, sans-serif' } } },
+  } },
+};
+const tip = (title, rows) => ({ title, content: rows.map(([k, v]) => `<div style="display:flex;justify-content:space-between;gap:18px"><span>${k}</span><b>${v}</b></div>`).join('') });
 let riskChart, coverChart, timeChart;
 function renderCharts(r) {
   if (!window.agCharts) return;
-  const cat = (k) => (k === 'dispute' ? 'Disputes' : k === 'invoice' ? 'Overdue invoices' : 'Tracking / holds');
   const sum = (xs) => xs.reduce((s, x) => s + x.amount, 0);
   const protectedBy = (k) => r.actions.filter((a) => a.kind === k && a.decision !== 'ACCEPT').reduce((s, a) => s + a.amount, 0);
+
+  // 1. Where the money is stuck: one bar per category, still at risk vs protected by the agent.
   const data = [
-    { category: cat('hold'), risk: sum(r.holds), saved: protectedBy('hold') },
-    { category: cat('invoice'), risk: sum(r.invoices), saved: protectedBy('invoice') },
-    { category: cat('dispute'), risk: sum(r.disputes), saved: protectedBy('dispute') },
+    { category: 'Tracking / holds', risk: sum(r.holds), saved: protectedBy('hold') },
+    { category: 'Overdue invoices', risk: sum(r.invoices), saved: protectedBy('invoice') },
+    { category: 'Disputes', risk: sum(r.disputes), saved: protectedBy('dispute') },
   ];
-  const fmt = { formatter: ({ value }) => (value >= 250 ? '$' + Math.round(value).toLocaleString() : '') };
+  const peak = Math.max(1, ...data.map((d) => d.risk + d.saved));
+  const bar = (yKey, yName, fill) => ({ type: 'bar', direction: 'horizontal', xKey: 'category', yKey, yName, stacked: true, fill,
+    stroke: VIZ.surface, strokeWidth: 2, cornerRadius: 4,
+    // Label only segments wide enough to hold the figure; the tooltip and axis carry the rest.
+    label: { color: '#fff', fontSize: 12, fontWeight: 600, formatter: ({ value }) => (value / peak >= 0.16 ? usd(value) : '') },
+    tooltip: { renderer: ({ datum }) => tip(datum.category, [['Still at risk', usd2(datum.risk)], ['Protected by agent', usd2(datum.saved)]]) } });
   const riskOpts = {
     container: $('#chartRisk'), data, theme: chartTheme,
-    series: [
-      { type: 'bar', direction: 'horizontal', xKey: 'category', yKey: 'risk', yName: 'At risk', stacked: true, fill: '#d93025', label: fmt },
-      { type: 'bar', direction: 'horizontal', xKey: 'category', yKey: 'saved', yName: 'Protected by agent', stacked: true, fill: '#1e8e3e', label: fmt },
-    ],
-    axes: [{ type: 'category', position: 'left' }, { type: 'number', position: 'bottom', label: { formatter: ({ value }) => '$' + value.toLocaleString() } }],
-    legend: { position: 'bottom' },
+    series: [bar('saved', 'Protected by agent', VIZ.protected), bar('risk', 'Still at risk', VIZ.atRisk)],
+    axes: [{ type: 'category', position: 'left', ...quietAxis, label: { ...axisText, color: VIZ.ink, fontSize: 12.5 }, paddingInner: 0.45, paddingOuter: 0.25 }, moneyAxis('bottom')],
   };
+
+  // 2. Protected over time: one series, so no legend; the title names it.
+  const acts = r.actions.filter((a) => a.decision !== 'ACCEPT').slice().sort((a, b) => a.at.localeCompare(b.at));
+  let run = 0;
+  const timeData = acts.map((a) => { run += a.amount; return { t: new Date(a.at), total: run, amount: a.amount, by: a.by, what: `${a.decision.replaceAll('_', ' ').toLowerCase()} · ${a.kind}` }; });
+  $('#timeHero').textContent = usd2(run);
+  $('#timeHeroSub').textContent = acts.length ? `across ${acts.length} action${acts.length === 1 ? '' : 's'}` : 'no actions yet';
+  const timeOpts = {
+    container: $('#chartTime'), data: timeData, theme: chartTheme,
+    series: [{ type: 'area', xKey: 't', yKey: 'total', yName: 'Protected (running total)', fill: VIZ.protected, fillOpacity: 0.12, stroke: VIZ.protected, strokeWidth: 2,
+      marker: { enabled: true, size: 8, fill: VIZ.protected, stroke: VIZ.surface, strokeWidth: 2 },
+      tooltip: { renderer: ({ datum }) => tip(datum.t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), [['Added', '+' + usd2(datum.amount)], ['Action', datum.what], ['Triggered by', datum.by], ['Running total', usd2(datum.total)]]) } }],
+    axes: [{ type: 'time', position: 'bottom', ...quietAxis, label: axisText, nice: false }, moneyAxis('left')],
+    legend: { enabled: false },
+    overlays: { noData: { text: 'Approve an action or turn on autopilot to see this grow.' } },
+  };
+
+  // 3. Disputes by Seller Protection: one whole split into parts, so a segmented bar, not a donut.
   const byStatus = { LIKELY_COVERED: 0, NEEDS_EVIDENCE: 0, NOT_COVERED: 0, UNCHECKED: 0 };
   const prop = Object.fromEntries(r.proposals.map((p) => [p.target, p]));
   for (const d of r.disputes) byStatus[prop[d.dispute_id]?.protection?.status || 'UNCHECKED'] += d.amount;
-  const coverData = [
-    { status: 'Likely covered', amount: byStatus.LIKELY_COVERED, color: '#1e8e3e' },
-    { status: 'Evidence missing', amount: byStatus.NEEDS_EVIDENCE, color: '#e37400' },
-    { status: 'Not covered', amount: byStatus.NOT_COVERED, color: '#d93025' },
-    { status: 'Not checked yet', amount: byStatus.UNCHECKED, color: '#9aa0a6' },
-  ].filter((x) => x.amount > 0);
+  const parts = [
+    { key: 'LIKELY_COVERED', name: 'Likely covered', mark: '✓', color: VIZ.good },
+    { key: 'NEEDS_EVIDENCE', name: 'Evidence missing', mark: '!', color: VIZ.warning },
+    { key: 'NOT_COVERED', name: 'Not covered', mark: '✗', color: VIZ.critical },
+    { key: 'UNCHECKED', name: 'Not checked yet', mark: '?', color: VIZ.neutral },
+  ];
+  const total = sum(r.disputes);
+  $('#coverHero').textContent = usd2(total);
+  // The legend is plain HTML: swatch, mark, label and amount, so status is never colour alone.
+  $('#coverLegend').innerHTML = parts.filter((x) => byStatus[x.key] > 0 || x.key !== 'UNCHECKED').map((x) =>
+    `<li><i style="background:${x.color}"></i><span>${x.mark} ${x.name}</span><b>${usd2(byStatus[x.key])}</b><em>${total ? Math.round((byStatus[x.key] / total) * 100) : 0}%</em></li>`).join('');
   const coverOpts = {
-    container: $('#chartCover'), data: coverData, theme: chartTheme,
-    series: [{ type: 'donut', angleKey: 'amount', legendItemKey: 'status', innerRadiusRatio: 0.62, fills: coverData.map((x) => x.color),
-      calloutLabel: { enabled: false }, sectorLabel: { formatter: ({ value }) => '$' + Math.round(value) },
-      innerLabels: [{ text: '$' + Math.round(sum(r.disputes)).toLocaleString(), fontSize: 20, fontWeight: 'bold' }, { text: 'in dispute' }] }],
-    legend: { position: 'bottom' },
-  };
-  // Running total protected (non-ACCEPT actions), one series per actor.
-  const acts = r.actions.filter((a) => a.decision !== 'ACCEPT').slice().sort((a, b) => a.at.localeCompare(b.at));
-  let run = 0;
-  const timeData = acts.map((a) => { run += a.amount; return { t: new Date(a.at), total: run, amount: a.amount, by: a.by }; });
-  const timeOpts = {
-    container: $('#chartTime'), data: timeData, theme: chartTheme,
-    series: [{ type: 'line', xKey: 't', yKey: 'total', yName: 'Protected (running total)', stroke: '#1e8e3e', marker: { fill: '#1e8e3e' },
-      tooltip: { renderer: ({ datum }) => ({ content: `+$${datum.amount.toFixed(2)} by ${datum.by} · $${datum.total.toFixed(2)} total` }) } }],
-    axes: [{ type: 'time', position: 'bottom', label: { format: '%H:%M' } }, { type: 'number', position: 'left', label: { formatter: ({ value }) => '$' + value.toLocaleString() } }],
-    legend: { position: 'bottom' },
-    overlays: { noData: { text: 'No actions yet. Approve something or turn on autopilot.' } },
+    container: $('#chartCover'), data: [{ whole: 'Disputes', ...byStatus }], theme: chartTheme,
+    series: parts.map((x) => ({ type: 'bar', direction: 'horizontal', xKey: 'whole', yKey: x.key, yName: x.name, stacked: true, fill: x.color,
+      stroke: VIZ.surface, strokeWidth: 2, cornerRadius: 4,
+      tooltip: { renderer: ({ datum }) => tip(x.name, [['In dispute', usd2(datum[x.key])], ['Share', (total ? Math.round((datum[x.key] / total) * 100) : 0) + '%']]) } })),
+    axes: [{ type: 'category', position: 'left', line: { enabled: false }, tick: { enabled: false }, label: { enabled: false }, paddingInner: 0, paddingOuter: 0 },
+      { type: 'number', position: 'bottom', line: { enabled: false }, tick: { enabled: false }, label: { enabled: false }, gridLine: { enabled: false }, nice: false, max: total || 1 }],
+    legend: { enabled: false }, padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    overlays: { noData: { text: 'No open disputes.' } },
   };
   if (timeChart) timeChart.update(timeOpts); else timeChart = agCharts.AgCharts.create(timeOpts);
   if (riskChart) riskChart.update(riskOpts); else riskChart = agCharts.AgCharts.create(riskOpts);
