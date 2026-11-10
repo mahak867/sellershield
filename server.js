@@ -465,7 +465,7 @@ app.post('/api/shop/capture', async (req, res, next) => {
     store.orders.unshift({
       demo: false, live: true, orderId: c.orderId, transactionId: c.captureId, item: p.name,
       buyer: c.buyer || 'sandbox buyer', amount: c.amount, carrier: p.carrier, trackingNumber: tracking,
-      delivered: null, onHold: true, daysHeld: 0, captureStatus: c.captureStatus, paypalProtection: c.sellerProtection,
+      delivered: null, onHold: true, daysHeld: 0, soldAt: today(), trackingSentAt: null, captureStatus: c.captureStatus, paypalProtection: c.sellerProtection,
     });
     res.json(c);
     activity('sale', `New PayPal Checkout sale: ${p.name} for $${c.amount.toFixed(2)} (capture ${c.captureId}). Protection check: not ready, PayPal has no tracking yet. The agent can fix that.`);
@@ -501,7 +501,7 @@ app.post('/api/orders', async (req, res, next) => {
     if (!(amount > 0) || amount > 1e6) return res.status(400).json({ error: 'amount must be a positive number' });
     const o = { demo: MOCK_PAYPAL, live: !MOCK_PAYPAL, external: true, transactionId: tx, orderId: b.orderId ? String(b.orderId) : undefined, item,
       buyer: String(b.buyer || 'buyer').slice(0, 120), amount, carrier: carrier || undefined, trackingNumber: tracking, delivered: b.delivered || null,
-      addressMatches: b.addressMatches !== false, onHold: true, daysHeld: 0, captureStatus, paypalProtection: protection };
+      addressMatches: b.addressMatches !== false, onHold: true, daysHeld: 0, soldAt: today(), trackingSentAt: null, captureStatus, paypalProtection: protection };
     store.orders.unshift(o);
     const readiness = assessReadiness(o);
     res.status(201).json({ transactionId: tx, item, amount, readiness });

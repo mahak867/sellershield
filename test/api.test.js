@@ -191,6 +191,21 @@ test('seller can type missing proof for a sale; tracking locks once it is on Pay
   await post('/api/demo/reset');
 });
 
+test('sale journey: sending tracking ends the time a sale spends without proof', async () => {
+  await post('/api/demo/reset');
+  const risk = async () => (await fetch(URL + '/api/risk', { headers: { Cookie: cookie } })).json();
+  const before = (await risk()).readiness;
+  const wallet = before.rows.find((r) => r.transactionId === '1AB23456CD789012E');
+  assert.ok(wallet.soldAt); assert.equal(wallet.trackingSentAt, null);
+  assert.ok(before.avgDaysExposed > 0);
+  const { proposals } = await (await post('/api/agent/scan')).json();
+  const hold = proposals.find((x) => x.target === wallet.transactionId);
+  await post('/api/agent/approve', { id: hold.id, fingerprint: hold.fingerprint });
+  const after = (await risk()).readiness.rows.find((r) => r.transactionId === wallet.transactionId);
+  assert.equal(after.trackingSentAt, new Date().toISOString().slice(0, 10));
+  await post('/api/demo/reset');
+});
+
 test('chat agent answers whether sales are protected', async () => {
   await post('/api/demo/reset');
   const r = await (await post('/api/agent/chat', { message: 'Are all my sales protected?' })).json();

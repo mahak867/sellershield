@@ -85,7 +85,7 @@
   @media (max-width:1100px) { .charts { grid-template-columns:1fr 1fr; } }
   @media (max-width:700px) { .charts { grid-template-columns:1fr; } }
   .chart { height:260px; }
-  .timeline { height:380px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .timeline { height:520px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
   .grid { height:280px; } .grid.tall { height:360px; }
   .gridhead { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
   .gridhead .tools { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
@@ -218,7 +218,7 @@
 
   <section class="card">
     <div class="gridhead">
-      <div><h2>Agent calendar</h2><p class="sub">Every deadline, overdue period and hold on one timeline (Bryntum Scheduler). Each <b>purple</b> bar is an action the agent proposes: <b>drag it onto a day to approve it for that day</b> (bound to its fingerprint; PayPal deadlines enforced). Green = approved; the agent runs it on that day.</p></div>
+      <div><h2>Agent calendar</h2><p class="sub">Every deadline, overdue period, hold and <b>sale journey</b> on one timeline (Bryntum Scheduler). For each sale, the red bar is the time PayPal had no proof, followed by transit and protection-ready, linked by arrows. Each <b>purple</b> bar is an action the agent proposes: <b>drag it onto a day to approve it for that day</b> (bound to its fingerprint; PayPal deadlines enforced). Green = approved; the agent runs it on that day.</p></div>
     </div>
     <div id="timeline" class="timeline"></div>
   </section>
@@ -410,7 +410,7 @@ async function refresh() {
     $('#fixAll').disabled = !rd.fixable;
     $('#fixAll').textContent = rd.fixable ? `Send tracking to PayPal for ${rd.fixable} sale${rd.fixable === 1 ? '' : 's'}` : 'Nothing for the agent to fix';
     $('#kReady').textContent = `${rd.ready} of ${rd.total}`;
-    $('#kReadySub').textContent = rd.fixable ? `agent can fix ${rd.fixable} more` : `${money(rd.amountReady)} of ${money(rd.amountTotal)}`;
+    $('#kReadySub').textContent = (rd.fixable ? `agent can fix ${rd.fixable} more` : `${money(rd.amountReady)} of ${money(rd.amountTotal)}`) + ` · ${rd.avgDaysExposed} days without proof on average`;
   }
   const protectedAmt = r.actions.filter((a) => a.decision !== 'ACCEPT').reduce((s, a) => s + a.amount, 0);
   $('#kRisk').textContent = money(rows.reduce((s, x) => s + x.amount, 0));
@@ -719,6 +719,28 @@ window.sellershieldTimeline = (r) => {
     if (!o.live) events.push({ id: id + ':est', resourceId: id, startDate: plus(today, 1), endDate: plus(since, 21), draggable: false, eventColor: 'gray', eventStyle: 'dashed',
       name: 'Est. release (typical 21-day hold)', tip: 'Estimate only: PayPal sets the actual release date.' });
   }
+  // Sale journeys: paid -> tracking on PayPal -> delivered -> protection-ready, linked by arrows.
+  // The red bar is the time a sale spent with no proof on PayPal: the window the agent closes.
+  const journeyDeps = [];
+  for (const s of r.readiness?.rows || []) {
+    if (!s.soldAt || resources.some((x) => x.id === 'hold:' + s.transactionId)) continue; // held sales already have a row
+    const id = 'sale:' + s.transactionId, sold = at(s.soldAt), tomorrow = plus(today, 1);
+    resources.push({ id, name: `Sale: ${s.item}${s.demo ? ' (demo)' : ''}`, amount: s.amount });
+    const sent = s.trackingSentAt ? at(s.trackingSentAt) : null, deliv = s.delivered ? at(s.delivered) : null;
+    const span = (a, b) => (b > a ? b : plus(a, 1));
+    events.push({ id: id + ':exposed', resourceId: id, startDate: sold, endDate: span(sold, sent || tomorrow), draggable: false, eventColor: 'red', cls: 'ss-journey',
+      name: sent ? 'No proof' : 'No proof on PayPal yet', tip: sent ? `Paid ${s.soldAt}. PayPal had no tracking until ${s.trackingSentAt}.` : `Paid ${s.soldAt}. PayPal still has no tracking for this sale.` });
+    if (sent) {
+      events.push({ id: id + ':transit', resourceId: id, startDate: sent, endDate: span(sent, deliv || tomorrow), draggable: false, eventColor: 'orange', cls: 'ss-journey',
+        name: deliv ? 'In transit' : 'In transit, not delivered yet', tip: `Tracking ${s.carrier} ${s.trackingNumber} on PayPal since ${s.trackingSentAt}.` });
+      journeyDeps.push({ id: 'jd1:' + id, from: id + ':exposed', to: id + ':transit' });
+    }
+    if (sent && deliv) {
+      events.push({ id: id + ':ready', resourceId: id, startDate: deliv, endDate: span(deliv, tomorrow), draggable: false, eventColor: s.status === 'READY' ? 'green' : 'gray', cls: 'ss-journey',
+        name: s.status === 'READY' ? 'Protection-ready' : 'Delivered', tip: s.status === 'READY' ? `Delivered ${s.delivered}. Meets the Seller Protection proof requirements.` : `Delivered ${s.delivered}, but another check fails. Open the sale in the readiness grid.` });
+      journeyDeps.push({ id: 'jd2:' + id, from: id + ':transit', to: id + ':ready' });
+    }
+  }
   // Agent calendar: every proposed action sits on its row. Drag it onto a day to approve it for that day.
   // Disputes missing proof get a two-step plan: seller task (get delivery confirmation) -> agent action.
   const deps = [];
@@ -753,7 +775,7 @@ window.sellershieldTimeline = (r) => {
   }
   sched.resourceStore.data = resources;
   sched.eventStore.data = events;
-  sched.dependencyStore.data = deps;
+  sched.dependencyStore.data = [...deps, ...journeyDeps];
 };
 if (window.__ssData) window.sellershieldTimeline(window.__ssData);
 </script>

@@ -512,6 +512,7 @@ components:
             total: { type: integer }
             ready: { type: integer }
             fixable: { type: integer, description: Sales the agent can make ready itself }
+            avgDaysExposed: { type: number, description: Average days a sale spent with no proof on PayPal }
             amountTotal: { type: number }
             amountReady: { type: number }
             rows:
