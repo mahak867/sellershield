@@ -50,6 +50,19 @@ test('dispute plan: structured output request and parsed result', async () => {
   assert.equal(req.body.thinking, undefined); // never send disabled thinking or a budget
 });
 
+test('the same dispute is planned once: a re-scan reuses the plan and its draft', async () => {
+  const { ai } = await import('../lib/ai.js');
+  const d = { ...dispute, dispute_id: 'PP-D-CACHE' };
+  const reply = { stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify({ decision: 'FIGHT', confidence: 0.8, reasoning: 'r', draft: 'First draft.' }) }] };
+  replies = [reply, { ...reply, content: [{ type: 'text', text: JSON.stringify({ decision: 'ACCEPT', confidence: 0.2, reasoning: 'r', draft: 'Second draft.' }) }] }];
+  const n = seen.length;
+  const a = await ai.planDispute(d, null, { status: 'LIKELY_COVERED' }, []);
+  const b = await ai.planDispute(d, null, { status: 'LIKELY_COVERED' }, []);
+  assert.equal(seen.length, n + 1);
+  assert.equal(b.draft, a.draft);
+  replies = [];
+});
+
 test('a refusal falls back to the rules planner', async () => {
   const { ai } = await import('../lib/ai.js');
   replies = [{ stop_reason: 'refusal', stop_details: { type: 'refusal', category: 'cyber' }, content: [] }];

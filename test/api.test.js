@@ -136,6 +136,20 @@ test('MCP: another agent can read, but may act only inside the seller\'s autopil
   assert.equal((await rpc('nope')).error.code, -32601);
 });
 
+test('demo data never goes stale: no demo dispute is past its deadline', async () => {
+  await post('/api/demo/reset');
+  const { proposals } = await (await post('/api/agent/scan')).json();
+  const disputes = proposals.filter((p) => p.kind === 'dispute');
+  assert.equal(disputes.length, 4);
+  for (const d of disputes) assert.ok(d.protection.checks[0].pass, `${d.target} deadline passed`);
+  assert.equal(disputes.find((d) => d.target === 'PP-D-1001').decision, 'FIGHT');
+});
+
+test('ids that could reach other PayPal paths are rejected', async () => {
+  assert.equal((await post('/api/disputes/..%2F..%2Fv2%2Fx/sandbox-settle')).status, 400);
+  assert.equal((await post('/api/shop/capture', { orderId: '../../v1/x', sku: 'wallet' })).status, 400);
+});
+
 test('chat agent answers whether sales are protected', async () => {
   await post('/api/demo/reset');
   const r = await (await post('/api/agent/chat', { message: 'Are all my sales protected?' })).json();

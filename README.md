@@ -200,9 +200,17 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 45 tests: Seller Protection rules, sale readiness, MCP limits, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 48 tests: Seller Protection rules, sale readiness, MCP limits, plan reuse, citation checker, fingerprints, API guardrails, autopilot limits
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
+
+A browser smoke test clicks through every main flow (run agent, citation block, approve, evidence PDF, one-click tracking, autopilot on a simulated dispute, chat, calendar, reset, phone width) and prints PASS or FAIL per step. Start the app without keys, then:
+
+```bash
+npm run smoke
+```
+
+It needs Playwright (`npm i -D playwright && npx playwright install chromium`).
 
 ## Screenshots
 
@@ -240,6 +248,8 @@ Every event is checked with PayPal's `verify-webhook-signature` API before the a
 
 - **Rate limits:** API writes are capped per IP. "Load sandbox data" (which creates real sandbox invoices) is capped per IP and per day.
 - **No double-sends:** one in-flight execution per item. For real PayPal objects, there's one write per item per 10 minutes across all visitors, so two judges can't both answer the same dispute.
+- **Capped AI spend:** routes that make Claude think are limited to 20 calls a minute per IP, and the same dispute or invoice is planned once an hour, so a re-scan reuses the plan instead of paying for it again.
+- **Demo data never goes stale:** demo deadlines and delivery dates are relative to today.
 - **Bounded AI:** the AI never sends anything directly. Every write goes through the fingerprint and citation checks, and autopilot limits.
 
 ## Deploy on Render

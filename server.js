@@ -17,6 +17,8 @@ app.use(express.json({ limit: '100kb' }));
 app.set('trust proxy', 1); // Render sits behind a proxy; use the real client IP for limits
 app.use(workspaceMiddleware);
 
+const AI_ROUTES = /^\/(agent\/(scan|chat)|mcp|demo\/simulate-dispute|orders\/[^/]+\/delivered)$/;
+const PAYPAL_ID = /^[A-Za-z0-9-]{5,40}$/; // dispute, order and capture ids; keeps path characters out of PayPal URLs
 // Simple fixed-window rate limits so a public demo can't be used to spam PayPal's sandbox.
 const hits = new Map();
 function limit(key, max, windowMs) {
@@ -30,6 +32,8 @@ function limit(key, max, windowMs) {
 app.use('/api', (req, res, next) => {
   if (req.method !== 'POST' || req.path.startsWith('/webhooks/')) return next();
   if (!limit(`ip:${req.ip}`, 120, 60_000)) return res.status(429).json({ error: 'Too many requests. Wait a minute and try again.' });
+  // Routes that make Claude think cost real money on a public demo: tighter cap when Claude is live.
+  if (!MOCK_AI && AI_ROUTES.test(req.path) && !limit(`ai:${req.ip}`, 20, 60_000)) return res.status(429).json({ error: 'The agent is busy. Wait a minute and try again.' });
   next();
 });
 app.use(express.static('public'));
@@ -227,6 +231,7 @@ app.post('/api/webhooks/paypal', async (req, res) => {
 // SANDBOX ONLY: let PayPal decide a real sandbox dispute, to show the full lifecycle.
 app.post('/api/disputes/:id/sandbox-settle', async (req, res, next) => {
   try {
+    if (!PAYPAL_ID.test(req.params.id)) return res.status(400).json({ error: 'not a PayPal dispute id' });
     const r = await paypal.sandboxSettle(req.params.id, req.body?.outcome === 'BUYER_FAVOR' ? 'BUYER_FAVOR' : 'SELLER_FAVOR');
     activity('webhook', `PayPal (sandbox) decided dispute ${req.params.id}: ${r.outcome || r.status} [${r.steps.join('; ')}]`);
     res.json(r);
@@ -418,6 +423,7 @@ app.post('/api/shop/capture', async (req, res, next) => {
   try {
     const sku = req.body.sku;
     const p = PRODUCTS.find((x) => x.sku === sku) || { name: 'Item', carrier: 'USPS' };
+    if (!PAYPAL_ID.test(String(req.body.orderId))) return res.status(400).json({ error: 'not a PayPal order id' });
     const c = await paypal.captureOrder(String(req.body.orderId));
     const tracking = p.carrier === 'FEDEX' ? String(Date.now()).slice(-12) : '9400' + String(Date.now()).padStart(18, '1').slice(-18);
     store.orders.unshift({
