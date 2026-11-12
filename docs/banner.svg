@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-labelledby="t d">
+  <title id="t">SellerShield</title>
+  <desc id="d">Get paid sooner. Keep what you earn. An AI agent that protects every PayPal sale, on both sides of the sale.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/><stop offset="1" stop-color="#141c33"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8aa9ff"/><stop offset="1" stop-color="#b29bff"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.82" cy="0.2" r="0.6">
+      <stop offset="0" stop-color="#2f5bea" stop-opacity="0.45"/><stop offset="1" stop-color="#2f5bea" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="320" rx="24" fill="url(#bg)"/>
+  <rect width="1280" height="320" rx="24" fill="url(#glow)"/>
+  <g transform="translate(72 82)">
+    <path d="M44 0 8 14v28c0 26 15.6 46.8 36 52.6C64.4 88.8 80 68 80 42V14z" fill="#2f5bea"/>
+    <path d="m26 46 12 12 22-24" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="176" y="128" fill="#ffffff" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="58" font-weight="800" letter-spacing="-1.5">SellerShield</text>
+  <text x="178" y="174" fill="url(#acc)" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700">Get paid sooner. Keep what you earn.</text>
+  <text x="178" y="214" fill="#b9c3d6" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="19">An AI agent that makes every PayPal sale protection-ready the moment it lands,</text>
+  <text x="178" y="240" fill="#b9c3d6" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="19">and follows it to the dispute, on both sides of the sale.</text>
+  <g font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#dfe6f5">
+    <g transform="translate(916 92)"><rect width="300" height="36" rx="18" fill="#ffffff" fill-opacity="0.07" stroke="#8aa9ff" stroke-opacity="0.35"/><circle cx="20" cy="18" r="5" fill="#6ad391"/><text x="34" y="23">Every sale checked before a dispute</text></g>
+    <g transform="translate(916 140)"><rect width="300" height="36" rx="18" fill="#ffffff" fill-opacity="0.07" stroke="#8aa9ff" stroke-opacity="0.35"/><circle cx="20" cy="18" r="5" fill="#6ad391"/><text x="34" y="23">Buyer agent: 8 of 8 attacks blocked</text></g>
+    <g transform="translate(916 188)"><rect width="300" height="36" rx="18" fill="#ffffff" fill-opacity="0.07" stroke="#8aa9ff" stroke-opacity="0.35"/><circle cx="20" cy="18" r="5" fill="#6ad391"/><text x="34" y="23">Every fact cited, every action logged</text></g>
+  </g>
+</svg>

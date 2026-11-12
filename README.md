@@ -1,6 +1,10 @@
 # SellerShield
 
-[![tests](https://github.com/mahak867/sellershield/actions/workflows/test.yml/badge.svg)](https://github.com/mahak867/sellershield/actions/workflows/test.yml) ![license](https://img.shields.io/badge/license-MIT-blue)
+![SellerShield: get paid sooner, keep what you earn](docs/banner.svg)
+
+[![tests](https://github.com/mahak867/sellershield/actions/workflows/test.yml/badge.svg)](https://github.com/mahak867/sellershield/actions/workflows/test.yml) ![license](https://img.shields.io/badge/license-MIT-blue) ![PayPal sandbox](https://img.shields.io/badge/PayPal-real%20sandbox%20API%20calls-1d3b6e) ![Claude](https://img.shields.io/badge/AI-Claude-6a4df5) ![MCP](https://img.shields.io/badge/MCP-server-1b2333)
+
+**[Live demo](https://sellershield-7qfd.onrender.com)** · **[Guided tour](https://sellershield-7qfd.onrender.com/?tour=1)** · **[Buyer agent](https://sellershield-7qfd.onrender.com/buyer.html)** · **[Results](RESULTS.md)** · **[How it maps to the judging criteria](#how-it-maps-to-the-judging-criteria)**
 
 **Get paid sooner. Keep what you earn.** An AI agent that makes every PayPal sale protection-ready the moment it lands, collects late invoices and answers disputes, within limits the seller sets.
 
@@ -15,6 +19,15 @@
 - **Unpaid invoices:** in Bonsai's analysis of 100,000+ freelancers, 29% of invoices were paid late ([Bonsai](https://www.hellobonsai.com/blog/late-freelance-payment)).
 
 So a small seller has to know which disputes PayPal will cover, get tracking onto PayPal before trouble starts, and chase late invoices, all while running the business.
+
+## Who it's for
+
+Small sellers who take payments with PayPal on their own site or through invoices: a maker shop, a one-person store, a freelancer. They have no chargeback team and no finance staff, and three things cost them money:
+- a new seller's funds held for weeks, until PayPal has proof the order arrived;
+- buyer disputes they don't have time to answer well before the deadline;
+- invoices that get paid late.
+
+The demo seller is **Clay & Thread**, an illustrative small handmade-goods shop.
 
 ## What SellerShield does
 
@@ -51,6 +64,16 @@ One autopilot policy and one audit log cover all of it.
 9. Open the **Agent audit log**: each action shows who triggered it, which PayPal API it used, and whether the call was **live** or **simulated**.
 
 Disputes tagged **demo** are sample data, and actions on them are simulated. A real sandbox dispute (see "Real dispute, end to end" below) is handled live.
+
+## How it maps to the judging criteria
+
+| Criterion | Where to see it |
+|---|---|
+| **Technological implementation** | Real PayPal sandbox calls across Disputes, Invoicing, Orders v2, Tracking, Webhooks (signature-verified), the Agent Toolkit and APIMatic's PayPal Server SDK, each named in the audit log with **live** or **simulated**. Claude with structured outputs and strict tools, validated in code with a rule-based fallback. 60 tests, a 30-step browser test in CI. See [Results](RESULTS.md). |
+| **Design** | One product across three pages (seller dashboard, store, buyer agent), light and dark themes, a guided tour, an evidence PDF, and an accessibility audit in CI. |
+| **Potential impact** | Starts at the sale, not the dispute: the proof PayPal asks for is on PayPal before trouble starts. One autopilot policy covers held funds, late invoices and disputes, so a seller with no staff can delegate safely. |
+| **Innovation** | Both sides of one sale handled by agents: a buyer's agent shops inside a mandate it cannot be talked out of, and if the buyer disputes the purchase, the seller's response cites the mandate and works out whose mistake it was. Drag a proposed action onto a calendar day to approve it. |
+| **Presentation** | Click **Guided tour**: the real demo in 11 steps, pressing the real buttons. |
 
 ## Features
 
