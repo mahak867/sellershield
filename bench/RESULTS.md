@@ -1,6 +1,6 @@
 # Policy test suite results
 
-Run: 2026-11-08 · Planner: rule-based planner
+Run: 2026-11-12 · Planner: rule-based planner
 
 | Metric | Result |
 |---|---|

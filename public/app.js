@@ -252,6 +252,7 @@ async function loadStatus() {
   $('#mode').innerHTML = `<span class="badge ${s.mockPaypal ? '' : 'live'}">PayPal ${s.mockPaypal ? 'mock' : 'sandbox'}</span><span class="badge ${s.mockAi || (s.ai.rules && !s.ai.claude) ? '' : 'live'}" title="${esc(s.ai.lastError ? 'Last Claude error: ' + s.ai.lastError : 'Plans written by Claude vs the rule-based fallback')}">${s.mockAi ? 'AI rules (no key)' : s.ai.rules && !s.ai.claude ? 'Claude failing, using rules' : `Claude live${s.ai.claude ? ` · ${s.ai.claude} plans` : ''}${s.ai.rules ? ` · ${s.ai.rules} fell back` : ''}`}</span>${s.persistence !== 'off' ? `<span class="badge live" title="Orders, proposals and the audit log survive a server restart">State saved (${esc(s.persistence)})</span>` : ''}<span class="badge ${s.channel3 ? 'live' : ''}" title="Product catalog facts for not-as-described disputes">Channel3 ${s.channel3 ? 'live' : 'demo'}</span>`;
   $('#seed').hidden = s.mockPaypal;
   $('#hookUrl').value = s.notifyUrl || '';
+  $('#hookTest').disabled = !s.notifyUrl; $('#hookTest').title = s.notifyUrl ? 'Send a test alert' : 'Save a Zapier URL first';
   $('#mcpUrl').value = `${location.origin}/api/mcp?ws=${s.workspace}`;
   setAp(s.autopilot);
 }
@@ -259,7 +260,7 @@ function setAp(a) {
   $('#apOn').checked = a.enabled; $('#apMax').value = a.maxAmount; $('#apConf').value = a.minConfidence;
   $('#apMaxV').textContent = '$' + a.maxAmount; $('#apConfV').textContent = Math.round(a.minConfidence * 100) + '%';
 }
-$('#hookSave').onclick = async () => { try { const r = await api('/api/notify', { url: $('#hookUrl').value }); toast(r.url ? 'Alerts on' : 'Alerts off'); } catch (e) { toast(e.message); } };
+$('#hookSave').onclick = async () => { try { const r = await api('/api/notify', { url: $('#hookUrl').value }); $('#hookTest').disabled = !r.url; toast(r.url ? 'Alerts on' : 'Alerts off'); } catch (e) { toast(e.message); } };
 $('#hookTest').onclick = async () => { try { await api('/api/notify/test', {}); toast('Test alert delivered'); } catch (e) { toast(e.message); } };
 $('#mcpCopy').onclick = async () => { try { await navigator.clipboard.writeText($('#mcpUrl').value); toast('MCP URL copied'); } catch { $('#mcpUrl').select(); } };
 const saveAp = async () => setAp(await api('/api/autopilot', { enabled: $('#apOn').checked, maxAmount: $('#apMax').value, minConfidence: $('#apConf').value }));

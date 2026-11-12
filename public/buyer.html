@@ -104,7 +104,9 @@ $('#go').onclick = async () => {
       $('#pay').append(b);
       const note = document.createElement('span'); note.className = 'mute'; note.textContent = 'No PayPal keys on this server, so the payment is simulated.'; $('#pay').append(note);
     } else {
-      await loadPayPal(r.clientId);
+      // If PayPal's script cannot load (an ad blocker, a strict network), keep the agent's result on screen.
+      try { await loadPayPal(r.clientId); }
+      catch (e) { $('#pay').innerHTML = `<div class="bad-box">PayPal checkout could not load in this browser (${esc(e.message)}). The agent's pick and checks above still stand; try again with blockers off.</div>`; return; }
       paypal.Buttons({
         style: { layout: 'horizontal', tagline: false, height: 40 },
         createOrder: async () => (await api('/api/buyer/order', { mandateId: r.mandate.id })).orderId,
