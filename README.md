@@ -69,7 +69,7 @@ Disputes tagged **demo** are sample data, and actions on them are simulated. A r
 
 | Criterion | Where to see it |
 |---|---|
-| **Technological implementation** | Real PayPal sandbox calls across Disputes, Invoicing, Orders v2, Tracking, Webhooks (signature-verified), the Agent Toolkit and APIMatic's PayPal Server SDK, each named in the audit log with **live** or **simulated**. Claude with structured outputs and strict tools, validated in code with a rule-based fallback. 60 tests, a 30-step browser test in CI. See [Results](RESULTS.md). |
+| **Technological implementation** | Real PayPal sandbox calls across Disputes, Invoicing, Orders v2, Tracking, Webhooks (signature-verified), the Agent Toolkit and APIMatic's PayPal Server SDK, each named in the audit log with **live** or **simulated**. Claude with structured outputs and strict tools, validated in code with a rule-based fallback. 157 tests (about 83% line coverage of the library modules), a 30-step browser test in CI. See [Results](RESULTS.md). |
 | **Design** | One product across three pages (seller dashboard, store, buyer agent), light and dark themes, a guided tour, an evidence PDF, and an accessibility audit in CI. |
 | **Potential impact** | Starts at the sale, not the dispute: the proof PayPal asks for is on PayPal before trouble starts. One autopilot policy covers held funds, late invoices and disputes, so a seller with no staff can delegate safely. |
 | **Innovation** | Both sides of one sale handled by agents: a buyer's agent shops inside a mandate it cannot be talked out of, and if the buyer disputes the purchase, the seller's response cites the mandate and works out whose mistake it was. Drag a proposed action onto a calendar day to approve it. |
@@ -296,7 +296,8 @@ PayPal's API doesn't let a seller create a dispute, but a sandbox buyer can open
 ## Tests
 
 ```bash
-npm test         # 60 tests: security headers, buyer agent mandates, red team and fault analysis, sale story, Seller Protection rules, sale readiness, proof entry, sale journeys, restart persistence (file and Redis), alerts, storefront client, MCP limits, plan reuse, citation checker, fingerprints, API guardrails, autopilot limits
+npm test         # 157 tests across 12 files: one per module (buyer agent, citations, Seller Protection, PDF, MCP, alerts, workspaces, PayPal client, persistence, Channel3, Claude request shape) plus end-to-end API tests
+npm run coverage # the same, with line and branch coverage (about 83% of lines in the library modules)
 npm run bench    # 30-case policy suite, uses Claude if ANTHROPIC_API_KEY is set
 ```
 

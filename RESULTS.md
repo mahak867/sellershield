@@ -4,7 +4,9 @@ What SellerShield measures about itself, and how to reproduce each number. Every
 
 | What | Result | How it is measured | Reproduce |
 |---|---|---|---|
-| Unit and API tests | 60 pass | Node's test runner against a real server process: Seller Protection rules, citation checker, fingerprints, autopilot limits, buyer agent mandates, red team, sale story, MCP limits, restart persistence (JSON file and a real Redis), alerts, security headers | `npm test` |
+| Unit and API tests | 157 pass, in 12 files | One file per module, plus Node's test runner against a real server process: Seller Protection rules, citation checker, fingerprints, autopilot limits, buyer agent mandates, red team, sale story, MCP limits, restart persistence (JSON file and a real Redis), alerts, security headers | `npm test` |
+| Code coverage | About 83% of lines and 84% of branches in the library modules | Node's built-in coverage; the server runs in a separate process during API tests and is not counted | `npm run coverage` |
+| Randomised checks | 400 random amounts and dates, all refused unless they match the cited record | Part of the citation checker tests | `npm test` |
 | Browser test | 30 steps pass, locally and in GitHub CI on every push | Playwright clicks through every main flow, runs the full guided tour, and audits accessibility | `npm start`, then `npm run smoke` |
 | Buyer agent red team | 8 of 8 attacks blocked | Prompt injection, an over-limit pick, an invented item, bait and switch, capturing another order, reusing a mandate, a forged mandate, impossible limits; each runs through the same capture guard a real purchase uses | **Buyer agent** page, **Run all 8 attacks**, or `npm test` |
 | Seller Protection policy suite | 30 of 30 coverage labels, 30 of 30 decisions (rule-based planner) | 30 hand-labelled disputes; labels written from PayPal's published Seller Protection rules | `npm run bench` (uses Claude when `ANTHROPIC_API_KEY` is set) |
