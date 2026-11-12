@@ -5,7 +5,7 @@ process.env.ANTHROPIC_API_KEY = '';
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { assessProtection } from '../lib/protection.js';
+import { assessProtection, assessReadiness, readinessSummary } from '../lib/protection.js';
 import { buildRecords, checkDraft, fingerprint, renderForPayPal } from '../lib/evidence.js';
 import { CASES } from '../bench/cases.js';
 import { ai } from '../lib/ai.js';
@@ -28,6 +28,28 @@ test('Seller Protection: wrong address is not covered', () => {
 });
 test('Seller Protection: missed deadline is not covered', () => {
   assert.equal(assessProtection({ ...inr, seller_response_due_date: soon(-1) }, order).status, 'NOT_COVERED');
+});
+
+test('Readiness: delivered sale with tracking on PayPal is ready', () => {
+  assert.equal(assessReadiness({ ...order, onHold: false }).status, 'READY');
+});
+test('Readiness: tracking not yet on PayPal is something the agent can fix', () => {
+  assert.equal(assessReadiness({ ...order, onHold: true }).status, 'AGENT_CAN_FIX');
+});
+test('Readiness: undelivered sale is waiting on the carrier', () => {
+  assert.equal(assessReadiness({ ...order, onHold: false, delivered: null }).status, 'WAITING');
+});
+test('Readiness: wrong address or no tracking number needs the seller', () => {
+  assert.equal(assessReadiness({ ...order, addressMatches: false }).status, 'AT_RISK');
+  assert.equal(assessReadiness({ ...order, trackingNumber: '' }).status, 'AT_RISK');
+});
+test('Readiness: summary counts ready sales and dollars', () => {
+  const s = readinessSummary([{ ...order, onHold: false }, { ...order, onHold: true, amount: 36 }]);
+  assert.deepEqual([s.total, s.ready, s.fixable, s.amountReady, s.amountTotal], [2, 1, 1, 64, 100]);
+});
+test('Citations: a value must match the record in full, not as a prefix', () => {
+  const issues = checkDraft('The buyer paid $6 [R2]. Tracking 94001118 [R2].', buildRecords(inr, order));
+  assert.deepEqual(issues.map((i) => i.detail), ['$6', '94001118']);
 });
 
 test('Citations: values from a cited record pass', () => {

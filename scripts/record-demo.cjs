@@ -3,7 +3,7 @@
 //   npm i -D playwright && npx playwright install chromium     (once)
 //   node scripts/record-demo.cjs https://your-app.onrender.com  (needs ffmpeg on PATH)
 //
-// Output: demo/sellershield-demo.mp4 (about 2:45, 1280x720, no audio).
+// Output: demo/sellershield-demo.mp4 (about 2:00, 1280x720, no audio).
 // Record against the deployed app with ANTHROPIC_API_KEY set, so the badge reads "Claude live".
 const { chromium } = require('playwright');
 const { execFileSync } = require('child_process');
@@ -74,100 +74,107 @@ async function card(page, html, ms) {
 
   // 1. Title + problem
   await card(page, `<div style="font-size:56px;font-weight:800">SellerShield</div>
-    <div style="font-size:28px;margin-top:14px;color:#9aa3b2">An AI agent that knows PayPal Seller Protection<br>and defends a small seller's money</div>`, 4000);
+    <div style="font-size:28px;margin-top:14px;color:#9aa3b2">Get paid sooner. Keep what you earn.<br>An AI agent for small PayPal sellers</div>`, 3500);
   await card(page, `<div style="font-size:26px;line-height:1.6;text-align:left">
-    <div style="font-size:20px;color:#9aa3b2;margin-bottom:10px">Where small sellers lose money on PayPal</div>
-    <b>Holds:</b> "Your funds are usually held for up to 21 days." PayPal's fix: upload tracking.<br>
-    <b>Disputes:</b> Seller Protection covers "item not received" with proof of delivery, and never "not as described".<br>
+    <div style="font-size:64px;font-weight:800;line-height:1.1">Up to 21 days</div>
+    <div style="font-size:20px;color:#9aa3b2;margin:6px 0 16px">is how long PayPal says a new seller's funds are usually held. PayPal's first fix: upload tracking.</div>
+    <b>Disputes:</b> "item not received" is covered only with proof of delivery. "Not as described" is never covered.<br>
     <b>Invoices:</b> 29% of freelance invoices are paid late.<br>
-    <div style="margin-top:18px;color:#7aa7ff">Big merchants have teams for this. Small sellers have SellerShield.</div></div>`, 9000);
+    <div style="margin-top:18px;color:#7aa7ff">Most tools start after a dispute. SellerShield starts at the sale.</div></div>`, 7500);
 
-  // 2. Dashboard
+  // 2. Dashboard: is every sale protected?
   await page.goto(BASE, { waitUntil: 'networkidle' });
   await overlay(page);
   await page.evaluate(() => fetch('/api/demo/reset', { method: 'POST' }));
   await page.reload({ waitUntil: 'networkidle' }); await overlay(page);
-  await cap(page, 'This is the seller\'s dashboard, running on the real PayPal sandbox.', 3500);
+  await cap(page, 'This is the dashboard of Clay & Thread, a small shop taking PayPal payments.', 3000);
   const seed = page.locator('#seed');
   if (await seed.isVisible()) {
     await click(page, seed);
-    await cap(page, 'One click creates real overdue invoices through the PayPal Invoicing API.', 4500);
+    await cap(page, 'One click creates real overdue invoices through the PayPal Invoicing API.', 3500);
   }
+  await scrollTo(page, '#readyGrid', 170);
+  await point(page, page.locator('#readyGrid'));
+  await cap(page, 'Every sale is checked against PayPal Seller Protection before any dispute exists. Only some are ready.', 4500);
+  await click(page, page.locator('#readyGrid .ag-center-cols-container .ag-row button').first());
+  await cap(page, 'Open a sale to see every rule, what is missing, and who has to fix it: the agent, the carrier or the seller.', 4500);
+  await click(page, page.locator('#fixAll'));
+  await page.waitForFunction(() => !document.querySelector('#fixAll').textContent.includes('Sending'), null, { timeout: 90000 });
+  await scrollTo(page, '.kpis', 120);
+  await point(page, page.locator('#kReady'));
+  await cap(page, 'One click: the agent sends the tracking it has to PayPal. That is the proof PayPal asks for to avoid a hold.', 5000);
+
+  // 3. The agent reviews everything; citations guard what it may say
   await click(page, page.locator('#run'));
   await page.waitForFunction(() => document.querySelector('#run').textContent === 'Run agent', null, { timeout: 90000 });
-  await cap(page, 'The agent reviews every dispute, overdue invoice and order missing tracking, and proposes one action each.', 4500);
-
-  // 3. Seller Protection + citations
   const d = page.locator('.prop').filter({ hasText: 'PP-D-1001' });
-  await point(page, d.locator('.prot'));
-  await cap(page, 'For each dispute it checks PayPal Seller Protection rule by rule: covered, tracked, delivered, right address, on time.', 5500);
-  await click(page, d.locator('details.recs summary'));
-  await cap(page, 'Claude decides FIGHT or ACCEPT on top of those facts, and may only state facts it can cite from these records.', 5500);
-  const ta = d.locator('textarea');
-  const original = await ta.inputValue();
-  await point(page, ta);
-  await ta.fill('The buyer signed for the parcel on 2026-01-01.');
-  await wait(900);
-  await point(page, d.locator('.issues'));
-  await cap(page, 'Type a fact it can\'t back up: the citation check blocks sending, and the approval fingerprint changes.', 5000);
-  await ta.fill(original); await wait(900);
-  await click(page, d.locator('button.approve'));
-  await cap(page, 'Approve: the evidence goes to PayPal\'s Disputes API, tied to a SHA-256 fingerprint of the exact text.', 4500);
+  if (await d.count()) {
+    await point(page, d.locator('.prot'));
+    await cap(page, 'Disputes that still arrive are checked rule by rule. Claude decides FIGHT or ACCEPT and may only state facts it can cite.', 5000);
+    const ta = d.locator('textarea');
+    const original = await ta.inputValue();
+    await point(page, ta);
+    await ta.fill('The buyer signed for the parcel on 2026-01-01.');
+    await wait(900);
+    await point(page, d.locator('.issues'));
+    await cap(page, 'Type a fact it cannot back up: sending is blocked, and the approval fingerprint changes.', 4500);
+    await ta.fill(original); await wait(900);
+    await click(page, d.locator('button.approve'));
+    await cap(page, 'Approve: the evidence goes to the PayPal Disputes API, tied to a fingerprint of the exact text.', 4000);
+  }
 
   // 4. Autopilot + real time
   await scrollTo(page, '.ap', 120);
   await click(page, page.locator('.switch span'));
-  await cap(page, 'Now give the agent limits: act alone under $100 when at least 80% confident.', 4000);
+  await cap(page, 'Now give the agent limits: act alone under $100 when at least 80% confident.', 3500);
   await click(page, page.locator('#simDispute'));
   await wait(2500);
   await point(page, page.locator('#feed .ev').first());
-  await cap(page, 'A buyer opens a dispute. The webhook fires, the agent checks coverage and acts within the limits. Bigger cases wait for you.', 6500);
+  await cap(page, 'A buyer opens a dispute. The agent checks coverage and acts inside the limits. Bigger cases wait for you.', 5500);
 
-  // 5. Charts + timeline
-  await scrollTo(page, '.charts');
-  await cap(page, 'AG Charts: where the money is stuck, and how much of it Seller Protection covers.', 4500);
+  // 5. Bryntum calendar
   await scrollTo(page, '#timeline', 120);
-  await cap(page, 'The Bryntum agent calendar: every PayPal deadline, overdue invoice and hold on one timeline.', 4000);
+  await cap(page, 'The Bryntum calendar: deadlines, holds, and each sale\'s journey from no proof to protection-ready.', 4500);
   const task = page.locator('#timeline .ss-task').first();
   if (await task.count()) {
-    page.once('dialog', (d) => d.accept(new Date().toISOString().slice(0, 10)));
+    page.once('dialog', (dlg) => dlg.accept(new Date().toISOString().slice(0, 10)));
     await point(page, task);
-    await cap(page, 'This dispute is missing proof of delivery. The plan: get the carrier confirmation (orange), then the agent submits (arrow).', 5000);
+    await cap(page, 'This dispute is missing proof of delivery: first the carrier confirmation, then the agent submits.', 4000);
     await click(page, task); await wait(2500);
-    await cap(page, 'Record the delivery date and the agent re-checks: Seller Protection now covers it, and the draft cites the new fact.', 5000);
+    await cap(page, 'Record the delivery date and the agent re-checks: Seller Protection now covers it.', 4000);
   }
   const plan = page.locator('#timeline .ss-plan').first();
   if (await plan.count()) {
-    await cap(page, 'Each purple bar is an action the agent proposes, placed before PayPal\'s deadline.', 4000);
     const b = await plan.boundingBox();
     await point(page, plan);
     await page.mouse.move(b.x + 8, b.y + b.height / 2); await page.mouse.down();
     for (let i = 1; i <= 10; i++) { await page.mouse.move(b.x + 8 + i * 17, b.y + b.height / 2); await wait(45); }
     await page.mouse.up(); await wait(1200);
-    await cap(page, 'Drag it onto a day to approve it for that day. It turns green and the agent runs it then, tied to its fingerprint.', 5500);
+    await cap(page, 'Drag an action onto a day to approve it for that day. The agent runs it then.', 4500);
   }
 
-  // 6. Grid + audit
-  await scrollTo(page, '#riskGrid', 160);
-  await cap(page, 'AG Grid ranks everything by urgency, with the agent\'s call and one-click or bulk approval.', 5000);
+  // 6. Audit log
   await scrollTo(page, '#logGrid', 160);
-  await cap(page, 'Every action is logged: who triggered it, live or simulated, the fingerprint, and exactly what PayPal received.', 5500);
+  await cap(page, 'Every action is logged in AG Grid: who triggered it, which PayPal API it used, live or simulated, and its fingerprint.', 5000);
 
-  // 7. Chat agent
+  // 7. Chat agent + other agents
   await scrollTo(page, '#chatlog', 260);
-  await click(page, page.locator('[data-q="What\'s my biggest risk right now?"]'));
+  await click(page, page.locator('[data-q="Are all my sales protected?"]'));
   await page.waitForFunction(() => !document.querySelector('#chatlog').textContent.includes('Thinking...'), null, { timeout: 90000 });
   await wait(600);
   await point(page, page.locator('#chatlog .msg.bot').last());
-  await cap(page, 'Or just ask. The chat agent reads the account through PayPal\'s Agent Toolkit and acts when asked.', 6000);
+  await cap(page, 'Or just ask. The chat agent reads the account through PayPal\'s Agent Toolkit.', 4500);
+  await scrollTo(page, '#mcpUrl', 320);
+  await point(page, page.locator('#mcpUrl'));
+  await cap(page, 'Other AI agents can connect over MCP, and can act only inside the limits the seller set.', 5000);
   await cap(page, '', 0);
 
   // 8. End card
   await card(page, `<div style="font-size:44px;font-weight:800">SellerShield</div>
-    <div style="font-size:24px;margin-top:12px;color:#9aa3b2">One agent, one inbox for every way a small seller's PayPal money gets stuck.</div>
+    <div style="font-size:24px;margin-top:12px;color:#9aa3b2">Every sale protection-ready from day one.<br>Get paid sooner. Keep what you earn.</div>
     <div style="font-size:18px;margin-top:26px;line-height:1.7;color:#c9ced8">PayPal Disputes · Invoicing · Orders · Tracking · Webhooks · Agent Toolkit · Server SDK (APIMatic)<br>
-    Claude · AG Grid · AG Charts · Bryntum Scheduler · Render</div>
-    <div style="font-size:18px;margin-top:22px;color:#7aa7ff">github.com/mahak867/sellershield</div>`, 6000);
+    Claude · AG Grid · AG Charts · Bryntum Scheduler · Channel3 · Render</div>
+    <div style="font-size:18px;margin-top:22px;color:#7aa7ff">github.com/mahak867/sellershield</div>`, 5000);
 
   const video = page.video();
   await ctx.close(); await browser.close();

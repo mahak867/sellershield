@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buyer agent · Clay &amp; Thread</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/store.css">
+</head>
+<body>
+<div class="topbar">
+  <a class="mark" href="/shop.html">Clay &amp; Thread</a>
+  <nav aria-label="Store">
+    <a href="/shop.html">Shop</a>
+    <a href="/buyer.html" aria-current="page">Let an agent shop for you</a>
+    <a href="/">Seller dashboard</a>
+  </nav>
+</div>
+<header class="hero">
+  <div class="eyebrow">Buyer agent</div>
+  <h1>Tell it what you want. Set your limit.</h1>
+  <p>An AI agent shops the store for you and can never spend more than your limit. You approve the payment in PayPal.</p>
+</header>
+<main class="narrow">
+  <section class="card">
+    <h2><span class="n">1</span>Your mandate</h2>
+    <div class="row">
+      <label>What do you want?<input id="want" maxlength="200" value="A handmade gift for a coffee lover"></label>
+      <label>Most you will pay ($)<input id="max" type="number" min="1" step="1" value="70"></label>
+    </div>
+    <div class="chips">
+      <button class="ghost" data-want="A handmade gift for a coffee lover" data-max="70">Coffee gift, $70</button>
+      <button class="ghost" data-want="Something to make the house smell nice" data-max="50">Home scent, $50</button>
+      <button class="ghost" data-want="A leather wallet" data-max="40">Wallet, only $40</button>
+    </div>
+    <div class="actions"><button id="go">Let the agent shop</button><span class="mute" id="status"></span></div>
+  </section>
+  <section class="card" id="result" hidden></section>
+  <section class="card" id="redteam">
+    <h2><span class="n">!</span>Try to break it</h2>
+    <p class="mute">Eight attacks a hostile buyer, a tricked AI or a tampered request might try. Each one runs against the same checks a real purchase passes through. Nothing reaches PayPal.</p>
+    <div class="actions"><button class="ghost" id="rtGo">Run all 8 attacks</button><span class="mute" id="rtSum"></span></div>
+    <ul class="checks" id="rtList"></ul>
+  </section>
+  </main>
+<p class="note">The seller sees this sale in the <a href="/">SellerShield dashboard</a>, with your mandate attached as a record.</p>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const api = (p, body) => fetch(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
+  .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error); return j; });
+document.querySelectorAll('[data-want]').forEach((b) => (b.onclick = () => { $('#want').value = b.dataset.want; $('#max').value = b.dataset.max; }));
+
+let sdkLoaded;
+const loadPayPal = (clientId) => (sdkLoaded ??= new Promise((ok, bad) => {
+  const s = document.createElement('script');
+  s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture&components=buttons`;
+  s.onload = ok; s.onerror = () => bad(new Error('PayPal SDK failed to load'));
+  document.head.appendChild(s);
+}));
+
+$('#rtGo').onclick = async () => {
+  $('#rtGo').disabled = true; $('#rtSum').textContent = 'Running...';
+  try {
+    const r = await api('/api/buyer/redteam');
+    $('#rtSum').textContent = `${r.blocked} of ${r.total} blocked`;
+    $('#rtList').innerHTML = r.attacks.map((a) => `<li class="${a.blocked ? 'ok' : 'no'}" data-i="${a.blocked ? '✓' : '✗'}"><span><b>${esc(a.attack)}.</b> <span class="mute">${esc(a.how)}</span><br>${esc(a.result)}</span></li>`).join('');
+  } catch (e) { $('#rtSum').textContent = e.message; }
+  finally { $('#rtGo').disabled = false; }
+};
+
+$('#go').onclick = async () => {
+  const box = $('#result');
+  $('#go').disabled = true; $('#status').textContent = 'The agent is looking through the store...';
+  try {
+    const r = await api('/api/buyer/shop', { want: $('#want').value, maxPrice: $('#max').value });
+    box.hidden = false;
+    box.innerHTML = `<h2><span class="n">2</span>What the agent picked <span class="tag">by ${r.source === 'claude' ? 'Claude' : 'rules'}</span></h2>
+      ${r.pick ? `<div class="pick"><span>${esc(r.pick.name)}</span><span>$${r.pick.price.toFixed(2)}</span></div>` : ''}
+      <p class="mute">${esc(r.reasoning)}</p>
+      ${r.overruled ? '<div class="bad-box">The AI first picked something outside your mandate. Its pick was discarded.</div>' : ''}
+      <ul class="checks">${r.checks.map((c) => `<li class="${c.pass ? 'ok' : 'no'}" data-i="${c.pass ? '✓' : '✗'}">${esc(c.rule)} <span class="mute">(${esc(c.detail)})</span></li>`).join('')}</ul>
+      <p class="mute">Mandate <code>${esc(r.mandate.id)}</code> · fingerprint <code>${esc(r.mandate.fingerprint.slice(0, 16))}</code></p>
+      ${r.allowed ? '<h2><span class="n">3</span>Approve the payment</h2><div id="pay" class="actions"></div>' : '<div class="bad-box">Nothing was ordered. No PayPal order can be created outside your mandate.</div>'}
+      <div id="done"></div>`;
+    if (!r.allowed) return;
+    const done = (c) => {
+      $('#pay').innerHTML = '';
+      $('#done').innerHTML = `<div class="ok-box">Paid $${c.amount.toFixed(2)}${c.simulated ? ' (simulated payment)' : ''}. Capture <code>${esc(c.captureId)}</code>. The seller has your mandate on record.</div>
+        <div class="actions" style="margin-top:10px"><a href="/" target="_blank" rel="noopener">See it in the seller dashboard</a>
+        <button class="ghost" id="dispute" title="Demo: open a dispute saying the agent bought the wrong thing">Demo: dispute this purchase</button></div><p class="mute" id="dmsg"></p>`;
+      $('#dispute').onclick = async () => {
+        $('#dispute').disabled = true;
+        try { await api('/api/demo/simulate-dispute', { transactionId: c.captureId }); $('#dmsg').textContent = 'Dispute opened. In the seller dashboard, the response cites your mandate: what you asked for, your limit, and that you approved the payment.'; }
+        catch (e) { $('#dmsg').textContent = e.message; $('#dispute').disabled = false; }
+      };
+    };
+    const capture = async (orderId) => done(await api('/api/buyer/capture', { mandateId: r.mandate.id, orderId }));
+    if (r.payment === 'simulated') {
+      const b = document.createElement('button'); b.textContent = `Approve $${r.pick.price.toFixed(2)} (simulated PayPal)`; b.id = 'simpay';
+      b.onclick = async () => { b.disabled = true; try { const o = await api('/api/buyer/order', { mandateId: r.mandate.id }); await capture(o.orderId); } catch (e) { $('#done').innerHTML = `<div class="bad-box">${esc(e.message)}</div>`; b.disabled = false; } };
+      $('#pay').append(b);
+      const note = document.createElement('span'); note.className = 'mute'; note.textContent = 'No PayPal keys on this server, so the payment is simulated.'; $('#pay').append(note);
+    } else {
+      await loadPayPal(r.clientId);
+      paypal.Buttons({
+        style: { layout: 'horizontal', tagline: false, height: 40 },
+        createOrder: async () => (await api('/api/buyer/order', { mandateId: r.mandate.id })).orderId,
+        onApprove: (data) => capture(data.orderID).catch((e) => { $('#done').innerHTML = `<div class="bad-box">${esc(e.message)}</div>`; }),
+        onCancel: () => { $('#done').innerHTML = '<p class="mute">Payment cancelled. Nothing was charged.</p>'; },
+        onError: (e) => { const t = String(e?.message || e); $('#done').innerHTML = /popup close|window closed/i.test(t) ? '<p class="mute">The PayPal window was closed before paying. Nothing was charged.</p>' : `<div class="bad-box">Payment could not be completed. ${esc(t)}</div>`; },
+      }).render('#pay');
+    }
+  } catch (e) { box.hidden = false; box.innerHTML = `<div class="bad-box">${esc(e.message)}</div>`; }
+  finally { $('#go').disabled = false; $('#status').textContent = ''; }
+};
+</script>
+</body>
+</html>
