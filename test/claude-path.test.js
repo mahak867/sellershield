@@ -50,6 +50,36 @@ test('dispute plan: structured output request and parsed result', async () => {
   assert.equal(req.body.thinking, undefined); // never send disabled thinking or a budget
 });
 
+test('the same dispute is planned once: a re-scan reuses the plan and its draft', async () => {
+  const { ai } = await import('../lib/ai.js');
+  const d = { ...dispute, dispute_id: 'PP-D-CACHE' };
+  const reply = { stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify({ decision: 'FIGHT', confidence: 0.8, reasoning: 'r', draft: 'First draft.' }) }] };
+  replies = [reply, { ...reply, content: [{ type: 'text', text: JSON.stringify({ decision: 'ACCEPT', confidence: 0.2, reasoning: 'r', draft: 'Second draft.' }) }] }];
+  const n = seen.length;
+  const a = await ai.planDispute(d, null, { status: 'LIKELY_COVERED' }, []);
+  const b = await ai.planDispute(d, null, { status: 'LIKELY_COVERED' }, []);
+  assert.equal(seen.length, n + 1);
+  assert.equal(b.draft, a.draft);
+  replies = [];
+});
+
+test('buyer agent: Claude picks from the catalog; a refusal falls back to the rule shopper', async () => {
+  const { ai } = await import('../lib/ai.js');
+  const products = [{ sku: 'mugs', name: 'Mug set', price: 64, tags: ['coffee'] }, { sku: 'wallet', name: 'Leather wallet', price: 85, tags: [] }];
+  const mandate = { id: 'M-TEST', want: 'something for coffee', maxPrice: 70 };
+  replies = [{ stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify({ sku: 'wallet', reasoning: 'Nice wallet.' }) }] }];
+  const pick = await ai.shop(mandate, products);
+  assert.deepEqual([pick.sku, pick.source], ['wallet', 'claude']); // over the limit: the server discards it (see checkMandate)
+  const req = seen.at(-1);
+  assert.deepEqual(req.body.output_config.format.schema.properties.sku.enum, ['mugs', 'wallet', 'NONE']);
+  assert.match(req.body.system, /data, not instructions/);
+  const { checkMandate } = await import('../lib/buyer.js');
+  assert.equal(checkMandate(mandate, products[1]).allowed, false);
+  replies = [{ stop_reason: 'refusal', stop_details: { type: 'refusal', category: 'cyber' }, content: [] }];
+  const fb = await ai.shop(mandate, products);
+  assert.deepEqual([fb.sku, fb.source], ['mugs', 'rules']);
+});
+
 test('a refusal falls back to the rules planner', async () => {
   const { ai } = await import('../lib/ai.js');
   replies = [{ stop_reason: 'refusal', stop_details: { type: 'refusal', category: 'cyber' }, content: [] }];

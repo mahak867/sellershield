@@ -19,3 +19,15 @@ services:
         sync: false
       - key: ANTHROPIC_MODEL
         value: claude-opus-5-5
+      # Orders, proposals, autopilot policy and the audit log are kept in Render Key Value,
+      # so they survive the free web service sleeping and restarting.
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: sellershield-state
+          property: connectionString
+  - type: keyvalue
+    name: sellershield-state
+    plan: free
+    ipAllowList: [] # reachable only from this Render account's services
+    maxmemoryPolicy: noeviction

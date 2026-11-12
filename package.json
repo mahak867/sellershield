@@ -10,10 +10,12 @@
     "bench": "node bench/run.js",
     "test": "node --test test/*.test.js",
     "record-demo": "node scripts/record-demo.cjs",
+    "smoke": "node scripts/smoke.cjs",
     "apimatic:validate": "apimatic api validate -i apimatic",
     "apimatic:sdk": "apimatic sdk generate -l typescript -i apimatic",
     "apimatic:portal": "apimatic portal generate -i apimatic",
-    "apimatic:plugin": "apimatic plugin generate -i apimatic"
+    "apimatic:plugin": "apimatic plugin generate -i apimatic",
+    "postman": "openapi2postmanv2 -s apimatic/src/spec/openapi.yaml -o postman/sellershield.postman_collection.json -p -O folderStrategy=Tags"
   },
   "engines": {
     "node": ">=18"
@@ -28,6 +30,10 @@
     "ag-charts-community": "^10.3.3",
     "ag-grid-community": "^32.3.3",
     "dotenv": "^16.4.5",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "redis": "^4.7.1"
+  },
+  "devDependencies": {
+    "axe-core": "^4.14.0"
   }
 }

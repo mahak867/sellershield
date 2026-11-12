@@ -14,108 +14,10 @@
 <link rel="stylesheet" href="/vendor/bryntum/stockholm-dark.css" media="(prefers-color-scheme: dark)">
 <link rel="stylesheet" href="/vendor/bryntum/fontawesome/css/fontawesome.css">
 <link rel="stylesheet" href="/vendor/bryntum/fontawesome/css/solid.css">
-<style>
-  :root {
-    --bg:#f5f6f8; --card:#fff; --ink:#111827; --mute:#5b6472; --line:#e4e7ec;
-    --accent:#0b57d0; --accent-soft:#e8effc; --good:#137333; --good-soft:#e6f4ea;
-    --warn:#a35200; --warn-soft:#fff3e0; --bad:#b3261e; --bad-soft:#fdecea;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#0f1218; --card:#171b23; --ink:#e8eaee; --mute:#9aa3b2; --line:#2a303b;
-      --accent:#7aa7ff; --accent-soft:#1d2a44; --good:#6fd08c; --good-soft:#15291c;
-      --warn:#f0b46a; --warn-soft:#2e2414; --bad:#ff8a80; --bad-soft:#331a19; }
-    .ag-theme-quartz { --ag-background-color:var(--card); --ag-foreground-color:var(--ink); --ag-header-background-color:#1d222c; --ag-border-color:var(--line); --ag-odd-row-background-color:#1a1f28; }
-  }
-  * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); }
-  header { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 20px; background:var(--card); border-bottom:1px solid var(--line); flex-wrap:wrap; }
-  @media (max-width:600px) { header { position:static; } .hero h1 { font-size:22px; } }
-  .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; }
-  .brand svg { width:26px; height:26px; }
-  .badges { display:flex; gap:6px; flex-wrap:wrap; }
-  .badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:99px; background:var(--warn-soft); color:var(--warn); }
-  .badge.live { background:var(--good-soft); color:var(--good); }
-  .actions { display:flex; gap:8px; flex-wrap:wrap; }
-  main { max-width:1240px; margin:0 auto; padding:20px 16px 48px; display:grid; gap:16px; }
-  .hero h1 { margin:4px 0 2px; font-size:26px; letter-spacing:-.01em; }
-  .hero p { margin:0; color:var(--mute); }
-  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; }
-  .kpi { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
-  .kpi small { color:var(--mute); font-size:13px; }
-  .kpi b { display:block; font-size:28px; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
-  .kpi.good b { color:var(--good); }
-  .cols { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; align-items:start; }
-  @media (max-width:900px) { .cols { grid-template-columns:1fr; } }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; min-width:0; }
-  .card h2 { margin:0 0 4px; font-size:16px; }
-  .card .sub { margin:0 0 12px; color:var(--mute); font-size:13px; }
-  button { font:inherit; font-weight:600; border:0; border-radius:9px; padding:9px 14px; background:var(--accent); color:#fff; cursor:pointer; }
-  @media (prefers-color-scheme: dark) { button { color:#0f1218; } }
-  button.ghost, .btnlink { background:var(--accent-soft); color:var(--accent); }
-  .btnlink { font-weight:600; border-radius:9px; padding:9px 14px; text-decoration:none; }
-  button:disabled { opacity:.5; cursor:progress; }
-  .prop { border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; display:grid; gap:8px; }
-  .prop .top { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; align-items:center; }
-  .tag { font-size:12px; font-weight:700; padding:2px 8px; border-radius:6px; background:var(--accent-soft); color:var(--accent); }
-  .tag.FIGHT { background:var(--good-soft); color:var(--good); } .tag.ACCEPT { background:var(--bad-soft); color:var(--bad); }
-  .tag.demo { background:var(--warn-soft); color:var(--warn); }
-  .meter { width:90px; height:6px; border-radius:6px; background:var(--line); overflow:hidden; display:inline-block; vertical-align:middle; margin-left:6px; }
-  .meter i { display:block; height:100%; background:var(--good); }
-  textarea { width:100%; min-height:72px; font:inherit; font-size:14px; padding:8px 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); resize:vertical; }
-  .mute { color:var(--mute); font-size:13px; }
-  .empty { padding:22px; text-align:center; color:var(--mute); border:1px dashed var(--line); border-radius:12px; }
-  .ap { display:grid; gap:12px; }
-  .ap label { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:14px; }
-  .ap input[type=range] { width:55%; }
-  .switch { position:relative; width:44px; height:24px; flex:none; }
-  .switch input { opacity:0; width:0; height:0; }
-  .switch span { position:absolute; inset:0; background:var(--line); border-radius:24px; transition:.2s; cursor:pointer; }
-  .switch span::before { content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
-  .switch input:checked + span { background:var(--good); }
-  .switch input:checked + span::before { transform:translateX(20px); }
-  .chatlog { max-height:320px; overflow:auto; display:grid; gap:8px; margin-bottom:10px; }
-  .msg { padding:9px 12px; border-radius:12px; white-space:pre-wrap; font-size:14px; }
-  .msg.me { background:var(--accent-soft); justify-self:end; max-width:85%; }
-  .msg.bot { background:var(--bg); border:1px solid var(--line); max-width:95%; }
-  .steps { font-size:12px; color:var(--mute); margin-top:4px; }
-  .chat { display:flex; gap:8px; } .chat input { flex:1; min-width:0; font:inherit; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); }
-  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
-  .chips button { font-size:12px; padding:5px 10px; }
-  .charts { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:16px; }
-  @media (max-width:1100px) { .charts { grid-template-columns:1fr 1fr; } }
-  @media (max-width:700px) { .charts { grid-template-columns:1fr; } }
-  .chart { height:260px; }
-  .timeline { height:380px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
-  .grid { height:280px; } .grid.tall { height:360px; }
-  .gridhead { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
-  .gridhead .tools { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
-  .gridhead input { font:inherit; padding:8px 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); min-width:0; width:180px; }
-  .urg { display:flex; align-items:center; gap:8px; height:100%; }
-  .urg .bar { flex:1; height:8px; border-radius:6px; background:var(--line); overflow:hidden; }
-  .urg .bar i { display:block; height:100%; }
-  .cellbtn { padding:4px 10px; font-size:12px; line-height:1.4; }
-  .ag-row-pinned { font-weight:700; }
-  .cell-edited { background: var(--accent-soft); } .cell-bad { background: var(--bad-soft); color: var(--bad); }
-  .live-cell { color:var(--good); font-weight:600; }
-  .prot { border-radius:10px; padding:8px 10px; font-size:13px; background:var(--bg); border:1px solid var(--line); }
-  .prot b.LIKELY_COVERED { color:var(--good); } .prot b.NEEDS_EVIDENCE { color:var(--warn); } .prot b.NOT_COVERED { color:var(--bad); }
-  .prot ul { margin:6px 0 0; padding:0; list-style:none; display:grid; gap:2px; }
-  .prot li::before { content:attr(data-i); display:inline-block; width:18px; font-weight:700; }
-  .prot li.ok::before { color:var(--good); } .prot li.no::before { color:var(--bad); }
-  .recs { font-size:13px; } .recs summary { cursor:pointer; color:var(--accent); font-weight:600; }
-  .recs ul { margin:6px 0 0; padding-left:18px; display:grid; gap:3px; } .recs code, .fp code { font-size:12px; }
-  .issuebox { font-size:13px; padding:8px 10px; border-radius:10px; background:var(--bad-soft); color:var(--bad); }
-  .issuebox ul { margin:4px 0 0; padding-left:18px; }
-  .approve-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; } .fp { margin-left:auto; }
-  .feed { display:grid; gap:6px; max-height:220px; overflow:auto; font-size:13px; }
-  .feed div.ev { padding:6px 8px; border-left:3px solid var(--accent); background:var(--bg); border-radius:6px; animation:pop .4s ease; }
-  .feed div.ev.webhook { border-color:var(--warn); } .feed div.ev.sale { border-color:var(--good); } .feed div.ev.error { border-color:var(--bad); }
-  .feed time { color:var(--mute); margin-right:6px; font-variant-numeric:tabular-nums; }
-  @keyframes pop { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
-  @media (prefers-reduced-motion: reduce) { .feed div.ev { animation:none; } }
-  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--card); padding:10px 16px; border-radius:10px; font-size:14px; opacity:0; transition:.3s; pointer-events:none; }
-  .toast.show { opacity:1; }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/app.css">
 </head>
 <body>
 <header>
@@ -124,6 +26,8 @@
     SellerShield <span class="badges" id="mode"></span>
   </div>
   <div class="actions">
+    <button class="ghost" id="tourBtn" title="A two-minute walk through the real demo">Guided tour</button>
+    <a class="ghost btnlink" href="/buyer.html" target="_blank" rel="noopener" title="An AI agent shops the store for a buyer, inside a spending limit">Buyer agent</a>
     <a class="ghost btnlink" href="/shop.html" target="_blank" rel="noopener">Open store</a>
     <button class="ghost" id="reset" title="Restore demo data and clear the log">Reset</button>
     <button class="ghost" id="seed" title="Create real overdue invoices in the PayPal sandbox">Load sandbox data</button>
@@ -133,22 +37,33 @@
 
 <main>
   <section class="hero">
-    <h1>Your money, defended by an AI agent.</h1>
-    <p>SellerShield knows PayPal Seller Protection. It reacts the moment a dispute opens or a sale lands, checks your coverage, closes evidence gaps, and acts within limits you set.</p>
+    <h1>Get paid sooner. Keep what you earn.</h1>
+    <p><b>Demo seller: Clay &amp; Thread</b>, a small handmade-goods shop. New sellers can wait up to 21 days for their money. SellerShield checks every sale against PayPal Seller Protection the moment it lands, sends PayPal the proof it needs, collects late invoices and answers disputes, all within limits you set.</p>
   </section>
 
   <section class="kpis">
-    <div class="kpi"><small>Money at risk</small><b id="kRisk">$0</b></div>
+    <div class="kpi"><small>Sales protection-ready</small><b id="kReady">0 of 0</b><small id="kReadySub"></small></div>
+    <div class="kpi"><small>Money stuck or at risk</small><b id="kRisk">$0</b></div>
     <div class="kpi good"><small>Protected by agent</small><b id="kSaved">$0</b></div>
-    <div class="kpi"><small>Hours saved</small><b id="kTime">0</b></div>
+    <div class="kpi"><small>Hours saved (estimate)</small><b id="kTime">0</b></div>
     <div class="kpi"><small>Actions taken</small><b id="kActs">0</b></div>
     <div class="kpi"><small>Needs your review</small><b id="kReview">0</b></div>
   </section>
 
+  <section class="card">
+    <div class="gridhead">
+      <div><h2>Is every sale protected?</h2><p class="sub">Each sale is checked against PayPal's Seller Protection proof requirements <b>before</b> any dispute exists. The agent closes the gaps it can; the rest tells you who has to act. Open a row for the full checklist, or type missing proof straight into the shaded cells.</p></div>
+      <div class="tools"><button id="fixAll" disabled title="The agent sends the tracking it has on file to PayPal for every sale it can fix">Send tracking to PayPal</button></div>
+    </div>
+    <div id="readyGrid" class="grid ag-theme-quartz"></div>
+  </section>
+
   <section class="card charts">
-    <div><h2>Where your money is stuck</h2><p class="sub">At risk vs protected by the agent, per category (AG Charts).</p><div id="chartRisk" class="chart"></div></div>
-    <div><h2>Protected over time</h2><p class="sub">Running total of money the agent protected; hover a point to see who acted (seller, autopilot, calendar, chat).</p><div id="chartTime" class="chart"></div></div>
-    <div><h2>Disputes by Seller Protection</h2><p class="sub">Dollars in dispute, by PayPal coverage. Run the agent to classify.</p><div id="chartCover" class="chart"></div></div>
+    <div><h2>Where your money is stuck</h2><p class="sub">By category: what is still at risk, and what the agent has already protected.</p><div id="chartRisk" class="chart"></div></div>
+    <div><h2>Protected by the agent</h2><p class="sub">Running total. Hover a point to see the action and who triggered it.</p>
+      <div class="hero-num"><b id="timeHero">$0.00</b><span id="timeHeroSub">no actions yet</span></div><div id="chartTime" class="chart mid"></div></div>
+    <div><h2>Disputes by Seller Protection</h2><p class="sub">Dollars in open disputes, by whether PayPal's Seller Protection covers them.</p>
+      <div class="hero-num"><b id="coverHero">$0.00</b><span>in open disputes</span></div><div id="chartCover" class="chart strip"></div><ul id="coverLegend" class="viz-legend"></ul></div>
   </section>
 
   <div class="cols">
@@ -172,18 +87,31 @@
       <section class="card">
         <div class="gridhead"><div><h2>Live activity</h2><p class="sub">PayPal webhooks and sales trigger the agent instantly.</p></div>
           <div class="tools"><button class="ghost" id="simDispute" title="Simulate a buyer opening a dispute">Simulate dispute</button></div></div>
-        <div id="feed" class="feed"><div class="mute">Waiting for events...</div></div>
+        <div id="feed" class="feed" tabindex="0" role="log" aria-label="Live activity"><div class="mute">Waiting for events...</div></div>
       </section>
 
       <section class="card">
         <h2>Ask the agent</h2>
         <p class="sub">It can look up your account and take action when you ask.</p>
         <div class="chips">
+          <button class="ghost" data-q="Are all my sales protected?">Sales protected?</button>
           <button class="ghost" data-q="What's my biggest risk right now?">Biggest risk?</button>
           <button class="ghost" data-q="Handle everything you're confident about.">Handle it</button>
         </div>
-        <div class="chatlog" id="chatlog"></div>
+        <div class="chatlog" id="chatlog" tabindex="0" role="log" aria-label="Conversation with the agent"></div>
         <div class="chat"><input id="q" placeholder="Ask about your money..."><button id="ask">Send</button></div>
+      </section>
+
+      <section class="card">
+        <h2>Alerts</h2>
+        <p class="sub">Get a message when something needs you or autopilot acts. Paste a Zapier "Catch Hook" URL and a Zap can send it to email, Slack or WhatsApp.</p>
+        <div class="chat"><input id="hookUrl" placeholder="https://hooks.zapier.com/hooks/catch/..." aria-label="Zapier webhook URL"><button class="ghost" id="hookSave">Save</button><button class="ghost" id="hookTest">Test</button></div>
+      </section>
+
+      <section class="card">
+        <h2>Connect your own agent</h2>
+        <p class="sub">SellerShield is also an MCP server. Another AI agent can check your sales and act, but only inside the autopilot limits above. Everything else is refused and waits for you.</p>
+        <div class="chat"><input id="mcpUrl" readonly aria-label="MCP server URL"><button class="ghost" id="mcpCopy">Copy</button></div>
       </section>
     </div>
   </div>
@@ -202,7 +130,7 @@
 
   <section class="card">
     <div class="gridhead">
-      <div><h2>Agent calendar</h2><p class="sub">Every deadline, overdue period and hold on one timeline (Bryntum Scheduler). Each <b>purple</b> bar is an action the agent proposes: <b>drag it onto a day to approve it for that day</b> (bound to its fingerprint; PayPal deadlines enforced). Green = approved; the agent runs it on that day.</p></div>
+      <div><h2>Agent calendar</h2><p class="sub">Every deadline, overdue period, hold and <b>sale journey</b> on one timeline (Bryntum Scheduler). For each sale, the red bar is the time PayPal had no proof, followed by transit and protection-ready, linked by arrows. Each <b>purple</b> bar is an action the agent proposes: <b>drag it onto a day to approve it for that day</b> (bound to its fingerprint; PayPal deadlines enforced). Green = approved; the agent runs it on that day.</p></div>
     </div>
     <div id="timeline" class="timeline"></div>
   </section>
@@ -215,466 +143,14 @@
     <div id="logGrid" class="grid ag-theme-quartz"></div>
   </section>
 </main>
+<dialog id="story" aria-labelledby="storyTitle">
+  <div class="story-head"><div><small>One sale, start to finish</small><h2 id="storyTitle">Sale</h2></div><button class="ghost" id="storyClose" aria-label="Close">Close</button></div>
+  <ol id="storyList" class="story"></ol>
+</dialog>
 <div class="toast" id="toast"></div>
 
-<script>
-const $ = (s) => document.querySelector(s);
-const money = (n) => '$' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const api = (p, body) => fetch(p, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {})
-  .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error); return j; });
-const toast = (t) => { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2600); };
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-
-const typeCell = (p) => {
-  if (p.node.rowPinned) return p.value;
-  const tag = p.data.demo ? '<span class="tag demo">demo</span>' : '<span class="tag FIGHT">live</span>';
-  return `${esc(p.value)} ${tag}`;
-};
-const urgCell = (p) => {
-  if (p.node.rowPinned || p.value == null) return '';
-  const v = p.value, c = v >= 70 ? 'var(--bad)' : v >= 40 ? 'var(--warn)' : 'var(--good)';
-  return `<div class="urg"><span class="bar"><i style="width:${v}%;background:${c}"></i></span><b>${v}</b></div>`;
-};
-const agentCell = (p) => {
-  const pr = p.data?.proposal;
-  if (!pr) return p.node.rowPinned ? '' : '<span class="mute">run agent</span>';
-  return `<span class="tag ${esc(pr.decision)}">${esc(pr.decision)}</span> <span class="mute">${Math.round(pr.confidence * 100)}%</span>`;
-};
-const actionCell = (p) => {
-  const pr = p.data?.proposal;
-  if (!pr && p.data?.type === 'Dispute' && !p.data.demo && !p.node.rowPinned) {
-    const b = document.createElement('button');
-    b.className = 'cellbtn ghost'; b.textContent = 'PayPal decides'; b.title = 'Sandbox only: ask PayPal to settle this dispute';
-    b.onclick = async () => { b.disabled = true; try { const r = await api(`/api/disputes/${encodeURIComponent(p.data.id)}/sandbox-settle`, {}); toast(`PayPal: ${r.outcome || r.status}`); await refresh(); } catch (e) { toast(e.message); b.disabled = false; } };
-    return b;
-  }
-  if (!pr) return '';
-  const b = document.createElement('button');
-  b.className = 'cellbtn'; b.textContent = 'Approve';
-  const ed = gridEdits[pr.id];
-  if (ed?.issues?.length) { b.disabled = true; b.title = 'Edited draft fails the citation check'; }
-  b.onclick = async () => {
-    b.disabled = true;
-    try {
-      await api('/api/agent/approve', ed ? { id: pr.id, draft: ed.draft, fingerprint: ed.fingerprint } : { id: pr.id, fingerprint: pr.fingerprint });
-      delete gridEdits[pr.id]; toast(`Done: ${pr.target}`); await refresh();
-    } catch (e) { toast(e.message); b.disabled = false; }
-  };
-  return b;
-};
-// Saved column layout (per browser; optional).
-function saveLayout() { try { localStorage.setItem('ss.riskGrid', JSON.stringify(riskGrid.getColumnState())); } catch {} }
-// Drafts edited inside the grid: { [proposalId]: { draft, fingerprint, issues } }
-const gridEdits = {};
-const riskGrid = agGrid.createGrid($('#riskGrid'), {
-  columnDefs: [
-    { field: 'type', width: 150, cellRenderer: typeCell },
-    { field: 'urgency', width: 140, cellRenderer: urgCell, sort: 'desc', filter: 'agNumberColumnFilter', enableCellChangeFlash: true },
-    { field: 'amount', valueFormatter: (p) => money(p.value), width: 120, type: 'rightAligned', filter: 'agNumberColumnFilter', enableCellChangeFlash: true },
-    { headerName: 'Agent says', width: 140, cellRenderer: agentCell, valueGetter: (p) => p.data?.proposal?.decision ?? '', enableCellChangeFlash: true },
-    { headerName: 'Draft (double-click to edit)', colId: 'draft', flex: 2, minWidth: 240, tooltipValueGetter: (p) => p.value,
-      editable: (p) => !!p.data?.proposal && !p.node.rowPinned, cellEditor: 'agLargeTextCellEditor', cellEditorPopup: true,
-      cellEditorParams: { maxLength: 4000, rows: 8, cols: 70 },
-      valueGetter: (p) => p.data?.proposal ? (gridEdits[p.data.proposal.id]?.draft ?? p.data.proposal.draft) : '',
-      valueSetter: (p) => { if (!p.data?.proposal) return false; gridEdits[p.data.proposal.id] = { draft: String(p.newValue ?? '') }; return true; },
-      cellClassRules: { 'cell-bad': (p) => !!gridEdits[p.data?.proposal?.id]?.issues?.length, 'cell-edited': (p) => !!gridEdits[p.data?.proposal?.id] } },
-    { field: 'detail', flex: 2, minWidth: 220, tooltipField: 'detail' },
-    { field: 'who', headerName: 'Buyer / client', flex: 1, minWidth: 170 },
-    { field: 'id', headerName: 'PayPal ID', flex: 1, minWidth: 170 },
-    { headerName: '', width: 130, cellRenderer: actionCell, sortable: false, filter: false, pinned: 'right' },
-  ],
-  defaultColDef: { sortable: true, filter: true, resizable: true },
-  rowSelection: { mode: 'multiRow', checkboxes: true, headerCheckbox: true, enableClickSelection: false, isRowSelectable: (n) => !!n.data?.proposal },
-  onSelectionChanged: () => { const n = riskGrid.getSelectedRows().length; $('#bulk').disabled = !n; $('#bulk').textContent = n ? `Approve selected (${n})` : 'Approve selected'; },
-  getRowId: (p) => p.data.key, rowData: [], overlayNoRowsTemplate: 'Nothing at risk. Nice.', tooltipShowDelay: 300,
-  undoRedoCellEditing: true, undoRedoCellEditingLimit: 20, // Ctrl+Z / Ctrl+Y on draft edits
-  onColumnMoved: saveLayout, onColumnResized: (e) => e.finished && saveLayout(), onSortChanged: saveLayout, onColumnPinned: saveLayout,
-  // Every grid edit is re-fingerprinted and citation-checked on the server before it can be approved.
-  onCellValueChanged: async (e) => {
-    if (e.colDef.colId !== 'draft' || !e.data?.proposal) return;
-    const id = e.data.proposal.id, ed = gridEdits[id];
-    const r = await api('/api/agent/check', { id, draft: ed.draft });
-    Object.assign(ed, r);
-    e.api.refreshCells({ rowNodes: [e.node], force: true });
-    toast(r.issues.length ? `Citation check failed: ${r.issues.map((i) => i.code).join(', ')}` : `Draft updated (fingerprint ${r.fingerprint.slice(0, 12)})`);
-  },
-});
-const logGrid = agGrid.createGrid($('#logGrid'), {
-  columnDefs: [
-    { field: 'at', headerName: 'Time', valueFormatter: (p) => p.value ? new Date(p.value).toLocaleTimeString() : '', width: 105 },
-    { field: 'by', headerName: 'Triggered by', width: 130 },
-    { field: 'kind', width: 95 }, { field: 'decision', width: 135 }, { field: 'target', flex: 1, minWidth: 150 },
-    { field: 'amount', valueFormatter: (p) => money(p.value), width: 110, type: 'rightAligned' },
-    { headerName: 'PayPal call', width: 120, cellDataType: 'text', valueGetter: (p) => p.node.rowPinned ? '' : p.data.simulated ? 'simulated' : 'live',
-      cellClassRules: { 'live-cell': (p) => p.value === 'live' } },
-    { field: 'fingerprint', headerName: 'Approved fingerprint', width: 150, valueFormatter: (p) => p.value ? p.value.slice(0, 12) : '', tooltipField: 'fingerprint' },
-    { field: 'text', headerName: 'Sent to PayPal', flex: 2, minWidth: 220, tooltipField: 'text' },
-  ],
-  defaultColDef: { sortable: true, filter: true, resizable: true }, rowData: [], overlayNoRowsTemplate: 'No actions yet.', tooltipShowDelay: 300,
-});
-try { const st = JSON.parse(localStorage.getItem('ss.riskGrid') || 'null'); if (st) riskGrid.applyColumnState({ state: st, applyOrder: true }); } catch {}
-$('#qf').oninput = () => riskGrid.setGridOption('quickFilterText', $('#qf').value);
-$('#csv1').onclick = () => riskGrid.exportDataAsCsv({ fileName: 'sellershield-money-at-risk.csv', columnKeys: ['type', 'urgency', 'amount', 'detail', 'who', 'id'] });
-$('#csv2').onclick = () => logGrid.exportDataAsCsv({ fileName: 'sellershield-audit-log.csv' });
-$('#bulk').onclick = async () => {
-  const rows = riskGrid.getSelectedRows(); $('#bulk').disabled = true;
-  let done = 0;
-  for (const r of rows) { try { const ed = gridEdits[r.proposal.id]; if (ed?.issues?.length) throw new Error(`${r.proposal.target}: fails citation check`); await api('/api/agent/approve', ed ? { id: r.proposal.id, draft: ed.draft, fingerprint: ed.fingerprint } : { id: r.proposal.id, fingerprint: r.proposal.fingerprint }); delete gridEdits[r.proposal.id]; done++; } catch (e) { toast(e.message); } }
-  toast(`Approved ${done} action${done === 1 ? '' : 's'}`); await refresh();
-};
-// Urgency 0-100: bigger amounts and older/closer-to-deadline items rank higher.
-const urgency = (base, amount) => Math.max(1, Math.min(100, Math.round(base + Math.sqrt(amount) * 1.2)));
-const daysUntil = (d) => d ? Math.ceil((new Date(d) - Date.now()) / 86400000) : 30;
-
-async function refresh() {
-  const r = await api('/api/risk');
-  const prop = Object.fromEntries(r.proposals.map((p) => [p.id, p]));
-  const rows = [
-    ...r.disputes.map((d) => ({ key: 'dispute:' + d.dispute_id, type: 'Dispute', demo: d.demo, id: d.dispute_id, who: d.transaction_id,
-      detail: `${d.reason.replaceAll('_', ' ').toLowerCase()}${d.stage ? ' · ' + d.stage.toLowerCase() : ''}${d.status && !d.demo ? ' · ' + d.status.toLowerCase().replaceAll('_', ' ') : ''} · respond in ${daysUntil(d.seller_response_due_date)} days`, amount: d.amount,
-      urgency: urgency(60 - daysUntil(d.seller_response_due_date) * 3, d.amount), proposal: prop['dispute:' + d.dispute_id] })),
-    ...r.invoices.map((i) => ({ key: 'invoice:' + i.id, type: 'Invoice', demo: i.demo, id: i.id, who: i.recipient,
-      detail: `${i.days_overdue} days overdue · ${i.memo}`, amount: i.amount,
-      urgency: urgency(i.days_overdue * 1.5, i.amount), proposal: prop['invoice:' + i.id] })),
-    ...r.holds.map((o) => ({ key: 'hold:' + o.transactionId, type: o.live ? 'Needs tracking' : 'Held funds', demo: o.demo, id: o.transactionId, who: o.buyer,
-      detail: o.live ? `${o.item} · paid via PayPal Checkout, no tracking yet` : `${o.item} · held ${o.daysHeld} days`, amount: o.amount,
-      urgency: urgency(25 + o.daysHeld * 2, o.amount), proposal: prop['hold:' + o.transactionId] })),
-  ];
-  window.__ssData = r; window.sellershieldTimeline?.(r);
-  try { renderCharts(r); } catch (e) { console.warn('charts', e); }
-  riskGrid.setGridOption('rowData', rows);
-  riskGrid.setGridOption('pinnedBottomRowData', rows.length ? [{ key: 'total', type: 'Total', amount: rows.reduce((s, x) => s + x.amount, 0), detail: `${rows.length} items` }] : []);
-  logGrid.setGridOption('rowData', r.actions);
-  logGrid.setGridOption('pinnedBottomRowData', r.actions.length ? [{ by: 'Total', amount: r.actions.reduce((s, a) => s + a.amount, 0), text: `${r.actions.length} actions` }] : []);
-  const protectedAmt = r.actions.filter((a) => a.decision !== 'ACCEPT').reduce((s, a) => s + a.amount, 0);
-  $('#kRisk').textContent = money(rows.reduce((s, x) => s + x.amount, 0));
-  $('#kSaved').textContent = money(protectedAmt);
-  $('#kTime').textContent = (r.actions.reduce((s, a) => s + (a.minutesSaved || 0), 0) / 60).toFixed(1);
-  $('#kActs').textContent = r.actions.length;
-  $('#kReview').textContent = r.proposals.length;
-  renderProps(r.proposals, r.actions.length > 0);
-}
-
-function renderProps(list, scanned) {
-  const box = $('#props');
-  if (!list.length) { box.innerHTML = `<div class="empty">${scanned ? 'All clear. Nothing waiting for you.' : 'Click <b>Run agent</b> to review every dispute, invoice and held payment.'}</div>`; return; }
-  box.innerHTML = '';
-  for (const p of list) {
-    const el = document.createElement('div');
-    el.className = 'prop';
-    const pct = Math.round((p.confidence || 0) * 100);
-    el.innerHTML = `<div class="top"><div><span class="tag ${esc(p.decision)}">${esc(p.decision)}</span> <b>${esc(p.kind)}</b> <span class="mute">${esc(p.target)}</span> ${p.demo ? '<span class="tag demo">demo</span>' : ''} <span class="mute">· by ${p.source === 'claude' ? 'Claude' : 'rules'}</span></div>
-      <div><b>${money(p.amount)}</b> <span class="mute">· ${pct}% confidence</span><span class="meter"><i style="width:${pct}%"></i></span></div></div>
-      <div class="mute">${esc(p.reasoning)}</div>
-      ${p.protection ? protBox(p.protection) : ''}
-      ${p.records?.length ? recBox(p.records) : ''}
-      <textarea aria-label="Draft sent to PayPal">${esc(p.draft)}</textarea>
-      <div class="issues"></div>
-      <div class="approve-row"><button class="approve">Approve &amp; send to PayPal</button> <button class="ghost skip">Skip</button>${p.kind === 'dispute' ? ' <button class="ghost pack" title="Response, Seller Protection check and cited records in one PDF">Evidence PDF</button>' : ''}
-        <span class="fp mute" title="SHA-256 of exactly what will be sent. Editing the draft changes it.">fingerprint <code></code></span></div>`;
-    const ok = el.querySelector(".approve"), skip = el.querySelector('.skip'), ta = el.querySelector('textarea');
-    let fp = p.fingerprint;
-    const show = (f, issues) => {
-      fp = f; el.querySelector('.fp code').textContent = f.slice(0, 12);
-      el.querySelector('.issues').innerHTML = issues.length
-        ? `<div class="issuebox"><b>Citation check failed:</b> fix before sending<ul>${issues.map((i) => `<li><code>${esc(i.code)}</code> ${esc(i.detail)}</li>`).join('')}</ul></div>` : '';
-      ok.disabled = issues.length > 0;
-    };
-    show(p.fingerprint, p.issues || []);
-    let t; ta.oninput = () => { ok.disabled = true; clearTimeout(t); t = setTimeout(async () => { const r = await api('/api/agent/check', { id: p.id, draft: ta.value }); show(r.fingerprint, r.issues); }, 250); };
-    ok.onclick = async () => {
-      ok.disabled = true;
-      try { await api('/api/agent/approve', { id: p.id, draft: ta.value, fingerprint: fp }); toast(`Done: ${p.decision.toLowerCase().replace('_', ' ')} on ${p.target}`); await refresh(); }
-      catch (e) { toast(e.message); ok.disabled = false; }
-    };
-    skip.onclick = () => el.remove();
-    const pack = el.querySelector('.pack');
-    if (pack) pack.onclick = async () => {
-      const r = await fetch('/api/agent/pack', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: p.id, draft: ta.value }) });
-      if (!r.ok) return toast('Could not build the PDF');
-      const a = document.createElement('a'); a.href = URL.createObjectURL(await r.blob()); a.download = `evidence-${p.target}.pdf`; a.click();
-    };
-    box.appendChild(el);
-  }
-}
-
-async function loadStatus() {
-  const s = await api('/api/status');
-  $('#mode').innerHTML = `<span class="badge ${s.mockPaypal ? '' : 'live'}">PayPal ${s.mockPaypal ? 'mock' : 'sandbox'}</span><span class="badge ${s.mockAi ? '' : 'live'}">${s.mockAi ? 'AI mock' : 'Claude live'}</span><span class="badge ${s.channel3 ? 'live' : ''}" title="Product catalog facts for not-as-described disputes">Channel3 ${s.channel3 ? 'live' : 'demo'}</span>`;
-  $('#seed').hidden = s.mockPaypal;
-  setAp(s.autopilot);
-}
-function setAp(a) {
-  $('#apOn').checked = a.enabled; $('#apMax').value = a.maxAmount; $('#apConf').value = a.minConfidence;
-  $('#apMaxV').textContent = '$' + a.maxAmount; $('#apConfV').textContent = Math.round(a.minConfidence * 100) + '%';
-}
-const saveAp = async () => setAp(await api('/api/autopilot', { enabled: $('#apOn').checked, maxAmount: $('#apMax').value, minConfidence: $('#apConf').value }));
-$('#apOn').onchange = saveAp; $('#apMax').oninput = $('#apConf').oninput = saveAp;
-
-$('#run').onclick = async () => {
-  $('#run').disabled = true; $('#run').textContent = 'Reviewing...';
-  $('#props').innerHTML = '<div class="empty">Agent is reading disputes, invoices and held payments...</div>';
-  try {
-    const r = await api('/api/agent/scan', {});
-    if (r.auto.length) toast(`Autopilot handled ${r.auto.length} item${r.auto.length > 1 ? 's' : ''} worth ${money(r.auto.reduce((s, a) => s + a.amount, 0))}`);
-    await refresh();
-  } catch (e) { $('#props').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
-  $('#run').disabled = false; $('#run').textContent = 'Run agent';
-};
-
-$('#reset').onclick = async () => { await api('/api/demo/reset', {}); $('#chatlog').innerHTML = ''; $('#feed').innerHTML = '<div class="mute">Waiting for events...</div>'; toast('Demo reset'); await refresh(); };
-
-$('#seed').onclick = async () => {
-  $('#seed').disabled = true;
-  try { const r = await api('/api/demo/seed', {}); toast(`Created ${r.created.length} real overdue invoices in PayPal sandbox`); await refresh(); }
-  catch (e) { toast(e.message); }
-  $('#seed').disabled = false;
-};
-
-function addMsg(cls, text, steps) {
-  const el = document.createElement('div');
-  el.className = 'msg ' + cls; el.textContent = text;
-  if (steps?.length) { const s = document.createElement('div'); s.className = 'steps'; s.textContent = 'Tools used: ' + steps.map((x) => x.tool + (x.input?.id ? `(${x.input.id})` : '')).join(', '); el.appendChild(s); }
-  $('#chatlog').appendChild(el); $('#chatlog').scrollTop = 1e9;
-  return el;
-}
-async function ask(q) {
-  if (!q.trim()) return;
-  addMsg('me', q); $('#q').value = '';
-  const pending = addMsg('bot', 'Thinking...');
-  try { const r = await api('/api/agent/chat', { message: q }); pending.remove(); addMsg('bot', r.reply, r.steps); await refresh(); }
-  catch (e) { pending.textContent = e.message; }
-}
-$('#ask').onclick = () => ask($('#q').value);
-$('#q').onkeydown = (e) => { if (e.key === 'Enter') ask($('#q').value); };
-document.querySelectorAll('[data-q]').forEach((b) => (b.onclick = () => ask(b.dataset.q)));
-
-const PROT_LABEL = { LIKELY_COVERED: 'Likely covered by Seller Protection', NEEDS_EVIDENCE: 'Coverable, evidence missing', NOT_COVERED: 'Not covered by Seller Protection' };
-function recBox(recs) {
-  return `<details class="recs"><summary>Evidence records the draft may cite (${recs.length})</summary><ul>${recs.map((r) =>
-    `<li><b>${esc(r.ref)}</b> ${esc(r.source)} <code>${esc(r.id)}</code> <span class="mute">${esc(Object.entries(r.fields).map(([k, v]) => `${k}: ${v}`).join(' · '))}</span></li>`).join('')}</ul></details>`;
-}
-function protBox(pr) {
-  return `<div class="prot"><b class="${esc(pr.status)}">${esc(PROT_LABEL[pr.status] || pr.status)}</b> <span class="mute">· ${esc(pr.summary)}</span>
-    <ul>${pr.checks.map((c) => `<li class="${c.pass ? 'ok' : 'no'}" data-i="${c.pass ? '✓' : '✗'}">${esc(c.rule)} <span class="mute">(${esc(c.detail)})</span></li>`).join('')}</ul></div>`;
-}
-
-// ---------- AG Charts ----------
-const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-const chartTheme = { baseTheme: dark ? 'ag-default-dark' : 'ag-default', overrides: { common: { background: { fill: 'transparent' } } } };
-let riskChart, coverChart, timeChart;
-function renderCharts(r) {
-  if (!window.agCharts) return;
-  const cat = (k) => (k === 'dispute' ? 'Disputes' : k === 'invoice' ? 'Overdue invoices' : 'Tracking / holds');
-  const sum = (xs) => xs.reduce((s, x) => s + x.amount, 0);
-  const protectedBy = (k) => r.actions.filter((a) => a.kind === k && a.decision !== 'ACCEPT').reduce((s, a) => s + a.amount, 0);
-  const data = [
-    { category: cat('dispute'), risk: sum(r.disputes), saved: protectedBy('dispute') },
-    { category: cat('invoice'), risk: sum(r.invoices), saved: protectedBy('invoice') },
-    { category: cat('hold'), risk: sum(r.holds), saved: protectedBy('hold') },
-  ];
-  const fmt = { formatter: ({ value }) => (value >= 250 ? '$' + Math.round(value).toLocaleString() : '') };
-  const riskOpts = {
-    container: $('#chartRisk'), data, theme: chartTheme,
-    series: [
-      { type: 'bar', direction: 'horizontal', xKey: 'category', yKey: 'risk', yName: 'At risk', stacked: true, fill: '#d93025', label: fmt },
-      { type: 'bar', direction: 'horizontal', xKey: 'category', yKey: 'saved', yName: 'Protected by agent', stacked: true, fill: '#1e8e3e', label: fmt },
-    ],
-    axes: [{ type: 'category', position: 'left' }, { type: 'number', position: 'bottom', label: { formatter: ({ value }) => '$' + value.toLocaleString() } }],
-    legend: { position: 'bottom' },
-  };
-  const byStatus = { LIKELY_COVERED: 0, NEEDS_EVIDENCE: 0, NOT_COVERED: 0, UNCHECKED: 0 };
-  const prop = Object.fromEntries(r.proposals.map((p) => [p.target, p]));
-  for (const d of r.disputes) byStatus[prop[d.dispute_id]?.protection?.status || 'UNCHECKED'] += d.amount;
-  const coverData = [
-    { status: 'Likely covered', amount: byStatus.LIKELY_COVERED, color: '#1e8e3e' },
-    { status: 'Evidence missing', amount: byStatus.NEEDS_EVIDENCE, color: '#e37400' },
-    { status: 'Not covered', amount: byStatus.NOT_COVERED, color: '#d93025' },
-    { status: 'Not checked yet', amount: byStatus.UNCHECKED, color: '#9aa0a6' },
-  ].filter((x) => x.amount > 0);
-  const coverOpts = {
-    container: $('#chartCover'), data: coverData, theme: chartTheme,
-    series: [{ type: 'donut', angleKey: 'amount', legendItemKey: 'status', innerRadiusRatio: 0.62, fills: coverData.map((x) => x.color),
-      calloutLabel: { enabled: false }, sectorLabel: { formatter: ({ value }) => '$' + Math.round(value) },
-      innerLabels: [{ text: '$' + Math.round(sum(r.disputes)).toLocaleString(), fontSize: 20, fontWeight: 'bold' }, { text: 'in dispute' }] }],
-    legend: { position: 'bottom' },
-  };
-  // Running total protected (non-ACCEPT actions), one series per actor.
-  const acts = r.actions.filter((a) => a.decision !== 'ACCEPT').slice().sort((a, b) => a.at.localeCompare(b.at));
-  let run = 0;
-  const timeData = acts.map((a) => { run += a.amount; return { t: new Date(a.at), total: run, amount: a.amount, by: a.by }; });
-  const timeOpts = {
-    container: $('#chartTime'), data: timeData, theme: chartTheme,
-    series: [{ type: 'line', xKey: 't', yKey: 'total', yName: 'Protected (running total)', stroke: '#1e8e3e', marker: { fill: '#1e8e3e' },
-      tooltip: { renderer: ({ datum }) => ({ content: `+$${datum.amount.toFixed(2)} by ${datum.by} · $${datum.total.toFixed(2)} total` }) } }],
-    axes: [{ type: 'time', position: 'bottom', label: { format: '%H:%M' } }, { type: 'number', position: 'left', label: { formatter: ({ value }) => '$' + value.toLocaleString() } }],
-    legend: { position: 'bottom' },
-    overlays: { noData: { text: 'No actions yet. Approve something or turn on autopilot.' } },
-  };
-  if (timeChart) timeChart.update(timeOpts); else timeChart = agCharts.AgCharts.create(timeOpts);
-  if (riskChart) riskChart.update(riskOpts); else riskChart = agCharts.AgCharts.create(riskOpts);
-  if (coverChart) coverChart.update(coverOpts); else coverChart = agCharts.AgCharts.create(coverOpts);
-}
-
-function addEvent(e) {
-  if (!e.text) return;
-  const feed = $('#feed');
-  if (feed.querySelector('.mute')) feed.innerHTML = '';
-  const el = document.createElement('div');
-  el.className = 'ev ' + e.kind;
-  el.innerHTML = `<time>${new Date(e.at).toLocaleTimeString()}</time>${esc(e.text)}`;
-  feed.prepend(el);
-}
-api('/api/activity').then((list) => list.slice().reverse().forEach(addEvent)).catch(() => {});
-let refreshTimer;
-try {
-  const es = new EventSource('/api/events');
-  es.onmessage = (m) => {
-    const e = JSON.parse(m.data); addEvent(e);
-    if (e.kind !== 'hello') { clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 300); }
-  };
-} catch { /* live feed is optional */ }
-$('#simDispute').onclick = async () => {
-  $('#simDispute').disabled = true;
-  try { await api('/api/demo/simulate-dispute', {}); } catch (e) { toast(e.message); }
-  $('#simDispute').disabled = false;
-};
-
-window.ssRefresh = refresh; window.ssToast = toast;
-loadStatus().then(refresh);
-</script>
-<script type="module">
-// Money timeline: Bryntum Scheduler. One row per item at risk; bars for response windows,
-// overdue periods and holds; draggable reminder events the agent respects.
-import { Scheduler, StringHelper } from '/vendor/bryntum/scheduler.module.js';
-
-const DAY = 864e5;
-const today = new Date(); today.setHours(0, 0, 0, 0);
-const iso = (d) => new Date(d).toISOString().slice(0, 10);
-const at = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
-const plus = (d, n) => new Date(+at(d) + n * DAY);
-const COVER = { LIKELY_COVERED: 'green', NEEDS_EVIDENCE: 'orange', NOT_COVERED: 'red' };
-
-const sched = new Scheduler({
-  appendTo: 'timeline',
-  startDate: plus(today, -21),
-  endDate: plus(today, 21),
-  viewPreset: 'weekAndDay',
-  tickSize: 84,
-  visibleDate: { date: today, block: 'center' },
-  rowHeight: 42,
-  barMargin: 7,
-  eventStyle: 'rounded',
-  features: {
-    timeRanges: { showCurrentTimeLine: true },
-    dependencies: { allowCreate: false, showTooltip: false, radius: 6 },
-    eventEdit: false, eventResize: false, eventDragCreate: false, eventMenu: false, scheduleMenu: false, cellEdit: false,
-    eventDrag: { constrainDragToResource: true },
-    eventTooltip: { template: ({ eventRecord }) => StringHelper.encodeHtml(eventRecord.get('tip') || eventRecord.name) },
-  },
-  columns: [
-    { text: 'Money at risk', field: 'name', width: 240 },
-    { text: 'Amount', field: 'amount', width: 110, align: 'right', renderer: ({ value }) => `$${Number(value || 0).toFixed(2)}` },
-  ],
-  eventRenderer: ({ eventRecord }) => StringHelper.encodeHtml(eventRecord.name),
-  listeners: {
-    // Seller evidence task: record the carrier's delivery date; the agent re-checks coverage.
-    async eventClick({ eventRecord }) {
-      const tx = eventRecord.get('orderTx');
-      if (!eventRecord.get('isTask') || !tx) return;
-      const date = prompt(`Carrier delivery date for ${eventRecord.get('item') || 'this order'} (YYYY-MM-DD):`, iso(today));
-      if (!date) return;
-      const r = await fetch(`/api/orders/${encodeURIComponent(tx)}/delivered`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date }) });
-      window.ssToast?.(r.ok ? 'Delivery recorded. Seller Protection re-checked.' : (await r.json()).error);
-      window.ssRefresh?.();
-    },
-    async eventDrop({ eventRecords }) {
-      for (const e of eventRecords) {
-        const proposalId = e.get('proposalId');
-        if (proposalId) {
-          const r = await fetch('/api/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: proposalId, at: iso(e.startDate), fingerprint: e.get('fingerprint') }) });
-          if (!r.ok) { window.ssToast?.((await r.json()).error); }
-          window.ssRefresh?.();
-          continue;
-        }
-        const invoiceId = e.get('invoiceId');
-        if (!invoiceId) continue;
-        const r = await fetch('/api/reminders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ invoiceId, at: iso(e.startDate) }) });
-        if (!r.ok) alert((await r.json()).error);
-      }
-    },
-  },
-});
-
-window.sellershieldTimeline = (r) => {
-  const prop = Object.fromEntries((r.proposals || []).map((p) => [p.id, p]));
-  const resources = [], events = [];
-  for (const d of r.disputes) {
-    const id = 'dispute:' + d.dispute_id, p = prop[id];
-    resources.push({ id, name: `Dispute ${d.dispute_id}${d.demo ? ' (demo)' : ''}`, amount: d.amount });
-    const due = d.seller_response_due_date ? at(d.seller_response_due_date) : plus(today, 10);
-    events.push({ id: id + ':win', resourceId: id, startDate: today, endDate: due > today ? due : plus(today, 1), draggable: false,
-      name: `Respond by ${iso(due)}`, eventColor: COVER[p?.protection?.status] || 'blue',
-      tip: p?.protection ? `${p.protection.status.replaceAll('_', ' ').toLowerCase()}: ${p.protection.summary}` : 'Run the agent to check Seller Protection' });
-  }
-  for (const i of r.invoices) {
-    const id = 'invoice:' + i.id;
-    resources.push({ id, name: `Invoice ${i.id.slice(0, 14)}${i.demo ? ' (demo)' : ''}`, amount: i.amount });
-    const due = at(i.due_date || today);
-    events.push({ id: id + ':late', resourceId: id, startDate: due, endDate: due < today ? today : plus(due, 1), draggable: false, eventColor: 'red',
-      name: `Overdue ${i.days_overdue}d`, tip: `${i.recipient}: ${i.memo}` });
-    if (prop[id]) continue; // the agent's own action event (below) replaces the plain reminder
-    const rem = at(r.reminders?.[i.id] || today);
-    events.push({ id: id + ':rem', resourceId: id, startDate: rem, endDate: plus(rem, 1), draggable: true, eventColor: 'violet', invoiceId: i.id,
-      name: 'Remind', tip: 'Drag to reschedule. The agent waits until this day.' });
-  }
-  for (const o of r.holds) {
-    const id = 'hold:' + o.transactionId;
-    resources.push({ id, name: `${o.live ? 'Needs tracking' : 'Held funds'}: ${o.item}${o.demo ? ' (demo)' : ''}`, amount: o.amount });
-    const since = plus(today, -(o.daysHeld || 0));
-    events.push({ id: id + ':held', resourceId: id, startDate: since, endDate: plus(today, 1), draggable: false, eventColor: 'orange',
-      name: o.live ? 'No tracking on PayPal' : `Held ${o.daysHeld}d`, tip: 'Adding tracking can release funds early and protects against "item not received".' });
-    if (!o.live) events.push({ id: id + ':est', resourceId: id, startDate: plus(today, 1), endDate: plus(since, 21), draggable: false, eventColor: 'gray', eventStyle: 'dashed',
-      name: 'Est. release (typical 21-day hold)', tip: 'Estimate only: PayPal sets the actual release date.' });
-  }
-  // Agent calendar: every proposed action sits on its row. Drag it onto a day to approve it for that day.
-  // Disputes missing proof get a two-step plan: seller task (get delivery confirmation) -> agent action.
-  const deps = [];
-  const dueOf = Object.fromEntries((r.disputes || []).map((d) => [d.dispute_id, d.seller_response_due_date]));
-  for (const p of r.proposals || []) {
-    if (!resources.some((x) => x.id === p.id)) continue;
-    const missingDelivery = p.kind === 'dispute' && p.protection?.status === 'NEEDS_EVIDENCE' && p.orderTx
-      && p.protection.checks.some((c) => !c.pass && /delivered/i.test(c.rule));
-    let taskDay = null;
-    if (missingDelivery) {
-      const due = dueOf[p.target] ? at(dueOf[p.target]) : plus(today, 7);
-      const latest = plus(due, -2) < today ? today : plus(due, -2);
-      taskDay = today;
-      events.push({ id: 'task:' + p.id, resourceId: p.id, startDate: taskDay, endDate: plus(taskDay, 1), draggable: false,
-        eventColor: 'orange', cls: 'ss-task', isTask: true, orderTx: p.orderTx, name: '📦 proof',
-        tip: `Seller task: get the carrier's delivery confirmation (latest ${iso(latest)}, 2 days before PayPal's deadline). Click to record the delivery date; the agent re-checks Seller Protection.` });
-      deps.push({ id: 'dep:' + p.id, from: 'task:' + p.id, to: 'plan:' + p.id });
-    }
-    const on = at(p.scheduledAt || (taskDay ? plus(taskDay, 2) : today));
-    const verb = { FIGHT: 'fight', ACCEPT: 'accept', REMIND: 'remind', ADD_TRACKING: 'tracking' }[p.decision] || p.decision.toLowerCase();
-    events.push({ id: 'plan:' + p.id, resourceId: p.id, startDate: on, endDate: plus(on, 1), draggable: true,
-      eventColor: p.scheduledAt ? 'green' : 'indigo', proposalId: p.id, fingerprint: p.fingerprint, cls: p.scheduledAt ? 'ss-plan ss-approved' : 'ss-plan',
-      name: p.scheduledAt ? `✓ ${verb}` : `${verb} ⇢`,
-      tip: p.scheduledAt ? `Approved to run on ${p.scheduledAt}. Fingerprint ${p.fingerprint.slice(0, 12)}.` : `Drag onto a day to approve this action for that day (fingerprint ${p.fingerprint.slice(0, 12)}). Today = runs within seconds.` });
-  }
-  const known = new Set(resources.map((x) => x.id));
-  for (const [n, a] of (r.actions || []).entries()) {
-    const id = `${a.kind}:${a.target}`;
-    if (!known.has(id)) { resources.push({ id, name: `${a.kind[0].toUpperCase() + a.kind.slice(1)} ${String(a.target).slice(0, 14)} (handled)`, amount: a.amount }); known.add(id); }
-    events.push({ id: `act:${n}`, resourceId: id, startDate: at(a.at), endDate: plus(a.at, 1), draggable: false, eventColor: 'green',
-      name: `✓ ${a.decision.replaceAll('_', ' ').toLowerCase()}`, tip: `${a.by} · ${a.simulated ? 'simulated' : 'live PayPal call'}` });
-  }
-  sched.resourceStore.data = resources;
-  sched.eventStore.data = events;
-  sched.dependencyStore.data = deps;
-};
-if (window.__ssData) window.sellershieldTimeline(window.__ssData);
-</script>
+<script src="/app.js"></script>
+<script type="module" src="/timeline.js"></script>
+<script type="module" src="/tour.js"></script>
 </body>
 </html>

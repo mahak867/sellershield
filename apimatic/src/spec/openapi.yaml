@@ -56,6 +56,241 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Risk' }
+  /api/buyer/shop:
+    post:
+      tags: [Storefront]
+      operationId: buyerAgentShop
+      summary: A buyer's AI agent picks one item inside a mandate
+      description: |
+        The agent proposes an item for what the buyer wants. Code then checks the pick against
+        the mandate (in catalog, within the price limit). A pick that fails is discarded.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [want, maxPrice]
+              properties:
+                want: { type: string, example: A handmade gift for a coffee lover }
+                maxPrice: { type: number, example: 70 }
+      responses:
+        '200':
+          description: The mandate, the pick and the mandate checks
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '400': { description: Invalid mandate }
+  /api/buyer/order:
+    post:
+      tags: [Storefront]
+      operationId: buyerAgentOrder
+      summary: Create the PayPal order for a mandate's pick
+      description: Refused unless the pick passes the mandate checks. The mandate id is set as the order's `custom_id`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [mandateId], properties: { mandateId: { type: string } } }
+      responses:
+        '200':
+          description: The order id
+          content:
+            application/json:
+              schema: { type: object, properties: { orderId: { type: string }, simulated: { type: boolean } } }
+        '404': { description: Mandate not found }
+        '409': { description: 'Mandate does not allow the purchase, or was already used' }
+  /api/buyer/capture:
+    post:
+      tags: [Storefront]
+      operationId: buyerAgentCapture
+      summary: Capture an agent-made purchase after the buyer approved it in PayPal
+      description: The order is read back from PayPal and re-checked against the mandate before capture. The mandate is stored with the sale as evidence.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [mandateId, orderId], properties: { mandateId: { type: string }, orderId: { type: string } } }
+      responses:
+        '200':
+          description: The capture
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '400': { description: Order was not created for this mandate }
+        '404': { description: Mandate not found }
+        '409': { description: 'Order does not match the mandate, or mandate already used' }
+  /api/buyer/redteam:
+    post:
+      tags: [Storefront]
+      operationId: buyerAgentRedTeam
+      summary: Run eight attacks against the buyer agent's checks
+      description: Prompt injection, an over-limit or invented pick, bait and switch, a swapped order, a reused or forged mandate, and impossible limits. Nothing reaches PayPal.
+      responses:
+        '200':
+          description: How many attacks were blocked, and each result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  blocked: { type: integer }
+                  total: { type: integer }
+                  attacks: { type: array, items: { type: object, properties: { attack: { type: string }, how: { type: string }, blocked: { type: boolean }, result: { type: string } } } }
+  /api/sales/{tx}/story:
+    get:
+      tags: [Risk]
+      operationId: getSaleStory
+      summary: Every event for one sale, from payment to dispute
+      parameters:
+        - { name: tx, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The sale and its ordered events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionId: { type: string }
+                  item: { type: string }
+                  amount: { type: number }
+                  status: { type: string }
+                  events: { type: array, items: { type: object, properties: { at: { type: string, nullable: true }, kind: { type: string }, title: { type: string }, detail: { type: string }, fingerprint: { type: string } } } }
+        '404': { description: 'Sale not found' }
+  /api/orders:
+    post:
+      tags: [Storefront]
+      operationId: registerSale
+      summary: Register a paid PayPal sale from any storefront
+      description: |
+        Call this once after checkout. SellerShield checks the sale against the Seller Protection
+        proof requirements at once and the agent proposes sending the tracking to PayPal.
+        Against the real sandbox the capture must exist on the PayPal account, and its amount
+        and eligibility are read from PayPal.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [transactionId, item]
+              properties:
+                transactionId: { type: string, description: PayPal capture id }
+                orderId: { type: string, description: PayPal order id (enables Orders v2 tracking) }
+                item: { type: string }
+                amount: { type: number, description: Used in demo mode; read from PayPal otherwise }
+                buyer: { type: string }
+                carrier: { type: string, example: USPS }
+                trackingNumber: { type: string }
+                delivered: { type: string, format: date }
+                addressMatches: { type: boolean, default: true }
+      responses:
+        '201':
+          description: Sale registered, with its readiness
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionId: { type: string }
+                  item: { type: string }
+                  amount: { type: number }
+                  readiness: { type: object, additionalProperties: true }
+        '400': { description: Invalid field }
+        '404': { description: PayPal has no such capture on this account }
+        '409': { description: Sale already registered }
+  /api/orders/{tx}/proof:
+    post:
+      tags: [Storefront]
+      operationId: updateSaleProof
+      summary: Fill in missing Seller Protection proof for a sale
+      description: Set the carrier, tracking number or delivery date. Tracking can change only until it has been sent to PayPal.
+      parameters:
+        - { name: tx, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                carrier: { type: string, example: USPS }
+                trackingNumber: { type: string }
+                delivered: { type: string, format: date }
+      responses:
+        '200':
+          description: Updated readiness
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '400': { description: Invalid field }
+        '404': { description: Sale not found }
+        '409': { description: Tracking already on PayPal }
+  /api/notify:
+    post:
+      tags: [Agent]
+      operationId: setAlertWebhook
+      summary: Set (or clear) the webhook that receives alerts
+      description: Events `needs_your_review` and `autopilot_acted` are posted as JSON. Only Zapier hook URLs are accepted on the hosted demo. An empty url turns alerts off.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url: { type: string, example: 'https://hooks.zapier.com/hooks/catch/123/abc' }
+      responses:
+        '200':
+          description: The saved URL, or null
+          content:
+            application/json:
+              schema: { type: object, properties: { url: { type: string, nullable: true } } }
+        '400': { description: Not an allowed webhook URL }
+  /api/notify/test:
+    post:
+      tags: [Agent]
+      operationId: testAlertWebhook
+      summary: Send a test alert to the saved webhook
+      responses:
+        '200': { description: Delivered }
+        '400': { description: No webhook saved }
+        '502': { description: The webhook did not accept the event }
+  /api/mcp:
+    post:
+      tags: [Agent]
+      operationId: mcp
+      summary: Model Context Protocol endpoint for other AI agents
+      description: |
+        JSON-RPC 2.0 over Streamable HTTP (JSON responses). Methods: `initialize`, `ping`,
+        `tools/list`, `tools/call`. Tools: `get_protection_readiness`, `get_money_at_risk`,
+        `review_account`, `approve_action`. `approve_action` only runs when the seller has
+        turned autopilot on and the proposal is inside the seller's limits; otherwise it is
+        refused. Name the workspace with the `Mcp-Session-Id` header returned by
+        `initialize`, or with `?ws=` copied from the dashboard.
+      parameters:
+        - { name: ws, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: Mcp-Session-Id, in: header, required: false, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jsonrpc, method]
+              properties:
+                jsonrpc: { type: string, enum: ['2.0'] }
+                id: { oneOf: [{ type: string }, { type: integer }] }
+                method: { type: string, example: tools/list }
+                params: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: JSON-RPC response
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '202': { description: Notification accepted }
   /api/agent/scan:
     post:
       tags: [Agent]
@@ -379,6 +614,15 @@ components:
       properties:
         mockPaypal: { type: boolean }
         mockAi: { type: boolean }
+        persistence: { type: string, enum: [off, file, redis] }
+        workspace: { type: string, format: uuid }
+        ai:
+          type: object
+          description: How many plans came from Claude and how many fell back to rules since the server started
+          properties:
+            claude: { type: integer }
+            rules: { type: integer }
+            lastError: { type: string, nullable: true }
         channel3: { type: boolean }
         autopilot: { $ref: '#/components/schemas/Autopilot' }
     Autopilot:
@@ -393,6 +637,27 @@ components:
         disputes: { type: array, items: { type: object, additionalProperties: true } }
         invoices: { type: array, items: { type: object, additionalProperties: true } }
         holds: { type: array, items: { type: object, additionalProperties: true } }
+        readiness:
+          type: object
+          description: Pre-dispute check of every sale against the Seller Protection proof requirements
+          properties:
+            total: { type: integer }
+            ready: { type: integer }
+            fixable: { type: integer, description: Sales the agent can make ready itself }
+            avgDaysExposed: { type: number, description: Average days a sale spent with no proof on PayPal }
+            amountTotal: { type: number }
+            amountReady: { type: number }
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  transactionId: { type: string }
+                  item: { type: string }
+                  amount: { type: number }
+                  demo: { type: boolean }
+                  status: { type: string, enum: [READY, AGENT_CAN_FIX, WAITING, AT_RISK] }
+                  checks: { type: array, items: { type: object, additionalProperties: true } }
         proposals: { type: array, items: { $ref: '#/components/schemas/Proposal' } }
         actions: { type: array, items: { $ref: '#/components/schemas/Action' } }
         reminders: { type: object, additionalProperties: { type: string, format: date } }

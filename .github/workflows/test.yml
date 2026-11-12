@@ -12,3 +12,21 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run bench
+  browser:
+    # Clicks through every main flow in a real browser, including the guided tour and an accessibility audit.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm i --no-save playwright@1 && npx playwright install --with-deps chromium
+      - name: Start the app in demo mode
+        run: |
+          WRITE_LIMIT_PER_MIN=10000 npm start > server.log 2>&1 &
+          for i in $(seq 1 50); do curl -sf http://localhost:3000/api/status > /dev/null && break; sleep 0.3; done
+      - run: npm run smoke
+      - if: failure()
+        run: cat server.log
